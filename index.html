@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
     <style>
-        /* 🎨UI · Thème Visuel */
+        /* 🎨 UI · Thème Visuel */
         :root {
             --bg-parchment: #F4EEDD; --bg-parchment-dark: #E8DCC4;
             --text-ink: #2C251F; --text-ink-light: #5A4E45;
@@ -28,7 +28,7 @@
         #app-container { max-width: 900px; margin: 0 auto; padding: 20px; }
         header { text-align: center; margin-bottom: 20px; }
 
-        /*🔍 Recherche Globale Fixe */
+        /* 🔍 Recherche Globale Fixe */
         .search-area { position: sticky; top: 0; z-index: 80; background: var(--bg-parchment); padding-bottom: 10px; margin-bottom: 20px; }
         .search-header { display: flex; gap: 10px; align-items: center; }
         .search-container { position: relative; flex: 1; }
@@ -113,6 +113,10 @@
         .star-rating span { transition: color 0.2s; }
         .star-rating span:hover, .star-rating span.active { color: var(--color-star); }
 
+        /* Bouton IA */
+        .btn-ai { background: linear-gradient(135deg, #a8c0ff, #3f2b96); color: white; border: none; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-ai:hover { opacity: 0.9; transform: scale(1.05); }
+
         .btn-primary { width: 100%; padding: 15px; background: var(--accent-wood); color: #fff; border: none; border-radius: 10px; font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 10px;}
         .view-section { display: none; }
         .view-section.active { display: block; }
@@ -192,31 +196,37 @@
             <section id="view-games" class="view-section"><div id="list-games" class="grid-container"></div></section>
             
             <section id="view-settings" class="view-section">
+                
                 <div class="settings-card">
-                    <h3>☁️ Cloud Sync (GitHub Gist)</h3>
-                    <p style="font-size: 0.9rem; color: var(--text-ink-light); margin-bottom: 15px;">Synchronise ta bibliothèque entre ton PC et ton téléphone.</p>
-                    
+                    <h3>✨ Intelligence Artificielle</h3>
+                    <p style="font-size: 0.9rem; color: var(--text-ink-light); margin-bottom: 10px;">Obtiens une clé gratuite sur <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a> pour générer des résumés.</p>
                     <div class="form-group">
-                        <label>Token GitHub (Permissions Gist)</label>
+                        <input type="password" id="gemini-api-key" placeholder="AIzaSy...">
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <h3>☁️ Cloud Sync (GitHub)</h3>
+                    <div class="form-group">
+                        <label>Token GitHub</label>
                         <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
                     </div>
                     <div class="form-group">
-                        <label>ID du Gist (Fichier Base de données)</label>
+                        <label>ID du Gist</label>
                         <input type="text" id="gh-gist-id" placeholder="Ex: 8a7b6c5d4e3f2a1...">
                     </div>
                     
-                    <button class="btn-primary" style="padding: 10px; margin-top: 0; background: var(--text-ink-light);" onclick="saveCloudSettings()">💾 Enregistrer les identifiants</button>
+                    <button class="btn-primary" style="padding: 10px; margin-top: 0; background: var(--text-ink-light);" onclick="saveCloudSettings()">💾 Enregistrer toutes les clés</button>
                     
                     <div class="data-btns" style="margin-top: 15px;">
-                        <button class="btn-secondary btn-cloud-push" onclick="pushToCloud()">☁️ Envoyer au Cloud (Sauvegarde)</button>
-                        <button class="btn-secondary btn-cloud-pull" onclick="pullFromCloud()">⬇️ Récupérer du Cloud (Mise à jour)</button>
+                        <button class="btn-secondary btn-cloud-push" onclick="pushToCloud()">☁️ Envoyer au Cloud</button>
+                        <button class="btn-secondary btn-cloud-pull" onclick="pullFromCloud()">⬇️ Récupérer du Cloud</button>
                     </div>
                     <p id="cloud-status" class="status-msg"></p>
                 </div>
 
                 <div class="settings-card">
                     <h3>📦 Secours Local (Import / Export)</h3>
-                    <p style="font-size: 0.9rem; margin-top: 10px; color: var(--text-ink-light);">Sauvegarde manuelle au format tableur (CSV).</p>
                     <div class="data-btns">
                         <button class="btn-secondary" onclick="exportToExcel()">💾 Sauver CSV</button>
                         <button class="btn-secondary" onclick="document.getElementById('import-file').click()">📥 Charger CSV</button>
@@ -257,7 +267,14 @@
                 </div>
 
                 <div class="form-group"><label>Statut</label><select id="statut" required></select></div>
-                <div id="group-resume" class="form-group" style="display: none;"><label>Résumé / Pitch</label><textarea id="resume" rows="2"></textarea></div>
+                
+                <div id="group-resume" class="form-group" style="display: none;">
+                    <label style="display: flex; justify-content: space-between; align-items: center;">
+                        Résumé / Pitch 
+                        <button type="button" id="btn-ai-summary" class="btn-ai">✨ Générer (IA)</button>
+                    </label>
+                    <textarea id="resume" rows="3"></textarea>
+                </div>
                 
                 <div id="review-section" class="review-box">
                     <div class="form-row" style="align-items: center; margin-bottom: 10px;">
@@ -293,13 +310,14 @@
     <script>
         // --- ⚙️ LOGIQUE DATA ---
         let library = JSON.parse(localStorage.getItem('myLibrary')) || [];
-        let cloudConfig = JSON.parse(localStorage.getItem('cloudConfig')) || { token: '', gistId: '' };
+        let cloudConfig = JSON.parse(localStorage.getItem('cloudConfig')) || { token: '', gistId: '', geminiKey: '' };
         let editingId = null;
         let itemToDeleteId = null;
 
-        // Pré-remplir les champs cloud si existants
-        document.getElementById('gh-token').value = cloudConfig.token;
-        document.getElementById('gh-gist-id').value = cloudConfig.gistId;
+        // Pré-remplir les champs config
+        document.getElementById('gh-token').value = cloudConfig.token || '';
+        document.getElementById('gh-gist-id').value = cloudConfig.gistId || '';
+        document.getElementById('gemini-api-key').value = cloudConfig.geminiKey || '';
 
         const statusConfig = {
             'lu': { icon: '✅', text: 'Lu/Terminé' }, 'encours': { icon: '⏳', text: 'En cours' }, 'alire': { icon: '📚', text: 'À lire' }, 'abandonne': { icon: '❌', text: 'Abandonné' },
@@ -318,66 +336,86 @@
             renderAll();
         }
 
-        // --- ☁️ CLOUD SYNC (GITHUB GIST) ---
+        // --- ☁️ CONFIGURATION & CLOUD ---
         function saveCloudSettings() {
             cloudConfig.token = document.getElementById('gh-token').value.trim();
             cloudConfig.gistId = document.getElementById('gh-gist-id').value.trim();
+            cloudConfig.geminiKey = document.getElementById('gemini-api-key').value.trim();
             localStorage.setItem('cloudConfig', JSON.stringify(cloudConfig));
             const status = document.getElementById('cloud-status');
-            status.style.color = 'var(--color-success)';
-            status.innerText = "✅ Identifiants enregistrés localement.";
+            status.style.color = 'var(--color-success)'; status.innerText = "✅ Identifiants enregistrés.";
             setTimeout(() => status.innerText = "", 3000);
         }
 
         async function pushToCloud() {
-            if(!cloudConfig.token || !cloudConfig.gistId) { alert("Renseigne ton Token et l'ID du Gist d'abord !"); return; }
-            const status = document.getElementById('cloud-status');
-            status.style.color = 'var(--text-ink)'; status.innerText = "⏳ Sauvegarde vers le Cloud en cours...";
-            
+            if(!cloudConfig.token || !cloudConfig.gistId) return alert("Renseigne ton Token et l'ID du Gist !");
+            const status = document.getElementById('cloud-status'); status.style.color = 'var(--text-ink)'; status.innerText = "⏳ Sauvegarde en cours...";
             try {
                 const response = await fetch(`https://api.github.com/gists/${cloudConfig.gistId}`, {
-                    method: 'PATCH',
-                    headers: { 'Authorization': `Bearer ${cloudConfig.token}`, 'Content-Type': 'application/json' },
+                    method: 'PATCH', headers: { 'Authorization': `Bearer ${cloudConfig.token}`, 'Content-Type': 'application/json' },
                     body: JSON.stringify({ files: { 'library.json': { content: JSON.stringify(library) } } })
                 });
-                if(response.ok) {
-                    status.style.color = 'var(--color-success)'; status.innerText = "✅ Succès ! Base de données envoyée sur GitHub.";
-                } else {
-                    status.style.color = 'var(--color-danger)'; status.innerText = `❌ Erreur API : ${response.statusText}`;
-                }
-            } catch(e) { 
-                status.style.color = 'var(--color-danger)'; status.innerText = "❌ Impossible de se connecter à GitHub."; 
-            }
+                if(response.ok) { status.style.color = 'var(--color-success)'; status.innerText = "✅ Sauvegardé sur le Cloud."; } 
+                else { status.style.color = 'var(--color-danger)'; status.innerText = `❌ Erreur: ${response.statusText}`; }
+            } catch(e) { status.style.color = 'var(--color-danger)'; status.innerText = "❌ Erreur de connexion."; }
         }
 
         async function pullFromCloud() {
-            if(!cloudConfig.token || !cloudConfig.gistId) { alert("Renseigne ton Token et l'ID du Gist d'abord !"); return; }
-            if(!confirm("Attention : Cela va écraser tes données locales avec celles du Cloud. Continuer ?")) return;
-            
-            const status = document.getElementById('cloud-status');
-            status.style.color = 'var(--text-ink)'; status.innerText = "⏳ Téléchargement depuis le Cloud...";
-            
+            if(!cloudConfig.token || !cloudConfig.gistId) return alert("Renseigne ton Token et l'ID du Gist !");
+            if(!confirm("Écraser tes données locales avec celles du Cloud ?")) return;
+            const status = document.getElementById('cloud-status'); status.style.color = 'var(--text-ink)'; status.innerText = "⏳ Téléchargement...";
             try {
-                // Ajout d'un timestamp pour éviter le cache du navigateur
-                const response = await fetch(`https://api.github.com/gists/${cloudConfig.gistId}?t=${Date.now()}`, {
-                    headers: { 'Authorization': `Bearer ${cloudConfig.token}` }
-                });
+                const response = await fetch(`https://api.github.com/gists/${cloudConfig.gistId}?t=${Date.now()}`, { headers: { 'Authorization': `Bearer ${cloudConfig.token}` } });
                 if(response.ok) {
                     const data = await response.json();
                     if(data.files['library.json']) {
                         library = JSON.parse(data.files['library.json'].content);
                         saveLibrary(); triggerUpdate();
-                        status.style.color = 'var(--color-success)'; status.innerText = "✅ Succès ! Données récupérées et appliquées.";
-                    } else {
-                        status.style.color = 'var(--color-danger)'; status.innerText = "❌ Fichier 'library.json' introuvable dans ce Gist.";
+                        status.style.color = 'var(--color-success)'; status.innerText = "✅ Données récupérées.";
                     }
-                } else {
-                    status.style.color = 'var(--color-danger)'; status.innerText = `❌ Erreur API : ${response.statusText}`;
-                }
-            } catch(e) { 
-                status.style.color = 'var(--color-danger)'; status.innerText = "❌ Impossible de se connecter à GitHub."; 
-            }
+                } else { status.style.color = 'var(--color-danger)'; status.innerText = `❌ Erreur: ${response.statusText}`; }
+            } catch(e) { status.style.color = 'var(--color-danger)'; status.innerText = "❌ Erreur de connexion."; }
         }
+
+        // --- ✨ GENERATION IA (GEMINI) ---
+        document.getElementById('btn-ai-summary').onclick = async () => {
+            const titre = document.getElementById('titre').value.trim();
+            const createur = document.getElementById('createur').value.trim();
+            const typeLabel = document.querySelector('input[name="type"]:checked').parentElement.textContent.trim();
+            
+            if(!titre) return alert("Il me faut au moins un titre pour générer un résumé !");
+            if(!cloudConfig.geminiKey) {
+                alert("Il manque ta clé API Gemini. Va dans l'onglet ⚙️ Data pour l'ajouter.");
+                switchView('view-settings');
+                document.getElementById('btn-close-modal').click();
+                return;
+            }
+
+            const resumeField = document.getElementById('resume');
+            resumeField.value = "⏳ L'IA réfléchit...";
+            resumeField.disabled = true;
+
+            const prompt = `Tu es un expert culturel. Rédige un pitch/résumé de présentation pour : "${titre}" de "${createur}" (Catégorie: ${typeLabel}). 
+            Règles strictes : Sois concis (3 ou 4 phrases maximum). Sois accrocheur. Ne révèle AUCUN spoiler sur la fin. Ne fais aucune phrase d'introduction ou de conclusion, donne uniquement le résumé direct.`;
+
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${cloudConfig.geminiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                });
+                
+                const data = await response.json();
+                if(data.candidates && data.candidates.length > 0) {
+                    resumeField.value = data.candidates[0].content.parts[0].text.trim();
+                } else {
+                    resumeField.value = "❌ L'IA n'a pas pu générer le résumé. Vérifie ta clé API.";
+                }
+            } catch(error) {
+                resumeField.value = "❌ Erreur de connexion au serveur IA.";
+            }
+            resumeField.disabled = false;
+        };
 
 
         // --- 🔍 RECHERCHE, FILTRES & TRI ---
@@ -462,16 +500,11 @@
                 document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.target === id));
                 updateFilterControls(id);
                 activeFilters.status = 'all'; activeFilters.format = 'all'; activeFilters.tag = 'all'; 
-                document.getElementById('filter-status').value = 'all';
-                document.getElementById('filter-format').value = 'all';
-                document.getElementById('filter-tag').value = 'all';
+                document.getElementById('filter-status').value = 'all'; document.getElementById('filter-format').value = 'all'; document.getElementById('filter-tag').value = 'all';
                 renderAll();
             }
         }
-        document.querySelectorAll('.nav-btn').forEach(btn => btn.onclick = () => {
-            document.getElementById('search-input').value = '';
-            switchView(btn.dataset.target);
-        });
+        document.querySelectorAll('.nav-btn').forEach(btn => btn.onclick = () => { document.getElementById('search-input').value = ''; switchView(btn.dataset.target); });
 
         // --- 💻 FORMULAIRE ---
         const modal = document.getElementById('modal-add');
@@ -506,10 +539,7 @@
             if (e.key === 'Enter') {
                 e.preventDefault();
                 const val = this.value.trim();
-                if (val && !selectedTags.includes(val)) {
-                    selectedTags.push(val);
-                    renderTagsUI(document.querySelector('input[name="type"]:checked').value);
-                }
+                if (val && !selectedTags.includes(val)) { selectedTags.push(val); renderTagsUI(document.querySelector('input[name="type"]:checked').value); }
                 this.value = '';
             }
         });
@@ -520,8 +550,7 @@
             const s = document.getElementById('statut'); s.innerHTML = ''; uiConfig[type].statuses.forEach(x => s.appendChild(new Option(x.text, x.val)));
             document.getElementById('group-tome').style.display = (type === 'bd') ? 'flex' : 'none';
             document.getElementById('group-resume').style.display = (type === 'book' || type === 'bd') ? 'flex' : 'none';
-            renderTagsUI(type);
-            updateReviewVisibility();
+            renderTagsUI(type); updateReviewVisibility();
         }
 
         function updateReviewVisibility() {
@@ -534,8 +563,7 @@
             editingId = null; form.reset(); selectedTags = []; setStars(0);
             document.getElementById('modal-title').textContent = "Nouvelle fiche";
             document.querySelector('input[name="type"][value="book"]').checked = true;
-            updateFormUI('book');
-            modal.showModal();
+            updateFormUI('book'); modal.showModal();
         };
 
         document.getElementById('btn-close-modal').onclick = () => modal.close();
@@ -570,23 +598,18 @@
             document.getElementById('statut').value = i.statut||''; document.getElementById('resume').value = i.resume||'';
             setStars(i.note || 0); document.getElementById('coup-de-coeur').checked = i.coupDeCoeur||false;
             document.getElementById('commentaire').value = i.commentaire||'';
-            updateReviewVisibility();
-            modal.showModal();
+            updateReviewVisibility(); modal.showModal();
         };
 
         window.deleteItem = (id) => { itemToDeleteId = id; modalConfirm.showModal(); };
         document.getElementById('btn-cancel-delete').onclick = () => { itemToDeleteId = null; modalConfirm.close(); };
-        document.getElementById('btn-confirm-delete').onclick = () => {
-            if(itemToDeleteId) { library = library.filter(x => x.id !== itemToDeleteId); saveLibrary(); triggerUpdate(); }
-            itemToDeleteId = null; modalConfirm.close();
-        };
+        document.getElementById('btn-confirm-delete').onclick = () => { if(itemToDeleteId) { library = library.filter(x => x.id !== itemToDeleteId); saveLibrary(); triggerUpdate(); } itemToDeleteId = null; modalConfirm.close(); };
 
         // --- 🎨 RENDU ---
         function createCard(i, search = false) {
             const s = statusConfig[i.statut] || {icon:'?', text:'-'};
             const icons = {book:'📖', bd:'💬', music:'🎵', game:'🎲'};
             const consumed = ['lu','ecoute','joue'].includes(i.statut);
-            
             const MAX_TAGS = 2; const safeTags = i.tags || []; let tagsHtml = '';
             
             safeTags.forEach((t, index) => {
@@ -594,7 +617,6 @@
                 const displayStyle = index >= MAX_TAGS ? 'display: none;' : 'display: inline-block;';
                 tagsHtml += `<span class="badge ${hiddenClass}" style="${displayStyle}">${t}</span>`;
             });
-            
             if (safeTags.length > MAX_TAGS) {
                 const extraCount = safeTags.length - MAX_TAGS;
                 tagsHtml += `<span class="badge" id="btn-expand-${i.id}" style="background: transparent; border: 1px dashed var(--accent-wood); color: var(--accent-wood); cursor: pointer; transition: 0.2s;" onclick="document.querySelectorAll('.extra-tag-${i.id}').forEach(el => el.style.display='inline-block'); this.style.display='none';">+${extraCount}</span>`;
@@ -603,17 +625,8 @@
             const card = document.createElement('div'); card.className = 'card';
             card.innerHTML = `
                 <div class="card-header">
-                    <div class="card-title-group">
-                        <div class="card-title">${search?icons[i.type]+' ':''}${i.serie?i.serie+' - ':''}${i.titre} ${i.coupDeCoeur?'❤️':''}</div>
-                        <div class="card-creator">${i.createur || ''}</div>
-                    </div>
-                    <div class="card-status-group">
-                        <span class="badge badge-status ${consumed?'consumed':''}" style="${consumed?'':'background:#eee'}">${s.icon} ${s.text}</span>
-                        <div class="card-actions">
-                            <button class="action-btn" onclick="editItem('${i.id}')">✏️</button>
-                            <button class="action-btn delete" onclick="deleteItem('${i.id}')">🗑️</button>
-                        </div>
-                    </div>
+                    <div class="card-title-group"><div class="card-title">${search?icons[i.type]+' ':''}${i.serie?i.serie+' - ':''}${i.titre} ${i.coupDeCoeur?'❤️':''}</div><div class="card-creator">${i.createur || ''}</div></div>
+                    <div class="card-status-group"><span class="badge badge-status ${consumed?'consumed':''}" style="${consumed?'':'background:#eee'}">${s.icon} ${s.text}</span><div class="card-actions"><button class="action-btn" onclick="editItem('${i.id}')">✏️</button><button class="action-btn delete" onclick="deleteItem('${i.id}')">🗑️</button></div></div>
                 </div>
                 <div style="flex:1;"></div>
                 ${i.note > 0 ? `<div style="color:var(--color-star);font-size:1.1rem;margin:8px 0; letter-spacing: 2px;">${'★'.repeat(i.note)}${'☆'.repeat(5-i.note)}</div>`:''}
@@ -630,10 +643,9 @@
 
         function renderDashboard() {
             const statsContainer = document.getElementById('dashboard-stats');
-            const stats = { book: { total: 0, lu: 0, encours: 0, alire: 0, abandonne: 0, title: '📖 Livres' }, bd: { total: 0, lu: 0, encours: 0, alire: 0, abandonne: 0, title: '💬 BD/Mangas' }, music: { total: 0, ecoute: 0, adecouvrir: 0, abandonne: 0, title: '🎵 Musique' }, game: { total: 0, joue: 0, atester: 0, abandonne: 0, title: '🎲 Jeux' } };
+            const stats = { book: { total: 0, lu: 0, encours: 0, alire: 0, abandonne: 0, title: '📖 Livres' }, bd: { total: 0, lu: 0, encours: 0, alire: 0, abandonne: 0, title: '💬 BD' }, music: { total: 0, ecoute: 0, adecouvrir: 0, abandonne: 0, title: '🎵 CD' }, game: { total: 0, joue: 0, atester: 0, abandonne: 0, title: '🎲 Jeux' } };
 
             library.forEach(i => { if (stats[i.type]) { stats[i.type].total++; if (stats[i.type][i.statut] !== undefined) stats[i.type][i.statut]++; }});
-            
             statsContainer.innerHTML = '';
             Object.keys(stats).forEach(k => {
                 const s = stats[k]; if (s.total === 0) return;
@@ -641,7 +653,6 @@
                 if(k === 'book' || k === 'bd') detailHtml = `<div>✅ ${s.lu} terminés</div><div>⏳ ${s.encours} en cours</div><div>📚 ${s.alire} à faire</div><div>❌ ${s.abandonne} ab.</div>`;
                 else if(k === 'music') detailHtml = `<div>🎧 ${s.ecoute} écoutés</div><div>💿 ${s.adecouvrir} à déc.</div><div>❌ ${s.abandonne} déçus</div>`;
                 else if(k === 'game') detailHtml = `<div>🎲 ${s.joue} joués</div><div>📦 ${s.atester} à test.</div><div>❌ ${s.abandonne} ab.</div>`;
-
                 statsContainer.innerHTML += `<div class="stat-card"><div class="stat-main"><span>${s.total}</span> <span style="font-size:1rem; color:var(--text-ink)">${s.title}</span></div><div class="stat-details">${detailHtml}</div></div>`;
             });
             if(statsContainer.innerHTML === '') statsContainer.innerHTML = '<p style="color:var(--text-ink-light);">Ta collection est vide pour le moment.</p>';
@@ -669,14 +680,8 @@
 
         function parseCSVLine(text) {
             let ret = [], keep = false, cur = '';
-            for(let i=0; i<text.length; i++) {
-                let c = text[i];
-                if(c === '"') keep = !keep;
-                else if(c === ';' && !keep) { ret.push(cur); cur = ''; }
-                else cur += c;
-            }
-            ret.push(cur);
-            return ret.map(s => s.trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
+            for(let i=0; i<text.length; i++) { let c = text[i]; if(c === '"') keep = !keep; else if(c === ';' && !keep) { ret.push(cur); cur = ''; } else cur += c; }
+            ret.push(cur); return ret.map(s => s.trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
         }
 
         function importFromCSV(input) {
@@ -686,18 +691,13 @@
                 for(let i=1; i<lines.length; i++) {
                     if(!lines[i].trim()) continue;
                     const c = parseCSVLine(lines[i]); if(c.length < 2) continue;
-                    added.push({ 
-                        id: Date.now().toString() + i, type: c[0] || 'book', titre: c[1], serie: c[2], tome: c[3], createur: c[4], 
-                        format: c[5], annee: c[6], statut: c[7], tags: c[8] ? c[8].split(',') : [], note: parseInt(c[9]) || 0, 
-                        coupDeCoeur: c[10] === 'true', commentaire: c[11], dateAjout: Date.now() 
-                    });
+                    added.push({ id: Date.now().toString() + i, type: c[0] || 'book', titre: c[1], serie: c[2], tome: c[3], createur: c[4], format: c[5], annee: c[6], statut: c[7], tags: c[8] ? c[8].split(',') : [], note: parseInt(c[9]) || 0, coupDeCoeur: c[10] === 'true', commentaire: c[11], dateAjout: Date.now() });
                 }
                 if(confirm(`Importer ${added.length} items ?`)) { library=[...library,...added]; saveLibrary(); triggerUpdate(); }
             }; r.readAsText(f);
         }
 
-        updateFilterControls('view-books');
-        renderAll();
+        updateFilterControls('view-books'); renderAll();
     </script>
 </body>
 </html>
