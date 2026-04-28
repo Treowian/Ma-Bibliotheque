@@ -349,32 +349,74 @@
 
         async function pushToCloud() {
             if(!cloudConfig.token || !cloudConfig.gistId) return alert("Renseigne ton Token et l'ID du Gist !");
-            const status = document.getElementById('cloud-status'); status.style.color = 'var(--text-ink)'; status.innerText = "⏳ Sauvegarde en cours...";
+            const status = document.getElementById('cloud-status'); 
+            status.style.color = 'var(--text-ink)'; 
+            status.innerText = "⏳ Sauvegarde en cours...";
             try {
                 const response = await fetch(`https://api.github.com/gists/${cloudConfig.gistId}`, {
-                    method: 'PATCH', headers: { 'Authorization': `Bearer ${cloudConfig.token}`, 'Content-Type': 'application/json' },
+                    method: 'PATCH', 
+                    headers: { 
+                        'Authorization': `Bearer ${cloudConfig.token}`, 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/vnd.github.v3+json'
+                    },
+                    // On force l'utilisation du fichier library.json
                     body: JSON.stringify({ files: { 'library.json': { content: JSON.stringify(library) } } })
                 });
-                if(response.ok) { status.style.color = 'var(--color-success)'; status.innerText = "✅ Sauvegardé sur le Cloud."; } 
-                else { status.style.color = 'var(--color-danger)'; status.innerText = `❌ Erreur: ${response.statusText}`; }
-            } catch(e) { status.style.color = 'var(--color-danger)'; status.innerText = "❌ Erreur de connexion."; }
+                
+                const responseData = await response.json().catch(() => null);
+                
+                if(response.ok) { 
+                    status.style.color = 'var(--color-success)'; 
+                    status.innerText = "✅ Sauvegardé sur le Cloud."; 
+                } else { 
+                    status.style.color = 'var(--color-danger)'; 
+                    status.innerText = `❌ ERREUR GITHUB (${response.status}) : ${responseData ? responseData.message : response.statusText}`; 
+                }
+            } catch(e) { 
+                status.style.color = 'var(--color-danger)'; 
+                status.innerText = `❌ ERREUR RÉSEAU : ${e.message}`; 
+            }
         }
 
         async function pullFromCloud() {
             if(!cloudConfig.token || !cloudConfig.gistId) return alert("Renseigne ton Token et l'ID du Gist !");
             if(!confirm("Écraser tes données locales avec celles du Cloud ?")) return;
-            const status = document.getElementById('cloud-status'); status.style.color = 'var(--text-ink)'; status.innerText = "⏳ Téléchargement...";
+            const status = document.getElementById('cloud-status'); 
+            status.style.color = 'var(--text-ink)'; 
+            status.innerText = "⏳ Téléchargement...";
             try {
-                const response = await fetch(`https://api.github.com/gists/${cloudConfig.gistId}?t=${Date.now()}`, { headers: { 'Authorization': `Bearer ${cloudConfig.token}` } });
+                const response = await fetch(`https://api.github.com/gists/${cloudConfig.gistId}?t=${Date.now()}`, { 
+                    headers: { 
+                        'Authorization': `Bearer ${cloudConfig.token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    } 
+                });
+                
+                const responseData = await response.json().catch(() => null);
+
                 if(response.ok) {
-                    const data = await response.json();
-                    if(data.files['library.json']) {
-                        library = JSON.parse(data.files['library.json'].content);
+                    // On cherche automatiquement n'importe quel fichier JSON dans ton Gist (data.json, library.json...)
+                    const files = responseData.files;
+                    const fileKey = Object.keys(files).find(k => k.endsWith('.json'));
+                    
+                    if(fileKey && files[fileKey]) {
+                        library = JSON.parse(files[fileKey].content);
                         saveLibrary(); triggerUpdate();
-                        status.style.color = 'var(--color-success)'; status.innerText = "✅ Données récupérées.";
+                        status.style.color = 'var(--color-success)'; 
+                        status.innerText = "✅ Données récupérées.";
+                    } else {
+                        status.style.color = 'var(--color-danger)'; 
+                        status.innerText = "❌ Aucun fichier de données trouvé dans ce Gist.";
                     }
-                } else { status.style.color = 'var(--color-danger)'; status.innerText = `❌ Erreur: ${response.statusText}`; }
-            } catch(e) { status.style.color = 'var(--color-danger)'; status.innerText = "❌ Erreur de connexion."; }
+                } else { 
+                    status.style.color = 'var(--color-danger)'; 
+                    status.innerText = `❌ ERREUR GITHUB (${response.status}) : ${responseData ? responseData.message : response.statusText}`; 
+                }
+            } catch(e) { 
+                status.style.color = 'var(--color-danger)'; 
+                status.innerText = `❌ ERREUR RÉSEAU : ${e.message}`; 
+            }
         }
 
         // --- ✨ GENERATION IA (FORMAT 4E DE COUVERTURE + STYLE AUTEUR) ---
