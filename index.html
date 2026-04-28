@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ma Bibliothèque</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        /* 🎨 UI · Thème Visuel */
+        :root {
+            --bg-parchment: #F4EEDD; --bg-parchment-dark: #E8DCC4;
+            --text-ink: #2C251F; --text-ink-light: #5A4E45;
+            --accent-wood: #8C5A40; --color-success: #4A7C59; --color-danger: #C0392B; --color-star: #f39c12;
+            --shadow-soft: 0 4px 12px rgba(44, 37, 31, 0.08);
+            --font-title: 'Merriweather', serif; --font-body: 'Inter', sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+        body { background-color: var(--bg-parchment); color: var(--text-ink); font-family: var(--font-body); line-height: 1.6; overflow-x: hidden; padding-bottom: 80px; }
+        h1, h2, h3 { font-family: var(--font-title); color: var(--accent-wood); }
+        h3.section-title { font-size: 1.2rem; margin: 25px 0 10px 0; display: flex; align-items: center; gap: 8px; border-bottom: 2px solid var(--bg-parchment-dark); padding-bottom: 5px; }
+        
+        #app-container { max-width: 900px; margin: 0 auto; padding: 20px; }
+        header { text-align: center; margin-bottom: 20px; }
+
+        /*🔍 Recherche Globale Fixe */
+        .search-area { position: sticky; top: 0; z-index: 80; background: var(--bg-parchment); padding-bottom: 10px; margin-bottom: 20px; }
+        .search-header { display: flex; gap: 10px; align-items: center; }
+        .search-container { position: relative; flex: 1; }
+        #search-input { width: 100%; padding: 12px 15px 12px 45px; border: 2px solid var(--bg-parchment-dark); border-radius: 25px; font-size: 1rem; background: #fff; transition: 0.2s; color: var(--text-ink); }
+        #search-input:focus { outline: none; border-color: var(--accent-wood); }
+        .search-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 1.2rem; pointer-events: none;}
+        
+        .btn-toggle-filters { background: #fff; border: 2px solid var(--bg-parchment-dark); border-radius: 50%; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; transition: 0.2s; color: var(--text-ink); }
+        .btn-toggle-filters.active { border-color: var(--accent-wood); background: var(--bg-parchment-dark); }
+
+        /* 🎛️ Panneau de Filtres */
+        .filter-panel { background: rgba(255, 255, 255, 0.7); border: 1px solid var(--bg-parchment-dark); border-radius: 12px; padding: 15px; margin-top: 10px; display: none; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; box-shadow: var(--shadow-soft); }
+        .filter-panel.open { display: grid; }
+        .filter-group { display: flex; flex-direction: column; gap: 4px; }
+        .filter-group label { font-size: 0.75rem; font-weight: 700; color: var(--text-ink-light); text-transform: uppercase; }
+        .filter-select { padding: 8px; border-radius: 6px; border: 1px solid var(--bg-parchment-dark); font-size: 0.85rem; }
+
+        /* 🧭 Navigation */
+        nav { position: fixed; bottom: 0; left: 0; width: 100%; background-color: var(--bg-parchment-dark); box-shadow: 0 -2px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-around; padding: 8px 0; z-index: 100; }
+        .nav-btn { background: none; border: none; color: var(--text-ink-light); font-family: var(--font-body); font-size: 0.85rem; font-weight: 600; cursor: pointer; padding: 10px; display: flex; flex-direction: column; align-items: center; gap: 4px; border-radius: 12px; transition: 0.2s; }
+        .nav-btn.active { color: var(--accent-wood); background-color: rgba(140, 90, 64, 0.15); font-weight: 700; }
+        @media (min-width: 768px) {
+            nav { position: static; background: none; box-shadow: none; max-width: 800px; margin: 0 auto 20px auto; border-bottom: 2px solid var(--bg-parchment-dark); border-radius: 0; }
+            .nav-btn { flex-direction: row; gap: 8px; padding: 12px 20px; }
+            .nav-btn.active { border-radius: 12px 12px 0 0; border-bottom: 3px solid var(--accent-wood); }
+        }
+
+        /* 🎨 UI · Cartes */
+        .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-top: 10px; }
+        .card { background: #fff; border: 1px solid var(--bg-parchment-dark); border-radius: 12px; padding: 15px; box-shadow: var(--shadow-soft); display: flex; flex-direction: column; width: 100%; overflow: hidden; }
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; gap: 10px; }
+        .card-title { font-weight: 700; font-family: var(--font-title); font-size: 1.05rem; line-height: 1.3; flex: 1; word-wrap: break-word;}
+        .card-creator { color: var(--text-ink-light); font-size: 0.9rem; }
+        .card-status-group { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+        .badge { display: inline-block; background: var(--bg-parchment); padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; white-space: nowrap; }
+        .badge-status.consumed { background: var(--color-success); color: white; }
+        .card-meta { display: flex; flex-wrap: wrap !important; gap: 8px; margin-top: 10px; width: 100%; align-items: center; }
+        .card-actions { display: flex; gap: 4px; margin-top: 4px; }
+        .action-btn { background: var(--bg-parchment); border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 0.85rem; }
+        .action-btn:hover { background: var(--bg-parchment-dark); }
+        @media (min-width: 768px) { .card-actions { opacity: 0; transition: 0.2s; } .card:hover .card-actions { opacity: 1; } }
+
+        /* Dashboard Stats */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 20px;}
+        .stat-card { background: #fff; border: 1px solid var(--bg-parchment-dark); border-radius: 12px; padding: 15px; box-shadow: var(--shadow-soft); display: flex; flex-direction: column; justify-content: center;}
+        .stat-main { display: flex; align-items: center; gap: 10px; font-size: 1.4rem; font-weight: 700; color: var(--accent-wood); font-family: var(--font-title); margin-bottom: 10px; border-bottom: 1px solid var(--bg-parchment); padding-bottom: 8px;}
+        .stat-details { font-size: 0.85rem; color: var(--text-ink); line-height: 1.6; display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+
+        /* Modales */
+        #btn-fab-add { position: fixed; bottom: 85px; right: 20px; width: 60px; height: 60px; border-radius: 50%; background-color: var(--accent-wood); color: #fff; font-size: 1.8rem; border: none; box-shadow: 0 6px 16px rgba(140, 90, 64, 0.4); cursor: pointer; z-index: 110; display: flex; align-items: center; justify-content: center; }
+        @media (min-width: 768px) { #btn-fab-add { bottom: 40px; right: 40px; } }
+        
+        dialog { margin: auto; border: none; border-radius: 12px; background-color: var(--bg-parchment); width: 95%; max-width: 550px; padding: 0; box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
+        dialog::backdrop { background: rgba(44, 37, 31, 0.7); backdrop-filter: blur(3px); }
+        .modal-content { padding: 20px; max-height: 90vh; overflow-y: auto; }
+        
+        #modal-confirm .modal-content { text-align: center; padding: 30px 20px; }
+        .confirm-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: center; }
+        .btn-danger { background: var(--color-danger); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .btn-cancel { background: var(--bg-parchment-dark); color: var(--text-ink); border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+
+        .form-group { margin-bottom: 12px; display: flex; flex-direction: column; }
+        .form-row { display: flex; gap: 10px; }
+        .form-row .form-group { flex: 1; }
+        label { font-weight: 600; font-size: 0.85rem; margin-bottom: 4px; color: var(--text-ink-light); }
+        input, select, textarea { padding: 10px; border: 1px solid var(--bg-parchment-dark); border-radius: 8px; font-family: var(--font-body); font-size: 0.95rem; background: #fff; }
+        
+        /* Boutons Radios & Tags */
+        .type-selector { display: flex; gap: 5px; margin-bottom: 15px; }
+        .type-selector label { flex: 1; cursor: pointer; }
+        .type-selector input { display: none; }
+        .type-btn { display: block; text-align: center; padding: 10px; background: rgba(255,255,255,0.5); border-radius: 8px; border: 2px solid transparent; font-size: 0.8rem; transition: 0.2s;}
+        .type-selector input:checked + .type-btn { background: var(--bg-parchment-dark); border-color: var(--accent-wood); font-weight: 700; }
+        
+        .tags-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px; margin-bottom: 8px; }
+        .tag-pill { padding: 6px 12px; border-radius: 20px; background: #fff; border: 1px solid var(--bg-parchment-dark); font-size: 0.8rem; cursor: pointer; transition: 0.2s; user-select: none; }
+        .tag-pill.active { background: var(--accent-wood); color: #fff; border-color: var(--accent-wood); }
+        .custom-tag-input { border: 1px dashed var(--accent-wood); background: transparent; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; outline: none; width: 150px; color: var(--text-ink);}
+        
+        /* Etoiles */
+        .star-rating { display: flex; gap: 5px; font-size: 1.5rem; cursor: pointer; color: #ccc; }
+        .star-rating span { transition: color 0.2s; }
+        .star-rating span:hover, .star-rating span.active { color: var(--color-star); }
+
+        .btn-primary { width: 100%; padding: 15px; background: var(--accent-wood); color: #fff; border: none; border-radius: 10px; font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 10px;}
+        .view-section { display: none; }
+        .view-section.active { display: block; }
+        
+        /* Settings & Cloud */
+        .settings-card { background: #fff; padding: 25px; border-radius: 12px; border: 1px solid var(--bg-parchment-dark); margin-bottom: 20px; }
+        .data-btns { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px; }
+        .btn-secondary { padding: 10px 15px; border: 2px solid var(--accent-wood); color: var(--accent-wood); background: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-family: var(--font-body); flex: 1; text-align: center;}
+        .btn-secondary:hover { background: var(--accent-wood); color: #fff; }
+        .btn-cloud-push { background: var(--accent-wood); color: #fff; border: none; }
+        .btn-cloud-pull { background: var(--color-success); color: #fff; border: none; }
+        .status-msg { font-size: 0.85rem; font-weight: bold; margin-top: 10px; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+        <header><h1>Ma Bibliothèque</h1></header>
+
+        <div class="search-area">
+            <div class="search-header">
+                <div class="search-container">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="search-input" placeholder="Titre, Auteur, Tag, Commentaire...">
+                </div>
+                <button id="btn-toggle-filters" class="btn-toggle-filters">🎛️</button>
+            </div>
+
+            <div id="filter-panel" class="filter-panel">
+                <div class="filter-group">
+                    <label>Trier par</label>
+                    <select id="filter-sort" class="filter-select">
+                        <option value="date_desc">📅 Ajout (Récent)</option>
+                        <option value="alpha_asc">📖 Titre (A-Z)</option>
+                        <option value="createur_asc">👤 Auteur (A-Z)</option>
+                        <option value="note_desc">★ Mieux notés</option>
+                    </select>
+                </div>
+                <div class="filter-group"><label>Statut</label><select id="filter-status" class="filter-select"><option value="all">Tous</option></select></div>
+                <div class="filter-group"><label>Format</label><select id="filter-format" class="filter-select"><option value="all">Tous</option></select></div>
+                <div class="filter-group"><label>Tag</label><select id="filter-tag" class="filter-select"><option value="all">Tous</option></select></div>
+                <div class="filter-group" style="flex-direction:row; align-items:center; gap:8px; grid-column: 1 / -1; justify-content: center; padding-top: 5px;">
+                    <input type="checkbox" id="filter-fav" style="transform: scale(1.2);"> <label for="filter-fav" style="margin:0; font-size:0.9rem; text-transform:none;">N'afficher que mes coups de ❤️</label>
+                </div>
+            </div>
+        </div>
+
+        <nav id="main-nav">
+            <button class="nav-btn active" data-target="view-dashboard"><span>🏠</span><span>Accueil</span></button>
+            <button class="nav-btn" data-target="view-books"><span>📖</span><span>Livres</span></button>
+            <button class="nav-btn" data-target="view-bd"><span>💬</span><span>BD</span></button>
+            <button class="nav-btn" data-target="view-music"><span>🎵</span><span>Musique</span></button>
+            <button class="nav-btn" data-target="view-games"><span>🎲</span><span>Jeux</span></button>
+            <button class="nav-btn" data-target="view-settings"><span>⚙️</span><span>Data</span></button>
+        </nav>
+
+        <main>
+            <section id="view-search" class="view-section">
+                <h3 class="section-title">🔍 Résultats</h3>
+                <div id="list-search" class="grid-container"></div>
+            </section>
+
+            <section id="view-dashboard" class="view-section active">
+                <h3 class="section-title">📊 Mes Statistiques</h3>
+                <div class="stats-grid" id="dashboard-stats"></div>
+                
+                <h3 class="section-title">⏳ Reprise rapide (En cours)</h3>
+                <div id="list-encours" class="grid-container" style="margin-bottom: 30px;"></div>
+
+                <h3 class="section-title">✨ Derniers ajouts</h3>
+                <div id="list-recent" class="grid-container"></div>
+            </section>
+
+            <section id="view-books" class="view-section"><div id="list-books" class="grid-container"></div></section>
+            <section id="view-bd" class="view-section"><div id="list-bd" class="grid-container"></div></section>
+            <section id="view-music" class="view-section"><div id="list-music" class="grid-container"></div></section>
+            <section id="view-games" class="view-section"><div id="list-games" class="grid-container"></div></section>
+            
+            <section id="view-settings" class="view-section">
+                <div class="settings-card">
+                    <h3>☁️ Cloud Sync (GitHub Gist)</h3>
+                    <p style="font-size: 0.9rem; color: var(--text-ink-light); margin-bottom: 15px;">Synchronise ta bibliothèque entre ton PC et ton téléphone.</p>
+                    
+                    <div class="form-group">
+                        <label>Token GitHub (Permissions Gist)</label>
+                        <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+                    </div>
+                    <div class="form-group">
+                        <label>ID du Gist (Fichier Base de données)</label>
+                        <input type="text" id="gh-gist-id" placeholder="Ex: 8a7b6c5d4e3f2a1...">
+                    </div>
+                    
+                    <button class="btn-primary" style="padding: 10px; margin-top: 0; background: var(--text-ink-light);" onclick="saveCloudSettings()">💾 Enregistrer les identifiants</button>
+                    
+                    <div class="data-btns" style="margin-top: 15px;">
+                        <button class="btn-secondary btn-cloud-push" onclick="pushToCloud()">☁️ Envoyer au Cloud (Sauvegarde)</button>
+                        <button class="btn-secondary btn-cloud-pull" onclick="pullFromCloud()">⬇️ Récupérer du Cloud (Mise à jour)</button>
+                    </div>
+                    <p id="cloud-status" class="status-msg"></p>
+                </div>
+
+                <div class="settings-card">
+                    <h3>📦 Secours Local (Import / Export)</h3>
+                    <p style="font-size: 0.9rem; margin-top: 10px; color: var(--text-ink-light);">Sauvegarde manuelle au format tableur (CSV).</p>
+                    <div class="data-btns">
+                        <button class="btn-secondary" onclick="exportToExcel()">💾 Sauver CSV</button>
+                        <button class="btn-secondary" onclick="document.getElementById('import-file').click()">📥 Charger CSV</button>
+                        <input type="file" id="import-file" style="display:none" accept=".csv" onchange="importFromCSV(this)">
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <button id="btn-fab-add">＋</button>
+
+    <dialog id="modal-add">
+        <div class="modal-content">
+            <div class="modal-header"><h3 id="modal-title">Fiche œuvre</h3><button id="btn-close-modal" class="btn-icon">❌</button></div>
+            <form id="form-add">
+                <div class="type-selector">
+                    <label><input type="radio" name="type" value="book" checked><span class="type-btn">📖 Livre</span></label>
+                    <label><input type="radio" name="type" value="bd"><span class="type-btn">💬 BD</span></label>
+                    <label><input type="radio" name="type" value="music"><span class="type-btn">🎵 Musique</span></label>
+                    <label><input type="radio" name="type" value="game"><span class="type-btn">🎲 Jeu</span></label>
+                </div>
+                <div class="form-group"><label>Titre</label><input type="text" id="titre" required></div>
+                <div class="form-row" id="group-tome" style="display: none;">
+                    <div class="form-group"><label>Série</label><input type="text" id="serie"></div>
+                    <div class="form-group"><label>N° Tome</label><input type="text" id="tome"></div>
+                </div>
+                <div class="form-group"><label id="label-createur">Auteur</label><input type="text" id="createur"></div>
+                <div class="form-row">
+                    <div class="form-group"><label>Format</label><select id="format"></select></div>
+                    <div class="form-group"><label>Année</label><input type="number" id="annee"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Tags</label>
+                    <div id="tags-container" class="tags-container"></div>
+                    <input type="text" id="custom-tag-input" class="custom-tag-input" placeholder="+ Tag (Entrée)">
+                </div>
+
+                <div class="form-group"><label>Statut</label><select id="statut" required></select></div>
+                <div id="group-resume" class="form-group" style="display: none;"><label>Résumé / Pitch</label><textarea id="resume" rows="2"></textarea></div>
+                
+                <div id="review-section" class="review-box">
+                    <div class="form-row" style="align-items: center; margin-bottom: 10px;">
+                        <div class="form-group" style="margin:0;">
+                            <label>Note</label>
+                            <div class="star-rating" id="star-rating">
+                                <span data-val="1">★</span><span data-val="2">★</span><span data-val="3">★</span><span data-val="4">★</span><span data-val="5">★</span>
+                            </div>
+                            <input type="hidden" id="note" value="0">
+                        </div>
+                        <div class="form-group" style="flex-direction:row;align-items:center;gap:5px; margin:0; justify-content: flex-end;">
+                            <input type="checkbox" id="coup-de-coeur"><label style="margin:0; cursor:pointer;" for="coup-de-coeur">Favori ❤️</label>
+                        </div>
+                    </div>
+                    <div class="form-group"><label>Commentaire perso</label><textarea id="commentaire" rows="2"></textarea></div>
+                </div>
+                <button type="submit" class="btn-primary" id="btn-submit">Sauvegarder</button>
+            </form>
+        </div>
+    </dialog>
+
+    <dialog id="modal-confirm">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 10px;">Supprimer l'œuvre ?</h3>
+            <p style="color: var(--text-ink-light); font-size: 0.9rem;">Cette action est définitive et l'œuvre sera retirée de ta bibliothèque.</p>
+            <div class="confirm-actions">
+                <button class="btn-cancel" id="btn-cancel-delete">Annuler</button>
+                <button class="btn-danger" id="btn-confirm-delete">Oui, supprimer</button>
+            </div>
+        </div>
+    </dialog>
+
+    <script>
+        // --- ⚙️ LOGIQUE DATA ---
+        let library = JSON.parse(localStorage.getItem('myLibrary')) || [];
+        let cloudConfig = JSON.parse(localStorage.getItem('cloudConfig')) || { token: '', gistId: '' };
+        let editingId = null;
+        let itemToDeleteId = null;
+
+        // Pré-remplir les champs cloud si existants
+        document.getElementById('gh-token').value = cloudConfig.token;
+        document.getElementById('gh-gist-id').value = cloudConfig.gistId;
+
+        const statusConfig = {
+            'lu': { icon: '✅', text: 'Lu/Terminé' }, 'encours': { icon: '⏳', text: 'En cours' }, 'alire': { icon: '📚', text: 'À lire' }, 'abandonne': { icon: '❌', text: 'Abandonné' },
+            'ecoute': { icon: '🎧', text: 'Écouté' }, 'adecouvrir': { icon: '💿', text: 'À découvrir' }, 'joue': { icon: '🎲', text: 'Joué' }, 'atester': { icon: '📦', text: 'À tester' }
+        };
+
+        const uiConfig = {
+            book: { createur: "Auteur", formats: ["Physique", "Dématérialisé"], tags: ["SF", "Fantasy", "Thriller", "Historique", "Essai", "Classique"], statuses: [{val:'lu', text:'✅ Lu'}, {val:'encours', text:'⏳ En cours'}, {val:'alire', text:'📚 À lire'}, {val:'abandonne', text:'❌ Abandonné'}] },
+            bd: { createur: "Auteur / Dessinateur", formats: ["Physique"], tags: ["Franco-Belge", "Comics", "Manga Shonen", "Manga Seinen", "Roman Graphique", "Humour", "Aventure", "SF/Fantasy"], statuses: [{val:'lu', text:'✅ Lu'}, {val:'encours', text:'⏳ En cours'}, {val:'alire', text:'📚 À lire'}, {val:'abandonne', text:'❌ Abandonné'}] },
+            music: { createur: "Artiste", formats: ["CD"], tags: ["Rock/Metal", "Electro", "Hip-Hop", "Jazz/Blues", "Classique", "OST"], statuses: [{val:'ecoute', text:'🎧 Écouté'}, {val:'adecouvrir', text:'💿 À découvrir'}, {val:'abandonne', text:'❌ Déçu/Abandonné'}] },
+            game: { createur: "Auteur / Éditeur", formats: ["Plateau", "Cartes", "Dés", "Figurines", "Autre"], tags: ["Coopératif", "Compétitif", "Gestion", "Deckbuilding", "Bluff", "Narratif", "2 Joueurs", "Familial", "Expert"], statuses: [{val:'joue', text:'🎲 Joué'}, {val:'atester', text:'📦 À tester'}, {val:'abandonne', text:'❌ Revendu/Abandonné'}] }
+        };
+
+        function saveLibrary() {
+            localStorage.setItem('myLibrary', JSON.stringify(library));
+            renderAll();
+        }
+
+        // --- ☁️ CLOUD SYNC (GITHUB GIST) ---
+        function saveCloudSettings() {
+            cloudConfig.token = document.getElementById('gh-token').value.trim();
+            cloudConfig.gistId = document.getElementById('gh-gist-id').value.trim();
+            localStorage.setItem('cloudConfig', JSON.stringify(cloudConfig));
+            const status = document.getElementById('cloud-status');
+            status.style.color = 'var(--color-success)';
+            status.innerText = "✅ Identifiants enregistrés localement.";
+            setTimeout(() => status.innerText = "", 3000);
+        }
+
+        async function pushToCloud() {
+            if(!cloudConfig.token || !cloudConfig.gistId) { alert("Renseigne ton Token et l'ID du Gist d'abord !"); return; }
+            const status = document.getElementById('cloud-status');
+            status.style.color = 'var(--text-ink)'; status.innerText = "⏳ Sauvegarde vers le Cloud en cours...";
+            
+            try {
+                const response = await fetch(`https://api.github.com/gists/${cloudConfig.gistId}`, {
+                    method: 'PATCH',
+                    headers: { 'Authorization': `Bearer ${cloudConfig.token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ files: { 'library.json': { content: JSON.stringify(library) } } })
+                });
+                if(response.ok) {
+                    status.style.color = 'var(--color-success)'; status.innerText = "✅ Succès ! Base de données envoyée sur GitHub.";
+                } else {
+                    status.style.color = 'var(--color-danger)'; status.innerText = `❌ Erreur API : ${response.statusText}`;
+                }
+            } catch(e) { 
+                status.style.color = 'var(--color-danger)'; status.innerText = "❌ Impossible de se connecter à GitHub."; 
+            }
+        }
+
+        async function pullFromCloud() {
+            if(!cloudConfig.token || !cloudConfig.gistId) { alert("Renseigne ton Token et l'ID du Gist d'abord !"); return; }
+            if(!confirm("Attention : Cela va écraser tes données locales avec celles du Cloud. Continuer ?")) return;
+            
+            const status = document.getElementById('cloud-status');
+            status.style.color = 'var(--text-ink)'; status.innerText = "⏳ Téléchargement depuis le Cloud...";
+            
+            try {
+                // Ajout d'un timestamp pour éviter le cache du navigateur
+                const response = await fetch(`https://api.github.com/gists/${cloudConfig.gistId}?t=${Date.now()}`, {
+                    headers: { 'Authorization': `Bearer ${cloudConfig.token}` }
+                });
+                if(response.ok) {
+                    const data = await response.json();
+                    if(data.files['library.json']) {
+                        library = JSON.parse(data.files['library.json'].content);
+                        saveLibrary(); triggerUpdate();
+                        status.style.color = 'var(--color-success)'; status.innerText = "✅ Succès ! Données récupérées et appliquées.";
+                    } else {
+                        status.style.color = 'var(--color-danger)'; status.innerText = "❌ Fichier 'library.json' introuvable dans ce Gist.";
+                    }
+                } else {
+                    status.style.color = 'var(--color-danger)'; status.innerText = `❌ Erreur API : ${response.statusText}`;
+                }
+            } catch(e) { 
+                status.style.color = 'var(--color-danger)'; status.innerText = "❌ Impossible de se connecter à GitHub."; 
+            }
+        }
+
+
+        // --- 🔍 RECHERCHE, FILTRES & TRI ---
+        const activeFilters = { sort: 'date_desc', status: 'all', format: 'all', tag: 'all', favOnly: false };
+
+        function triggerUpdate() {
+            if (document.getElementById('search-input').value.trim() !== '') {
+                document.getElementById('search-input').dispatchEvent(new Event('input'));
+            } else {
+                renderAll();
+            }
+        }
+
+        document.getElementById('btn-toggle-filters').onclick = function() {
+            document.getElementById('filter-panel').classList.toggle('open');
+            this.classList.toggle('active');
+        };
+
+        function updateFilterControls(category) {
+            const sSelect = document.getElementById('filter-status');
+            const fSelect = document.getElementById('filter-format');
+            const tSelect = document.getElementById('filter-tag');
+            
+            sSelect.innerHTML = '<option value="all">Tous</option>';
+            fSelect.innerHTML = '<option value="all">Tous</option>';
+            tSelect.innerHTML = '<option value="all">Tous</option>';
+            
+            const type = { 'view-books':'book', 'view-bd':'bd', 'view-music':'music', 'view-games':'game' }[category];
+            let uniqueTags = new Set();
+            if(type) {
+                uiConfig[type].tags.forEach(t => uniqueTags.add(t));
+                library.filter(i => i.type === type && i.tags).forEach(i => i.tags.forEach(t => uniqueTags.add(t)));
+                
+                uiConfig[type].statuses.forEach(s => sSelect.appendChild(new Option(s.text, s.val)));
+                uiConfig[type].formats.forEach(f => fSelect.appendChild(new Option(f, f)));
+                Array.from(uniqueTags).sort().forEach(t => tSelect.appendChild(new Option(t, t)));
+            }
+        }
+
+        document.getElementById('filter-sort').onchange = (e) => { activeFilters.sort = e.target.value; triggerUpdate(); };
+        document.getElementById('filter-status').onchange = (e) => { activeFilters.status = e.target.value; triggerUpdate(); };
+        document.getElementById('filter-format').onchange = (e) => { activeFilters.format = e.target.value; triggerUpdate(); };
+        document.getElementById('filter-tag').onchange = (e) => { activeFilters.tag = e.target.value; triggerUpdate(); };
+        document.getElementById('filter-fav').onchange = (e) => { activeFilters.favOnly = e.target.checked; triggerUpdate(); };
+
+        document.getElementById('search-input').oninput = function(e) {
+            const term = e.target.value.toLowerCase().trim();
+            if (term === '') { switchView(document.querySelector('.nav-btn.active').dataset.target); return; }
+            switchView('view-search');
+            let data = library.filter(i => 
+                (i.titre||'').toLowerCase().includes(term) || 
+                (i.createur||'').toLowerCase().includes(term) || 
+                (i.serie||'').toLowerCase().includes(term) || 
+                (i.commentaire||'').toLowerCase().includes(term) || 
+                (i.tags||[]).some(t=>t.toLowerCase().includes(term))
+            );
+            renderGrid(processData(data), 'list-search', true);
+        };
+
+        function processData(data) {
+            let res = data.filter(i => {
+                if (activeFilters.status !== 'all' && i.statut !== activeFilters.status) return false;
+                if (activeFilters.format !== 'all' && i.format !== activeFilters.format) return false;
+                if (activeFilters.tag !== 'all' && !(i.tags && i.tags.includes(activeFilters.tag))) return false; 
+                if (activeFilters.favOnly && !i.coupDeCoeur) return false;
+                return true;
+            });
+            res.sort((a,b) => {
+                if (activeFilters.sort === 'date_desc') return b.dateAjout - a.dateAjout;
+                if (activeFilters.sort === 'alpha_asc') return (a.titre||'').localeCompare(b.titre||'');
+                if (activeFilters.sort === 'createur_asc') return (a.createur||'').localeCompare(b.createur||''); 
+                if (activeFilters.sort === 'note_desc') return (b.note||0) - (a.note||0);
+                return 0;
+            });
+            return res;
+        }
+
+        // --- 📐 NAVIGATION ---
+        function switchView(id) {
+            document.querySelectorAll('.view-section').forEach(v => v.classList.toggle('active', v.id === id));
+            if (id !== 'view-search') {
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.target === id));
+                updateFilterControls(id);
+                activeFilters.status = 'all'; activeFilters.format = 'all'; activeFilters.tag = 'all'; 
+                document.getElementById('filter-status').value = 'all';
+                document.getElementById('filter-format').value = 'all';
+                document.getElementById('filter-tag').value = 'all';
+                renderAll();
+            }
+        }
+        document.querySelectorAll('.nav-btn').forEach(btn => btn.onclick = () => {
+            document.getElementById('search-input').value = '';
+            switchView(btn.dataset.target);
+        });
+
+        // --- 💻 FORMULAIRE ---
+        const modal = document.getElementById('modal-add');
+        const form = document.getElementById('form-add');
+        const modalConfirm = document.getElementById('modal-confirm');
+        let selectedTags = [];
+
+        const stars = document.querySelectorAll('#star-rating span');
+        const noteInput = document.getElementById('note');
+        
+        function setStars(val) {
+            noteInput.value = val;
+            stars.forEach(s => { s.style.color = parseInt(s.dataset.val) <= val ? 'var(--color-star)' : '#ccc'; });
+        }
+        stars.forEach(s => { s.onclick = () => setStars(parseInt(s.dataset.val)); });
+
+        function renderTagsUI(type) {
+            const container = document.getElementById('tags-container'); container.innerHTML = '';
+            let allAvailableTags = new Set(uiConfig[type].tags);
+            library.filter(i => i.type === type && i.tags).forEach(i => i.tags.forEach(t => allAvailableTags.add(t)));
+            selectedTags.forEach(t => allAvailableTags.add(t));
+
+            Array.from(allAvailableTags).sort().forEach(t => {
+                const p = document.createElement('span'); p.className = 'tag-pill' + (selectedTags.includes(t)?' active':'');
+                p.textContent = t; 
+                p.onclick = () => { p.classList.toggle('active'); if(selectedTags.includes(t)) selectedTags = selectedTags.filter(x=>x!==t); else selectedTags.push(t); };
+                container.appendChild(p);
+            });
+        }
+
+        document.getElementById('custom-tag-input').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const val = this.value.trim();
+                if (val && !selectedTags.includes(val)) {
+                    selectedTags.push(val);
+                    renderTagsUI(document.querySelector('input[name="type"]:checked').value);
+                }
+                this.value = '';
+            }
+        });
+
+        function updateFormUI(type) {
+            document.getElementById('label-createur').textContent = uiConfig[type].createur;
+            const f = document.getElementById('format'); f.innerHTML = ''; uiConfig[type].formats.forEach(x => f.appendChild(new Option(x,x)));
+            const s = document.getElementById('statut'); s.innerHTML = ''; uiConfig[type].statuses.forEach(x => s.appendChild(new Option(x.text, x.val)));
+            document.getElementById('group-tome').style.display = (type === 'bd') ? 'flex' : 'none';
+            document.getElementById('group-resume').style.display = (type === 'book' || type === 'bd') ? 'flex' : 'none';
+            renderTagsUI(type);
+            updateReviewVisibility();
+        }
+
+        function updateReviewVisibility() {
+            const consumed = ['lu','ecoute','joue','abandonne'].includes(document.getElementById('statut').value);
+            document.getElementById('review-section').style.display = consumed ? 'block' : 'none';
+        }
+        document.getElementById('statut').onchange = updateReviewVisibility;
+
+        document.getElementById('btn-fab-add').onclick = () => {
+            editingId = null; form.reset(); selectedTags = []; setStars(0);
+            document.getElementById('modal-title').textContent = "Nouvelle fiche";
+            document.querySelector('input[name="type"][value="book"]').checked = true;
+            updateFormUI('book');
+            modal.showModal();
+        };
+
+        document.getElementById('btn-close-modal').onclick = () => modal.close();
+        document.querySelectorAll('input[name="type"]').forEach(r => r.onchange = (e) => { selectedTags=[]; updateFormUI(e.target.value); });
+
+        form.onsubmit = (e) => {
+            e.preventDefault();
+            const type = document.querySelector('input[name="type"]:checked').value;
+            const item = {
+                id: editingId || Date.now().toString(), type, titre: document.getElementById('titre').value,
+                createur: document.getElementById('createur').value, serie: document.getElementById('serie').value,
+                tome: document.getElementById('tome').value, format: document.getElementById('format').value,
+                annee: document.getElementById('annee').value, statut: document.getElementById('statut').value,
+                tags: [...selectedTags], resume: document.getElementById('resume').value,
+                note: parseInt(document.getElementById('note').value) || 0, coupDeCoeur: document.getElementById('coup-de-coeur').checked,
+                commentaire: document.getElementById('commentaire').value,
+                dateAjout: editingId ? library.find(i=>i.id===editingId).dateAjout : Date.now()
+            };
+            const idx = library.findIndex(i=>i.id===editingId);
+            if(idx !== -1) library[idx] = item; else library.push(item);
+            saveLibrary(); modal.close(); triggerUpdate();
+        };
+
+        window.editItem = (id) => {
+            const i = library.find(x=>x.id===id); editingId = id;
+            document.getElementById('modal-title').textContent = "Modifier";
+            document.querySelector(`input[name="type"][value="${i.type}"]`).checked = true;
+            selectedTags = [...(i.tags||[])]; updateFormUI(i.type);
+            document.getElementById('titre').value = i.titre||''; document.getElementById('createur').value = i.createur||'';
+            document.getElementById('serie').value = i.serie||''; document.getElementById('tome').value = i.tome||'';
+            document.getElementById('format').value = i.format||''; document.getElementById('annee').value = i.annee||'';
+            document.getElementById('statut').value = i.statut||''; document.getElementById('resume').value = i.resume||'';
+            setStars(i.note || 0); document.getElementById('coup-de-coeur').checked = i.coupDeCoeur||false;
+            document.getElementById('commentaire').value = i.commentaire||'';
+            updateReviewVisibility();
+            modal.showModal();
+        };
+
+        window.deleteItem = (id) => { itemToDeleteId = id; modalConfirm.showModal(); };
+        document.getElementById('btn-cancel-delete').onclick = () => { itemToDeleteId = null; modalConfirm.close(); };
+        document.getElementById('btn-confirm-delete').onclick = () => {
+            if(itemToDeleteId) { library = library.filter(x => x.id !== itemToDeleteId); saveLibrary(); triggerUpdate(); }
+            itemToDeleteId = null; modalConfirm.close();
+        };
+
+        // --- 🎨 RENDU ---
+        function createCard(i, search = false) {
+            const s = statusConfig[i.statut] || {icon:'?', text:'-'};
+            const icons = {book:'📖', bd:'💬', music:'🎵', game:'🎲'};
+            const consumed = ['lu','ecoute','joue'].includes(i.statut);
+            
+            const MAX_TAGS = 2; const safeTags = i.tags || []; let tagsHtml = '';
+            
+            safeTags.forEach((t, index) => {
+                const hiddenClass = index >= MAX_TAGS ? `extra-tag-${i.id}` : '';
+                const displayStyle = index >= MAX_TAGS ? 'display: none;' : 'display: inline-block;';
+                tagsHtml += `<span class="badge ${hiddenClass}" style="${displayStyle}">${t}</span>`;
+            });
+            
+            if (safeTags.length > MAX_TAGS) {
+                const extraCount = safeTags.length - MAX_TAGS;
+                tagsHtml += `<span class="badge" id="btn-expand-${i.id}" style="background: transparent; border: 1px dashed var(--accent-wood); color: var(--accent-wood); cursor: pointer; transition: 0.2s;" onclick="document.querySelectorAll('.extra-tag-${i.id}').forEach(el => el.style.display='inline-block'); this.style.display='none';">+${extraCount}</span>`;
+            }
+
+            const card = document.createElement('div'); card.className = 'card';
+            card.innerHTML = `
+                <div class="card-header">
+                    <div class="card-title-group">
+                        <div class="card-title">${search?icons[i.type]+' ':''}${i.serie?i.serie+' - ':''}${i.titre} ${i.coupDeCoeur?'❤️':''}</div>
+                        <div class="card-creator">${i.createur || ''}</div>
+                    </div>
+                    <div class="card-status-group">
+                        <span class="badge badge-status ${consumed?'consumed':''}" style="${consumed?'':'background:#eee'}">${s.icon} ${s.text}</span>
+                        <div class="card-actions">
+                            <button class="action-btn" onclick="editItem('${i.id}')">✏️</button>
+                            <button class="action-btn delete" onclick="deleteItem('${i.id}')">🗑️</button>
+                        </div>
+                    </div>
+                </div>
+                <div style="flex:1;"></div>
+                ${i.note > 0 ? `<div style="color:var(--color-star);font-size:1.1rem;margin:8px 0; letter-spacing: 2px;">${'★'.repeat(i.note)}${'☆'.repeat(5-i.note)}</div>`:''}
+                <div class="card-meta"><span class="badge" style="background:#ddd">${i.format}</span>${tagsHtml}</div>
+            `;
+            return card;
+        }
+
+        function renderGrid(data, containerId, search = false) {
+            const c = document.getElementById(containerId); c.innerHTML = '';
+            if(data.length === 0) { c.innerHTML = '<p style="grid-column:1/-1;color:var(--text-ink-light);padding:10px;">Rien à afficher ici.</p>'; return; }
+            data.forEach(i => c.appendChild(createCard(i, search)));
+        }
+
+        function renderDashboard() {
+            const statsContainer = document.getElementById('dashboard-stats');
+            const stats = { book: { total: 0, lu: 0, encours: 0, alire: 0, abandonne: 0, title: '📖 Livres' }, bd: { total: 0, lu: 0, encours: 0, alire: 0, abandonne: 0, title: '💬 BD/Mangas' }, music: { total: 0, ecoute: 0, adecouvrir: 0, abandonne: 0, title: '🎵 Musique' }, game: { total: 0, joue: 0, atester: 0, abandonne: 0, title: '🎲 Jeux' } };
+
+            library.forEach(i => { if (stats[i.type]) { stats[i.type].total++; if (stats[i.type][i.statut] !== undefined) stats[i.type][i.statut]++; }});
+            
+            statsContainer.innerHTML = '';
+            Object.keys(stats).forEach(k => {
+                const s = stats[k]; if (s.total === 0) return;
+                let detailHtml = '';
+                if(k === 'book' || k === 'bd') detailHtml = `<div>✅ ${s.lu} terminés</div><div>⏳ ${s.encours} en cours</div><div>📚 ${s.alire} à faire</div><div>❌ ${s.abandonne} ab.</div>`;
+                else if(k === 'music') detailHtml = `<div>🎧 ${s.ecoute} écoutés</div><div>💿 ${s.adecouvrir} à déc.</div><div>❌ ${s.abandonne} déçus</div>`;
+                else if(k === 'game') detailHtml = `<div>🎲 ${s.joue} joués</div><div>📦 ${s.atester} à test.</div><div>❌ ${s.abandonne} ab.</div>`;
+
+                statsContainer.innerHTML += `<div class="stat-card"><div class="stat-main"><span>${s.total}</span> <span style="font-size:1rem; color:var(--text-ink)">${s.title}</span></div><div class="stat-details">${detailHtml}</div></div>`;
+            });
+            if(statsContainer.innerHTML === '') statsContainer.innerHTML = '<p style="color:var(--text-ink-light);">Ta collection est vide pour le moment.</p>';
+
+            renderGrid(library.filter(i => i.statut === 'encours'), 'list-encours', true);
+            renderGrid([...library].sort((a,b) => b.dateAjout - a.dateAjout).slice(0, 4), 'list-recent', true);
+        }
+
+        function renderAll() {
+            renderDashboard();
+            const maps = { book:'list-books', bd:'list-bd', music:'list-music', game:'list-games' };
+            Object.keys(maps).forEach(k => renderGrid(processData(library.filter(i=>i.type===k)), maps[k]));
+        }
+
+        // --- 💾 EXPORT/IMPORT BLINDÉ ---
+        function exportToExcel() {
+            let csv = "\ufeffType;Titre;Série;Tome;Créateur;Format;Année;Statut;Tags;Note;Coup de coeur;Commentaire\n";
+            library.forEach(i => {
+                const q = (s) => `"${(s||"").toString().replace(/"/g, '""')}"`;
+                csv += `${i.type};${q(i.titre)};${q(i.serie)};${q(i.tome)};${q(i.createur)};${q(i.format)};${i.annee||''};${i.statut};${q((i.tags||[]).join(','))};${i.note||0};${i.coupDeCoeur};${q(i.commentaire)}\n`;
+            });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8'}));
+            a.download = `Bibliotheque_${new Date().toISOString().split('T')[0]}.csv`; a.click();
+        }
+
+        function parseCSVLine(text) {
+            let ret = [], keep = false, cur = '';
+            for(let i=0; i<text.length; i++) {
+                let c = text[i];
+                if(c === '"') keep = !keep;
+                else if(c === ';' && !keep) { ret.push(cur); cur = ''; }
+                else cur += c;
+            }
+            ret.push(cur);
+            return ret.map(s => s.trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
+        }
+
+        function importFromCSV(input) {
+            const f = input.files[0]; if(!f) return;
+            const r = new FileReader(); r.onload = (e) => {
+                const lines = e.target.result.split('\n'); const added = [];
+                for(let i=1; i<lines.length; i++) {
+                    if(!lines[i].trim()) continue;
+                    const c = parseCSVLine(lines[i]); if(c.length < 2) continue;
+                    added.push({ 
+                        id: Date.now().toString() + i, type: c[0] || 'book', titre: c[1], serie: c[2], tome: c[3], createur: c[4], 
+                        format: c[5], annee: c[6], statut: c[7], tags: c[8] ? c[8].split(',') : [], note: parseInt(c[9]) || 0, 
+                        coupDeCoeur: c[10] === 'true', commentaire: c[11], dateAjout: Date.now() 
+                    });
+                }
+                if(confirm(`Importer ${added.length} items ?`)) { library=[...library,...added]; saveLibrary(); triggerUpdate(); }
+            }; r.readAsText(f);
+        }
+
+        updateFilterControls('view-books');
+        renderAll();
+    </script>
+</body>
+</html>
