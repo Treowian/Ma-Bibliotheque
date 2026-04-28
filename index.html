@@ -377,7 +377,7 @@
             } catch(e) { status.style.color = 'var(--color-danger)'; status.innerText = "❌ Erreur de connexion."; }
         }
 
-        // --- ✨ GENERATION IA (MODE DIAGNOSTIC) ---
+        // --- ✨ GENERATION IA (MODE AUTO-DETECTEUR) ---
         document.getElementById('btn-ai-summary').onclick = async () => {
             const titre = document.getElementById('titre').value.trim();
             const createur = document.getElementById('createur').value.trim();
@@ -386,21 +386,41 @@
             if(!titre) return alert("Il me faut au moins un titre pour générer un résumé !");
             if(!cloudConfig.geminiKey) {
                 alert("Il manque ta clé API Gemini. Va dans l'onglet ⚙️ Data pour l'ajouter.");
-                switchView('view-settings');
-                document.getElementById('btn-close-modal').click();
                 return;
             }
 
             const resumeField = document.getElementById('resume');
-            resumeField.value = "⏳ L'IA réfléchit (Mode Diagnostic)...";
+            resumeField.value = "⏳ Recherche du modèle IA autorisé pour ton compte...";
             resumeField.disabled = true;
 
             const prompt = `Tu es un expert culturel. Rédige un pitch/résumé de présentation pour : "${titre}" de "${createur}" (Catégorie: ${typeLabel}). 
-            Règles strictes : Sois concis (3 ou 4 phrases maximum). Sois accrocheur. Ne révèle AUCUN spoiler sur la fin. Ne fais aucune phrase d'introduction ou de conclusion, donne uniquement le résumé direct.`;
+            Règles strictes : Sois concis (3 ou 4 phrases maximum). Sois accrocheur. Ne révèle AUCUN spoiler sur la fin. Ne fais aucune phrase d'intro, donne uniquement le résumé direct.`;
 
             try {
-                // On utilise le modèle standard le plus stable
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${cloudConfig.geminiKey}`, {
+                // 1. ÉTAPE RADAR : On demande à Google les modèles auxquels tu as accès
+                const modelsReq = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${cloudConfig.geminiKey}`);
+                const modelsData = await modelsReq.json();
+                
+                if (!modelsReq.ok) {
+                    resumeField.value = `❌ ERREUR CLÉ : ${modelsData.error.message}`;
+                    resumeField.disabled = false;
+                    return;
+                }
+
+                // On fouille dans la liste pour trouver le premier modèle Gemini capable de générer du texte
+                const validModel = modelsData.models.find(m => m.name.includes('gemini') && m.supportedGenerationMethods.includes('generateContent'));
+                
+                if (!validModel) {
+                    resumeField.value = "❌ Aucun modèle de texte autorisé n'a été trouvé pour cette clé.";
+                    resumeField.disabled = false;
+                    return;
+                }
+
+                // On a trouvé le bon modèle ! On prévient l'utilisateur.
+                resumeField.value = `⏳ Modèle autorisé trouvé (${validModel.name.replace('models/', '')}). Génération en cours...`;
+
+                // 2. ÉTAPE GÉNÉRATION : On fait la requête avec le nom du modèle exact trouvé
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/${validModel.name}:generateContent?key=${cloudConfig.geminiKey}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
@@ -408,11 +428,9 @@
                 
                 const data = await response.json();
                 
-                // 🛑 C'EST ICI LA MAGIE : On intercepte l'erreur exacte de Google
                 if (!response.ok) {
-                    resumeField.value = `❌ ERREUR GOOGLE (${response.status}) :\n${data.error ? data.error.message : 'Erreur inconnue'}`;
-                } 
-                else if(data.candidates && data.candidates.length > 0) {
+                    resumeField.value = `❌ ERREUR GOOGLE : ${data.error.message}`;
+                } else if(data.candidates && data.candidates.length > 0) {
                     resumeField.value = data.candidates[0].content.parts[0].text.trim();
                 } else {
                     resumeField.value = "❌ L'IA a répondu mais le texte est vide.";
