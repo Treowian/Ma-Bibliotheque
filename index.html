@@ -377,7 +377,7 @@
             } catch(e) { status.style.color = 'var(--color-danger)'; status.innerText = "❌ Erreur de connexion."; }
         }
 
-        // --- ✨ GENERATION IA (GEMINI) ---
+        // --- ✨ GENERATION IA (MODE DIAGNOSTIC) ---
         document.getElementById('btn-ai-summary').onclick = async () => {
             const titre = document.getElementById('titre').value.trim();
             const createur = document.getElementById('createur').value.trim();
@@ -392,27 +392,33 @@
             }
 
             const resumeField = document.getElementById('resume');
-            resumeField.value = "⏳ L'IA réfléchit...";
+            resumeField.value = "⏳ L'IA réfléchit (Mode Diagnostic)...";
             resumeField.disabled = true;
 
             const prompt = `Tu es un expert culturel. Rédige un pitch/résumé de présentation pour : "${titre}" de "${createur}" (Catégorie: ${typeLabel}). 
             Règles strictes : Sois concis (3 ou 4 phrases maximum). Sois accrocheur. Ne révèle AUCUN spoiler sur la fin. Ne fais aucune phrase d'introduction ou de conclusion, donne uniquement le résumé direct.`;
 
             try {
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${cloudConfig.geminiKey}`, {
+                // On utilise le modèle standard le plus stable
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${cloudConfig.geminiKey}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
                 });
                 
                 const data = await response.json();
-                if(data.candidates && data.candidates.length > 0) {
+                
+                // 🛑 C'EST ICI LA MAGIE : On intercepte l'erreur exacte de Google
+                if (!response.ok) {
+                    resumeField.value = `❌ ERREUR GOOGLE (${response.status}) :\n${data.error ? data.error.message : 'Erreur inconnue'}`;
+                } 
+                else if(data.candidates && data.candidates.length > 0) {
                     resumeField.value = data.candidates[0].content.parts[0].text.trim();
                 } else {
-                    resumeField.value = "❌ L'IA n'a pas pu générer le résumé. Vérifie ta clé API.";
+                    resumeField.value = "❌ L'IA a répondu mais le texte est vide.";
                 }
             } catch(error) {
-                resumeField.value = "❌ Erreur de connexion au serveur IA.";
+                resumeField.value = `❌ ERREUR RÉSEAU :\n${error.message}`;
             }
             resumeField.disabled = false;
         };
