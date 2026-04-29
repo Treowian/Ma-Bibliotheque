@@ -28,7 +28,7 @@
         #app-container { max-width: 900px; margin: 0 auto; padding: 20px; }
         header { text-align: center; margin-bottom: 20px; }
 
-        /* 🔍 Recherche Globale */
+        /* 🔍 Recherche Globale Fixe */
         .search-area { position: sticky; top: 0; z-index: 80; background: var(--bg-parchment); padding-bottom: 10px; margin-bottom: 20px; }
         .search-header { display: flex; gap: 8px; align-items: center; width: 100%; }
         .search-container { position: relative; flex: 1; min-width: 0; }
@@ -81,14 +81,17 @@
         .top-list li { margin-bottom: 3px; }
 
         /* Barre Oracle Flottante */
-        #oracle-bar { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #a8c0ff, #3f2b96); color: white; padding: 12px 25px; border-radius: 30px; display: none; align-items: center; gap: 15px; z-index: 90; box-shadow: 0 8px 20px rgba(63, 43, 150, 0.4); white-space: nowrap; font-weight: bold; cursor: pointer; transition: 0.2s;}
+        #oracle-bar { position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #a8c0ff, #3f2b96); color: white; padding: 12px 25px; border-radius: 30px; display: none; align-items: center; gap: 15px; z-index: 90; box-shadow: 0 8px 20px rgba(63, 43, 150, 0.4); white-space: nowrap; font-weight: bold; cursor: pointer; transition: 0.2s;}
         #oracle-bar:hover { transform: translateX(-50%) scale(1.05); }
         @media (min-width: 768px) { #oracle-bar { bottom: 30px; } }
 
-        /* Modales */
-        #btn-fab-add { position: fixed; bottom: 85px; right: 20px; width: 60px; height: 60px; border-radius: 50%; background-color: var(--accent-wood); color: #fff; font-size: 1.8rem; border: none; box-shadow: 0 6px 16px rgba(140, 90, 64, 0.4); cursor: pointer; z-index: 110; display: flex; align-items: center; justify-content: center; }
+        /* Bouton Ajouter (+) */
+        #btn-fab-add { position: fixed; bottom: 85px; right: 20px; width: 60px; height: 60px; border-radius: 50%; background-color: var(--accent-wood); color: #fff; font-size: 1.8rem; border: none; box-shadow: 0 6px 16px rgba(140, 90, 64, 0.4); cursor: pointer; z-index: 110; display: flex; align-items: center; justify-content: center; transition: 0.3s opacity, 0.3s transform; }
         @media (min-width: 768px) { #btn-fab-add { bottom: 40px; right: 40px; } }
+        /* Classe pour masquer doucement le bouton + */
+        #btn-fab-add.hidden-fab { opacity: 0; transform: scale(0) rotate(90deg); pointer-events: none; }
         
+        /* Modales */
         dialog { margin: auto; border: none; border-radius: 12px; background-color: var(--bg-parchment); width: 95%; max-width: 600px; padding: 0; box-shadow: 0 10px 40px rgba(0,0,0,0.4); }
         dialog::backdrop { background: rgba(20, 15, 10, 0.7); } 
         .modal-content { padding: 25px; max-height: 90vh; overflow-y: auto; position: relative; }
@@ -211,6 +214,7 @@
             <section id="view-games" class="view-section"><div id="list-games" class="grid-container"></div></section>
             
             <section id="view-settings" class="view-section">
+                
                 <div class="settings-card" style="background: transparent; border: none; padding: 0; box-shadow: none;">
                     <h3 class="section-title" style="margin-top:0;">📊 Mes Statistiques</h3>
                     <div class="stats-grid" id="dashboard-stats"></div>
@@ -241,8 +245,8 @@
                     <div class="form-group"><label>ID du Gist</label><input type="text" id="gh-gist-id" placeholder="Ex: 8a7b6c5d..."></div>
                     <button class="btn-primary" style="padding: 10px; margin-top: 0; background: var(--text-ink-light);" onclick="saveCloudSettings()">💾 Enregistrer toutes les clés</button>
                     <div class="data-btns" style="margin-top: 15px;">
-                        <button class="btn-secondary" style="background: var(--accent-wood); color: #fff; border:none;" onclick="pushToCloud()">☁️ Envoyer</button>
-                        <button class="btn-secondary" style="background: var(--color-success); color: #fff; border:none;" onclick="pullFromCloud()">⬇️ Récupérer</button>
+                        <button class="btn-secondary" style="background: var(--accent-wood); color: #fff; border:none;" onclick="pushToCloud()">☁️ Envoyer au Cloud</button>
+                        <button class="btn-secondary" style="background: var(--color-success); color: #fff; border:none;" onclick="pullFromCloud()">⬇️ Récupérer du Cloud</button>
                     </div>
                     <p id="cloud-status" class="status-msg"></p>
                 </div>
@@ -378,9 +382,16 @@
 
         // --- 🪄 ORACLE IA ---
         document.getElementById('btn-toggle-oracle').onclick = function() {
-            isOracleMode = !isOracleMode; this.classList.toggle('active'); selectedForOracle = [];
+            isOracleMode = !isOracleMode; 
+            this.classList.toggle('active'); 
+            selectedForOracle = [];
             document.getElementById('oracle-bar').style.display = isOracleMode ? 'flex' : 'none';
-            document.getElementById('oracle-count').innerText = 0; renderAll(); 
+            // Masquer ou afficher le bouton +
+            if(isOracleMode) document.getElementById('btn-fab-add').classList.add('hidden-fab');
+            else document.getElementById('btn-fab-add').classList.remove('hidden-fab');
+            
+            document.getElementById('oracle-count').innerText = 0; 
+            renderAll(); 
         };
 
         function toggleCardSelection(id, cardElement) {
@@ -471,7 +482,7 @@
             try { 
                 const r = await fetch(`https://api.github.com/gists/${cloudConfig.gistId}`, { method: 'PATCH', headers: { 'Authorization': `Bearer ${cloudConfig.token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ files: { 'library.json': { content: JSON.stringify(library) } } }) });
                 const d = await r.json().catch(()=>null);
-                if(r.ok) status.innerText = "✅ Sauvegardé."; else status.innerText = `❌ Erreur GitHub: ${d ? d.message : r.status}`;
+                if(r.ok) status.innerText = "✅ Sauvegardé."; else status.innerText = `❌ Erreur GitHub (Vérifiez la case "gist" du Token): ${d ? d.message : r.status}`;
             } catch(e) { status.innerText = "❌ Échec de la connexion."; }
         }
         async function pullFromCloud() {
@@ -480,7 +491,7 @@
             try { 
                 const r = await fetch(`https://api.github.com/gists/${cloudConfig.gistId}?t=${Date.now()}`, { headers: { 'Authorization': `Bearer ${cloudConfig.token}` } });
                 const d = await r.json().catch(()=>null);
-                if(!r.ok) { status.innerText = `❌ Erreur GitHub: ${d ? d.message : r.status}`; return; }
+                if(!r.ok) { status.innerText = `❌ Erreur GitHub (Vérifiez la case "gist" du Token): ${d ? d.message : r.status}`; return; }
                 if(!d.files) { status.innerText = "❌ Gist invalide ou vide."; return; }
                 const fKey = Object.keys(d.files).find(k => k.endsWith('.json'));
                 if(fKey && d.files[fKey]) { 
