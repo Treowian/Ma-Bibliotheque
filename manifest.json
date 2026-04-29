@@ -1,0 +1,17 @@
+{
+  "name": "Ma Bibliothèque",
+  "short_name": "Biblio",
+  "description": "Assistant culturel personnel et gestion de collection.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#2C251F",
+  "theme_color": "#2C251F",
+  "icons": [
+    {
+      "src": "icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
