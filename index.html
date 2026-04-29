@@ -28,10 +28,10 @@
         #app-container { max-width: 900px; margin: 0 auto; padding: 20px; }
         header { text-align: center; margin-bottom: 20px; }
 
-        /* 🔍 Recherche Globale Fixe (Corrigée pour Mobile) */
+        /* 🔍 Recherche Globale */
         .search-area { position: sticky; top: 0; z-index: 80; background: var(--bg-parchment); padding-bottom: 10px; margin-bottom: 20px; }
         .search-header { display: flex; gap: 8px; align-items: center; width: 100%; }
-        .search-container { position: relative; flex: 1; min-width: 0; /* Essentiel pour mobile */ }
+        .search-container { position: relative; flex: 1; min-width: 0; }
         #search-input { width: 100%; padding: 10px 15px 10px 40px; border: 2px solid var(--bg-parchment-dark); border-radius: 25px; font-size: 0.95rem; background: #fff; transition: 0.2s; color: var(--text-ink); }
         #search-input:focus { outline: none; border-color: var(--accent-wood); }
         .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 1.1rem; pointer-events: none;}
@@ -111,7 +111,6 @@
         label { font-weight: 600; font-size: 0.85rem; margin-bottom: 4px; color: var(--text-ink-light); }
         input, select, textarea { padding: 10px; border: 1px solid var(--bg-parchment-dark); border-radius: 8px; font-family: var(--font-body); font-size: 0.95rem; background: #fff; }
         
-        /* Boutons Radios & Tags */
         .type-selector { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 15px; }
         .type-selector label { flex: 1; min-width: 80px; cursor: pointer; }
         .type-selector input { display: none; }
@@ -123,12 +122,10 @@
         .tag-pill.active { background: var(--accent-wood); color: #fff; border-color: var(--accent-wood); }
         .custom-tag-input { border: 1px dashed var(--accent-wood); background: transparent; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; outline: none; width: 150px; color: var(--text-ink);}
         
-        /* Etoiles */
         .star-rating { display: flex; gap: 5px; font-size: 1.5rem; cursor: pointer; color: #ccc; }
         .star-rating span { transition: color 0.2s; }
         .star-rating span:hover, .star-rating span.active { color: var(--color-star); }
 
-        /* Boutons d'action */
         .btn-ai { background: linear-gradient(135deg, #a8c0ff, #3f2b96); color: white; border: none; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .btn-ai:hover { opacity: 0.9; transform: scale(1.05); }
 
@@ -139,7 +136,6 @@
         .view-section { display: none; }
         .view-section.active { display: block; }
         
-        /* Settings & Cloud */
         .settings-card { background: #fff; padding: 25px; border-radius: 12px; border: 1px solid var(--bg-parchment-dark); margin-bottom: 20px; }
         .data-btns { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px; }
         .btn-secondary { padding: 10px 15px; border: 2px solid var(--accent-wood); color: var(--accent-wood); background: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-family: var(--font-body); flex: 1; text-align: center;}
@@ -215,7 +211,6 @@
             <section id="view-games" class="view-section"><div id="list-games" class="grid-container"></div></section>
             
             <section id="view-settings" class="view-section">
-                
                 <div class="settings-card" style="background: transparent; border: none; padding: 0; box-shadow: none;">
                     <h3 class="section-title" style="margin-top:0;">📊 Mes Statistiques</h3>
                     <div class="stats-grid" id="dashboard-stats"></div>
@@ -259,6 +254,7 @@
                         <button class="btn-secondary" onclick="document.getElementById('import-file').click()">📥 Charger CSV</button>
                         <input type="file" id="import-file" style="display:none" accept=".csv" onchange="importFromCSV(this)">
                     </div>
+                    <button class="btn-danger" style="width: 100%; margin-top: 20px; font-size: 0.85rem;" onclick="if(confirm('🚨 ATTENTION : Cela va effacer les données de CE navigateur. (Aucun impact sur le Cloud). Confirmer ?')){localStorage.removeItem('myLibrary'); location.reload();}">⚠️ Réinitialiser l'application (Vider le cache)</button>
                 </div>
             </section>
         </main>
@@ -347,9 +343,17 @@
     </dialog>
 
     <script>
-        // --- ⚙️ LOGIQUE DATA ---
-        let library = JSON.parse(localStorage.getItem('myLibrary')) || [];
-        let cloudConfig = JSON.parse(localStorage.getItem('cloudConfig')) || { token: '', gistId: '', geminiKey: '' };
+        // --- ⚙️ LOGIQUE DATA (BLINDÉE CONTRE LES CRASHES) ---
+        let library = [];
+        try {
+            const stored = JSON.parse(localStorage.getItem('myLibrary'));
+            if(Array.isArray(stored)) library = stored;
+            else if(stored) console.warn("Données locales ignorées car format invalide.");
+        } catch(e) { console.error("Erreur de lecture du localStorage."); }
+
+        let cloudConfig = { token: '', gistId: '', geminiKey: '' };
+        try { const c = JSON.parse(localStorage.getItem('cloudConfig')); if(c) cloudConfig = c; } catch(e) {}
+
         let editingId = null;
         let isOracleMode = false;
         let selectedForOracle = [];
@@ -372,14 +376,11 @@
 
         function saveLibrary() { localStorage.setItem('myLibrary', JSON.stringify(library)); renderAll(); }
 
-        // --- 🪄 ORACLE IA & SELECTION ---
+        // --- 🪄 ORACLE IA ---
         document.getElementById('btn-toggle-oracle').onclick = function() {
-            isOracleMode = !isOracleMode;
-            this.classList.toggle('active');
-            selectedForOracle = [];
+            isOracleMode = !isOracleMode; this.classList.toggle('active'); selectedForOracle = [];
             document.getElementById('oracle-bar').style.display = isOracleMode ? 'flex' : 'none';
-            document.getElementById('oracle-count').innerText = 0;
-            renderAll(); 
+            document.getElementById('oracle-count').innerText = 0; renderAll(); 
         };
 
         function toggleCardSelection(id, cardElement) {
@@ -390,44 +391,36 @@
         }
 
         async function askOracle() {
-            if(selectedForOracle.length === 0) return alert("Sélectionne au moins 1 œuvre pour inspirer l'Oracle !");
+            if(selectedForOracle.length === 0) return alert("Sélectionne au moins 1 œuvre !");
             if(!cloudConfig.geminiKey) return alert("Clé API Gemini manquante dans Paramètres.");
 
             const modal = document.getElementById('modal-oracle');
             const resultBox = document.getElementById('oracle-result');
             modal.showModal();
-            resultBox.innerText = "⏳ L'IA fouille ta bibliothèque et connecte les neurones...";
+            resultBox.innerText = "⏳ L'IA fouille ta bibliothèque...";
 
-            const inspirateurs = selectedForOracle.map(id => { const i = library.find(x=>x.id===id); return `${i.titre} de ${i.createur} (${i.tags?i.tags.join(', '):''})`; }).join(" | ");
-            const palObjects = library.filter(i => ['alire', 'adecouvrir', 'atester'].includes(i.statut));
-            const palList = palObjects.map(i => `${i.titre} de ${i.createur}`).join(" | ");
+            const inspirateurs = selectedForOracle.map(id => { const i = library.find(x=>x.id===id); return `${i.titre} de ${i.createur}`; }).join(" | ");
+            const palList = library.filter(i => ['alire', 'adecouvrir', 'atester'].includes(i.statut)).map(i => `${i.titre} de ${i.createur}`).join(" | ");
 
-            const prompt = `Tu es l'Oracle d'une bibliothèque. L'utilisateur a sélectionné ces œuvres qu'il aime : [ ${inspirateurs} ].
-            Sa Pile à Lire/Découvrir actuelle contient : [ ${palList || "Rien pour le moment"} ].
-            
-            Propose EXACTEMENT DEUX (2) recommandations au total, pas une de plus :
-            1. PIOCHE : Une œuvre à choisir EN PRIORITÉ dans sa Pile à Lire (explique le lien avec ses sélections). Si sa PAL est vide, dis-le gentiment.
-            2. DÉCOUVERTE : Une œuvre EXTERNE (Livre, BD ou Jeu) qu'il ne possède pas, qui correspond parfaitement à l'ambiance des œuvres sélectionnées.
-            
-            Structure ta réponse clairement avec des retours à la ligne. Ne dis pas "bonjour" ou "voici". Sois direct, immersif et passionné.`;
+            const prompt = `Tu es l'Oracle d'une bibliothèque. L'utilisateur aime : [ ${inspirateurs} ]. Sa Pile à Lire contient : [ ${palList || "Rien"} ].
+            Fais EXACTEMENT 2 recommandations claires et argumentées :
+            1. PIOCHE : Une œuvre à choisir dans sa Pile à Lire (Si vide, dis-le).
+            2. DÉCOUVERTE : Une nouveauté externe (Livre, BD ou Jeu) qu'il ne possède pas.`;
 
             try {
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${cloudConfig.geminiKey}`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                const req = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${cloudConfig.geminiKey}`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
                 });
-                const data = await response.json();
+                const data = await req.json();
                 if(data.candidates) {
-                    let finalTxt = data.candidates[0].content.parts[0].text.trim().replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
-                    resultBox.innerHTML = finalTxt;
-                } else resultBox.innerText = "❌ L'Oracle est muet. Erreur de l'IA.";
+                    resultBox.innerHTML = data.candidates[0].content.parts[0].text.trim().replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+                } else resultBox.innerText = `❌ Erreur : ${data.error ? data.error.message : 'inconnue'}`;
             } catch(e) { resultBox.innerText = "❌ Erreur de connexion à l'Oracle."; }
         }
 
-        // --- 📖 VUE LECTURE SEULE ---
+        // --- 📖 VUE & IA RESUME ---
         function viewItem(id) {
-            const i = library.find(x => x.id === id);
-            const s = statusConfig[i.statut];
+            const i = library.find(x => x.id === id); const s = statusConfig[i.statut];
             document.getElementById('view-titre').textContent = `${i.serie ? i.serie + ' - ' : ''}${i.titre}`;
             document.getElementById('view-createur').textContent = i.createur || 'Inconnu';
             
@@ -436,36 +429,24 @@
             if(i.coupDeCoeur) metaHtml += `<span class="badge" style="background:var(--color-danger); color:white;">❤️ Coup de coeur</span>`;
             (i.tags || []).forEach(t => metaHtml += `<span class="badge" style="background:#fff; border:1px solid #ddd;">${t}</span>`);
             document.getElementById('view-meta').innerHTML = metaHtml;
-            
             document.getElementById('view-stars').innerHTML = i.note > 0 ? '★'.repeat(i.note) + '☆'.repeat(5-i.note) : '';
             
-            const resBox = document.getElementById('view-resume');
-            resBox.style.display = i.resume ? 'block' : 'none';
-            resBox.textContent = i.resume || '';
-
-            const comBox = document.getElementById('view-comment');
-            comBox.style.display = i.commentaire ? 'block' : 'none';
-            comBox.textContent = i.commentaire || '';
+            document.getElementById('view-resume').style.display = i.resume ? 'block' : 'none'; document.getElementById('view-resume').textContent = i.resume || '';
+            document.getElementById('view-comment').style.display = i.commentaire ? 'block' : 'none'; document.getElementById('view-comment').textContent = i.commentaire || '';
 
             document.getElementById('btn-edit-from-view').onclick = () => { document.getElementById('modal-view').close(); editItem(id); };
             document.getElementById('btn-delete-from-view').onclick = () => { if(confirm('Supprimer cette œuvre ?')) { library = library.filter(x=>x.id!==id); saveLibrary(); document.getElementById('modal-view').close(); } };
-
             document.getElementById('modal-view').showModal();
         }
 
-        // --- ✨ GENERATION IA (RESUME) ---
         document.getElementById('btn-ai-summary').onclick = async () => {
             const titre = document.getElementById('titre').value.trim(); const createur = document.getElementById('createur').value.trim();
-            if(!titre) return alert("Il me faut au moins un titre !"); if(!cloudConfig.geminiKey) return alert("Clé API Gemini manquante.");
+            if(!titre) return alert("Titre requis !"); if(!cloudConfig.geminiKey) return alert("Clé API manquante.");
             const res = document.getElementById('resume'); const com = document.getElementById('commentaire');
-            res.value = "⏳ L'IA rédige la 4e de couverture..."; res.disabled = true;
+            res.value = "⏳ Génération..."; res.disabled = true;
             
-            const prompt = `Tu es assistant d'une bibliothèque. Fiche pour : "${titre}" de "${createur}".
-Renvoie EXACTEMENT ce JSON, sans markdown (pas de balise \`\`\`json) :
-{
-  "resume": "Pitch façon 4e de couverture. 3-4 phrases max. Accrocheur, imprégné du style de l'auteur si connu. AUCUN SPOILER.",
-  "anecdote": "Un fun fact court sur la création (ou chaîne vide)."
-}`;
+            const prompt = `Fiche pour : "${titre}" de "${createur}". Renvoie EXACTEMENT ce JSON brut :
+            { "resume": "Pitch 4e de couverture. 3 phrases max.", "anecdote": "Un fun fact (ou vide)." }`;
             try {
                 const req = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${cloudConfig.geminiKey}`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
@@ -473,171 +454,94 @@ Renvoie EXACTEMENT ce JSON, sans markdown (pas de balise \`\`\`json) :
                 const data = await req.json();
                 if(data.candidates) {
                     let raw = data.candidates[0].content.parts[0].text.replace(/```json/gi, '').replace(/```/g, '').trim();
-                    try { const ia = JSON.parse(raw); res.value = ia.resume || "Introuvable."; if(ia.anecdote) com.value = (com.value ? com.value+"\n\n" : "") + "💡 " + ia.anecdote; } 
-                    catch(e) { res.value = "❌ Erreur JSON IA : " + raw; }
-                } else res.value = "❌ Erreur IA.";
+                    try { const ia = JSON.parse(raw); res.value = ia.resume || "Introuvable."; if(ia.anecdote) com.value = (com.value ? com.value+"\n\n" : "") + "💡 " + ia.anecdote; } catch(e) { res.value = "❌ Erreur de format IA."; }
+                } else res.value = "❌ Erreur serveur Google.";
             } catch(e) { res.value = "❌ Erreur réseau."; }
             res.disabled = false;
         };
 
-        // --- ☁️ CLOUD SYNC ---
+        // --- ☁️ CLOUD SYNC (SÉCURISÉ) ---
         function saveCloudSettings() {
             cloudConfig.token = document.getElementById('gh-token').value.trim(); cloudConfig.gistId = document.getElementById('gh-gist-id').value.trim(); cloudConfig.geminiKey = document.getElementById('gemini-api-key').value.trim();
             localStorage.setItem('cloudConfig', JSON.stringify(cloudConfig)); document.getElementById('cloud-status').innerText = "✅ Clés sauvegardées.";
         }
         async function pushToCloud() {
             if(!cloudConfig.token || !cloudConfig.gistId) return;
-            document.getElementById('cloud-status').innerText = "⏳ Envoi...";
-            try { const r = await fetch(`https://api.github.com/gists/${cloudConfig.gistId}`, { method: 'PATCH', headers: { 'Authorization': `Bearer ${cloudConfig.token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ files: { 'library.json': { content: JSON.stringify(library) } } }) });
-                document.getElementById('cloud-status').innerText = r.ok ? "✅ Sauvegardé." : "❌ Erreur Github."; } catch(e) { document.getElementById('cloud-status').innerText = "❌ Erreur réseau."; }
+            const status = document.getElementById('cloud-status'); status.innerText = "⏳ Envoi...";
+            try { 
+                const r = await fetch(`https://api.github.com/gists/${cloudConfig.gistId}`, { method: 'PATCH', headers: { 'Authorization': `Bearer ${cloudConfig.token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ files: { 'library.json': { content: JSON.stringify(library) } } }) });
+                const d = await r.json().catch(()=>null);
+                if(r.ok) status.innerText = "✅ Sauvegardé."; else status.innerText = `❌ Erreur GitHub: ${d ? d.message : r.status}`;
+            } catch(e) { status.innerText = "❌ Échec de la connexion."; }
         }
         async function pullFromCloud() {
-            if(!cloudConfig.token || !cloudConfig.gistId || !confirm("Écraser tes données locales ?")) return;
-            document.getElementById('cloud-status').innerText = "⏳ Récupération...";
-            try { const r = await fetch(`https://api.github.com/gists/${cloudConfig.gistId}?t=${Date.now()}`, { headers: { 'Authorization': `Bearer ${cloudConfig.token}` } });
-                const d = await r.json(); const fKey = Object.keys(d.files).find(k => k.endsWith('.json'));
-                if(fKey && d.files[fKey]) { library = JSON.parse(d.files[fKey].content); saveLibrary(); document.getElementById('cloud-status').innerText = "✅ Données à jour."; } else document.getElementById('cloud-status').innerText = "❌ Fichier introuvable.";
-            } catch(e) { document.getElementById('cloud-status').innerText = "❌ Erreur réseau."; }
+            if(!cloudConfig.token || !cloudConfig.gistId || !confirm("Écraser les données locales ?")) return;
+            const status = document.getElementById('cloud-status'); status.innerText = "⏳ Récupération...";
+            try { 
+                const r = await fetch(`https://api.github.com/gists/${cloudConfig.gistId}?t=${Date.now()}`, { headers: { 'Authorization': `Bearer ${cloudConfig.token}` } });
+                const d = await r.json().catch(()=>null);
+                if(!r.ok) { status.innerText = `❌ Erreur GitHub: ${d ? d.message : r.status}`; return; }
+                if(!d.files) { status.innerText = "❌ Gist invalide ou vide."; return; }
+                const fKey = Object.keys(d.files).find(k => k.endsWith('.json'));
+                if(fKey && d.files[fKey]) { 
+                    const parsed = JSON.parse(d.files[fKey].content);
+                    if(Array.isArray(parsed)) { library = parsed; saveLibrary(); status.innerText = "✅ Données à jour."; }
+                    else { status.innerText = "❌ Le fichier Cloud est corrompu (non-tableau)."; }
+                } else status.innerText = "❌ Fichier .json introuvable.";
+            } catch(e) { status.innerText = `❌ Échec de la connexion: ${e.message}`; }
         }
 
-        // --- 🔍 FILTRES, TRI & CARTES ---
+        // --- 📊 UI & STATS ---
+        function renderDashboard() {
+            const stats = { book: { t: 0, l: 0, a: 0, title: '📖 Livres' }, bd: { t: 0, l: 0, a: 0, title: '💬 BD' }, music: { t: 0, l: 0, a: 0, title: '🎵 Musique' }, game: { t: 0, l: 0, a: 0, title: '🎲 Jeux' } };
+            let auteurs = {}, tagsCount = {};
+            library.forEach(i => { 
+                if (stats[i.type]) { stats[i.type].t++; if (['lu','ecoute','joue'].includes(i.statut)) stats[i.type].l++; else if(['alire','adecouvrir','atester'].includes(i.statut)) stats[i.type].a++; }
+                if(i.createur) auteurs[i.createur] = (auteurs[i.createur] || 0) + 1;
+                if(i.tags) i.tags.forEach(t => tagsCount[t] = (tagsCount[t] || 0) + 1);
+            });
+            const sContainer = document.getElementById('dashboard-stats'); sContainer.innerHTML = '';
+            Object.keys(stats).forEach(k => { const s = stats[k]; if(s.t === 0) return; sContainer.innerHTML += `<div class="stat-card"><div class="stat-main"><span>${s.t}</span> <span style="font-size:1rem; color:var(--text-ink)">${s.title}</span></div><div class="stat-details"><div>✅ ${s.l} faits</div><div>📚 ${s.a} à faire</div></div></div>`; });
+            
+            document.getElementById('stat-top-auteurs').innerHTML = Object.entries(auteurs).sort((a,b)=>b[1]-a[1]).slice(0,3).map((a, i) => `<li>${i===0?'🥇':i===1?'🥈':'🥉'} <b>${a[0]}</b> (${a[1]})</li>`).join('');
+            document.getElementById('stat-top-tags').innerHTML = Object.entries(tagsCount).sort((a,b)=>b[1]-a[1]).slice(0,4).map(t => `<li>🏷️ <b>${t[0]}</b> (${t[1]})</li>`).join('');
+
+            const favs = library.filter(i => i.coupDeCoeur); document.getElementById('title-coups-coeur').style.display = favs.length ? 'block' : 'none';
+            renderGrid(favs.slice(0, 4), 'list-favs'); renderGrid([...library].sort((a,b) => b.dateAjout - a.dateAjout).slice(0, 4), 'list-recent');
+        }
+
         const activeFilters = { sort: 'date_desc', status: 'all', format: 'all', tag: 'all', favOnly: false };
         function triggerUpdate() { if(document.getElementById('search-input').value.trim() !== '') document.getElementById('search-input').dispatchEvent(new Event('input')); else renderAll(); }
         document.getElementById('btn-toggle-filters').onclick = function() { document.getElementById('filter-panel').classList.toggle('open'); this.classList.toggle('active'); };
         ['sort','status','format','tag'].forEach(id => document.getElementById(`filter-${id}`).onchange = e => { activeFilters[id] = e.target.value; triggerUpdate(); });
         document.getElementById('filter-fav').onchange = e => { activeFilters.favOnly = e.target.checked; triggerUpdate(); };
+        document.getElementById('search-input').oninput = function(e) { const term = e.target.value.toLowerCase().trim(); if (term === '') { switchView(document.querySelector('.nav-btn.active').dataset.target); return; } switchView('view-search'); renderGrid(processData(library.filter(i => (i.titre||'').toLowerCase().includes(term) || (i.createur||'').toLowerCase().includes(term) || (i.tags||[]).some(t=>t.toLowerCase().includes(term)))), 'list-search'); };
 
-        document.getElementById('search-input').oninput = function(e) {
-            const term = e.target.value.toLowerCase().trim();
-            if (term === '') { switchView(document.querySelector('.nav-btn.active').dataset.target); return; }
-            switchView('view-search');
-            let data = library.filter(i => (i.titre||'').toLowerCase().includes(term) || (i.createur||'').toLowerCase().includes(term) || (i.tags||[]).some(t=>t.toLowerCase().includes(term)));
-            renderGrid(processData(data), 'list-search');
-        };
-
-        function processData(data) {
-            let res = data.filter(i => {
-                if(activeFilters.status !== 'all' && i.statut !== activeFilters.status) return false;
-                if(activeFilters.format !== 'all' && i.format !== activeFilters.format) return false;
-                if(activeFilters.tag !== 'all' && !(i.tags && i.tags.includes(activeFilters.tag))) return false; 
-                if(activeFilters.favOnly && !i.coupDeCoeur) return false; return true;
-            });
-            res.sort((a,b) => {
-                if(activeFilters.sort === 'date_desc') return b.dateAjout - a.dateAjout;
-                if(activeFilters.sort === 'alpha_asc') return (a.titre||'').localeCompare(b.titre||'');
-                if(activeFilters.sort === 'createur_asc') return (a.createur||'').localeCompare(b.createur||''); 
-                if(activeFilters.sort === 'note_desc') return (b.note||0) - (a.note||0); return 0;
-            });
-            return res;
-        }
-
+        function processData(data) { let res = data.filter(i => { if(activeFilters.status !== 'all' && i.statut !== activeFilters.status) return false; if(activeFilters.format !== 'all' && i.format !== activeFilters.format) return false; if(activeFilters.tag !== 'all' && !(i.tags && i.tags.includes(activeFilters.tag))) return false; if(activeFilters.favOnly && !i.coupDeCoeur) return false; return true; }); res.sort((a,b) => { if(activeFilters.sort === 'date_desc') return b.dateAjout - a.dateAjout; if(activeFilters.sort === 'alpha_asc') return (a.titre||'').localeCompare(b.titre||''); if(activeFilters.sort === 'createur_asc') return (a.createur||'').localeCompare(b.createur||''); if(activeFilters.sort === 'note_desc') return (b.note||0) - (a.note||0); return 0; }); return res; }
+        
         function createCard(i) {
-            const s = statusConfig[i.statut] || {icon:'?', text:'-'};
-            const icons = {book:'📖', bd:'💬', music:'🎵', game:'🎲'};
-            const card = document.createElement('div'); 
-            card.className = `card ${isOracleMode ? 'mode-selection' : ''} ${selectedForOracle.includes(i.id) ? 'selected' : ''}`;
-            
-            let tagsHtml = (i.tags || []).slice(0, 3).map(t => `<span class="badge">${t}</span>`).join('');
-            
-            card.innerHTML = `
-                <div class="card-header"><div class="card-title-group"><div class="card-title">${icons[i.type]} ${i.serie?i.serie+' - ':''}${i.titre} ${i.coupDeCoeur?'❤️':''}</div><div class="card-creator">${i.createur || ''}</div></div><div class="card-status-group"><span class="badge badge-status" style="background:var(--bg-parchment-dark)">${s.icon} ${s.text}</span></div></div>
-                <div style="flex:1; pointer-events:none;"></div>
-                ${i.note > 0 ? `<div style="color:var(--color-star);font-size:1.1rem;margin:4px 0; letter-spacing: 2px;">${'★'.repeat(i.note)}${'☆'.repeat(5-i.note)}</div>`:''}
-                <div class="card-meta"><span class="badge" style="background:#ddd">${i.format}</span>${tagsHtml}</div>
-            `;
-            
-            card.onclick = () => { if(isOracleMode) toggleCardSelection(i.id, card); else viewItem(i.id); };
-            return card;
+            const card = document.createElement('div'); card.className = `card ${isOracleMode ? 'mode-selection' : ''} ${selectedForOracle.includes(i.id) ? 'selected' : ''}`;
+            card.innerHTML = `<div class="card-header"><div class="card-title-group"><div class="card-title">${{book:'📖',bd:'💬',music:'🎵',game:'🎲'}[i.type]} ${i.serie?i.serie+' - ':''}${i.titre} ${i.coupDeCoeur?'❤️':''}</div><div class="card-creator">${i.createur || ''}</div></div><div class="card-status-group"><span class="badge badge-status" style="background:var(--bg-parchment-dark)">${(statusConfig[i.statut]||{icon:'?'}).icon}</span></div></div><div style="flex:1; pointer-events:none;"></div>${i.note > 0 ? `<div style="color:var(--color-star);font-size:1.1rem;margin:4px 0;">${'★'.repeat(i.note)}</div>`:''}<div class="card-meta"><span class="badge" style="background:#ddd">${i.format}</span>${(i.tags || []).slice(0, 3).map(t => `<span class="badge">${t}</span>`).join('')}</div>`;
+            card.onclick = () => isOracleMode ? toggleCardSelection(i.id, card) : viewItem(i.id); return card;
         }
 
-        function renderGrid(data, containerId) {
-            const c = document.getElementById(containerId); c.innerHTML = '';
-            if(data.length === 0) { c.innerHTML = '<p style="grid-column:1/-1;color:var(--text-ink-light);padding:10px;">Rien à afficher.</p>'; return; }
-            data.forEach(i => c.appendChild(createCard(i)));
-        }
-
-        // --- 📊 STATISTIQUES ---
-        function renderDashboard() {
-            const sContainer = document.getElementById('dashboard-stats');
-            const stats = { book: { total: 0, lu: 0, alire: 0, title: '📖 Livres' }, bd: { total: 0, lu: 0, alire: 0, title: '💬 BD' }, music: { total: 0, ecoute: 0, adecouvrir: 0, title: '🎵 Musique' }, game: { total: 0, joue: 0, atester: 0, title: '🎲 Jeux' } };
-            let auteurs = {}, tagsCount = {};
-
-            library.forEach(i => { 
-                if (stats[i.type]) { stats[i.type].total++; if (stats[i.type][i.statut] !== undefined) stats[i.type][i.statut]++; }
-                if(i.createur) auteurs[i.createur] = (auteurs[i.createur] || 0) + 1;
-                if(i.tags) i.tags.forEach(t => tagsCount[t] = (tagsCount[t] || 0) + 1);
-            });
-            
-            sContainer.innerHTML = '';
-            Object.keys(stats).forEach(k => {
-                const s = stats[k]; if(s.total === 0) return;
-                let det = k==='book'||k==='bd' ? `<div>✅ ${s.lu} terminés</div><div>📚 ${s.alire} à lire</div>` : k==='music' ? `<div>🎧 ${s.ecoute} écoutés</div><div>💿 ${s.adecouvrir} à déc.</div>` : `<div>🎲 ${s.joue} joués</div><div>📦 ${s.atester} à test.</div>`;
-                sContainer.innerHTML += `<div class="stat-card"><div class="stat-main"><span>${s.total}</span> <span style="font-size:1rem; color:var(--text-ink)">${s.title}</span></div><div class="stat-details">${det}</div></div>`;
-            });
-
-            const topAuteurs = Object.entries(auteurs).sort((a,b)=>b[1]-a[1]).slice(0,3);
-            document.getElementById('stat-top-auteurs').innerHTML = topAuteurs.map((a, i) => `<li>${i===0?'🥇':i===1?'🥈':'🥉'} <b>${a[0]}</b> (${a[1]})</li>`).join('');
-            const topTags = Object.entries(tagsCount).sort((a,b)=>b[1]-a[1]).slice(0,4);
-            document.getElementById('stat-top-tags').innerHTML = topTags.map(t => `<li>🏷️ <b>${t[0]}</b> (${t[1]})</li>`).join('');
-
-            const favs = library.filter(i => i.coupDeCoeur);
-            document.getElementById('title-coups-coeur').style.display = favs.length ? 'block' : 'none';
-            renderGrid(favs.slice(0, 4), 'list-favs');
-
-            renderGrid([...library].sort((a,b) => b.dateAjout - a.dateAjout).slice(0, 4), 'list-recent');
-        }
-
-        function switchView(id) {
-            document.querySelectorAll('.view-section').forEach(v => v.classList.toggle('active', v.id === id));
-            if(id !== 'view-search') { document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.target === id)); renderAll(); }
-        }
+        function renderGrid(data, containerId) { const c = document.getElementById(containerId); c.innerHTML = data.length ? '' : '<p style="padding:10px;">Rien à afficher.</p>'; data.forEach(i => c.appendChild(createCard(i))); }
+        function switchView(id) { document.querySelectorAll('.view-section').forEach(v => v.classList.toggle('active', v.id === id)); if(id !== 'view-search') { document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.target === id)); renderAll(); } }
         document.querySelectorAll('.nav-btn').forEach(b => b.onclick = () => { document.getElementById('search-input').value=''; switchView(b.dataset.target); });
+        function renderAll() { renderDashboard(); const maps = { book:'list-books', bd:'list-bd', music:'list-music', game:'list-games' }; Object.keys(maps).forEach(k => renderGrid(processData(library.filter(i=>i.type===k)), maps[k])); }
 
-        function renderAll() {
-            renderDashboard();
-            const maps = { book:'list-books', bd:'list-bd', music:'list-music', game:'list-games' };
-            Object.keys(maps).forEach(k => renderGrid(processData(library.filter(i=>i.type===k)), maps[k]));
-        }
-
-        // --- 💻 FORMULAIRE ET DONNEES ---
+        // --- 💻 FORMULAIRE ---
         const modalAdd = document.getElementById('modal-add'); const form = document.getElementById('form-add'); let selectedTags = [];
-        const stars = document.querySelectorAll('#star-rating span');
-        function setStars(val) { document.getElementById('note').value = val; stars.forEach(s => s.style.color = parseInt(s.dataset.val) <= val ? 'var(--color-star)' : '#ccc'); }
-        stars.forEach(s => s.onclick = () => setStars(parseInt(s.dataset.val)));
-
-        function renderTagsUI(type) {
-            const container = document.getElementById('tags-container'); container.innerHTML = '';
-            let all = new Set(uiConfig[type].tags); library.filter(i=>i.type===type && i.tags).forEach(i=>i.tags.forEach(t=>all.add(t))); selectedTags.forEach(t=>all.add(t));
-            Array.from(all).sort().forEach(t => { const p = document.createElement('span'); p.className = 'tag-pill' + (selectedTags.includes(t)?' active':''); p.textContent = t; p.onclick = () => { p.classList.toggle('active'); selectedTags = selectedTags.includes(t) ? selectedTags.filter(x=>x!==t) : [...selectedTags, t]; }; container.appendChild(p); });
-        }
+        const stars = document.querySelectorAll('#star-rating span'); function setStars(val) { document.getElementById('note').value = val; stars.forEach(s => s.style.color = parseInt(s.dataset.val) <= val ? 'var(--color-star)' : '#ccc'); } stars.forEach(s => s.onclick = () => setStars(parseInt(s.dataset.val)));
+        function renderTagsUI(type) { const container = document.getElementById('tags-container'); container.innerHTML = ''; let all = new Set(uiConfig[type].tags); library.filter(i=>i.type===type && i.tags).forEach(i=>i.tags.forEach(t=>all.add(t))); selectedTags.forEach(t=>all.add(t)); Array.from(all).sort().forEach(t => { const p = document.createElement('span'); p.className = 'tag-pill' + (selectedTags.includes(t)?' active':''); p.textContent = t; p.onclick = () => { p.classList.toggle('active'); selectedTags = selectedTags.includes(t) ? selectedTags.filter(x=>x!==t) : [...selectedTags, t]; }; container.appendChild(p); }); }
         document.getElementById('custom-tag-input').addEventListener('keydown', function(e) { if(e.key==='Enter') { e.preventDefault(); const v=this.value.trim(); if(v&&!selectedTags.includes(v)) { selectedTags.push(v); renderTagsUI(document.querySelector('input[name="type"]:checked').value); } this.value=''; }});
-
-        function updateFormUI(type) {
-            document.getElementById('label-createur').textContent = uiConfig[type].createur;
-            const f = document.getElementById('format'); f.innerHTML=''; uiConfig[type].formats.forEach(x => f.appendChild(new Option(x,x)));
-            const s = document.getElementById('statut'); s.innerHTML=''; uiConfig[type].statuses.forEach(x => s.appendChild(new Option(x.text, x.val)));
-            document.getElementById('group-tome').style.display = type==='bd'?'flex':'none'; document.getElementById('group-resume').style.display = (type==='book'||type==='bd')?'flex':'none';
-            renderTagsUI(type); document.getElementById('review-section').style.display = ['lu','ecoute','joue','abandonne'].includes(document.getElementById('statut').value) ? 'block' : 'none';
-        }
+        function updateFormUI(type) { document.getElementById('label-createur').textContent = uiConfig[type].createur; const f = document.getElementById('format'); f.innerHTML=''; uiConfig[type].formats.forEach(x => f.appendChild(new Option(x,x))); const s = document.getElementById('statut'); s.innerHTML=''; uiConfig[type].statuses.forEach(x => s.appendChild(new Option(x.text, x.val))); document.getElementById('group-tome').style.display = type==='bd'?'flex':'none'; document.getElementById('group-resume').style.display = (type==='book'||type==='bd')?'flex':'none'; renderTagsUI(type); document.getElementById('review-section').style.display = ['lu','ecoute','joue','abandonne'].includes(document.getElementById('statut').value) ? 'block' : 'none'; }
         document.getElementById('statut').onchange = () => document.getElementById('review-section').style.display = ['lu','ecoute','joue','abandonne'].includes(document.getElementById('statut').value) ? 'block' : 'none';
-
         document.getElementById('btn-fab-add').onclick = () => { editingId=null; form.reset(); selectedTags=[]; setStars(0); document.querySelector('input[name="type"][value="book"]').checked=true; updateFormUI('book'); modalAdd.showModal(); };
         document.querySelectorAll('input[name="type"]').forEach(r => r.onchange = e => { selectedTags=[]; updateFormUI(e.target.value); });
+        form.onsubmit = e => { e.preventDefault(); const item = { id: editingId || Date.now().toString(), type: document.querySelector('input[name="type"]:checked').value, titre: document.getElementById('titre').value, createur: document.getElementById('createur').value, serie: document.getElementById('serie').value, tome: document.getElementById('tome').value, format: document.getElementById('format').value, annee: document.getElementById('annee').value, statut: document.getElementById('statut').value, tags: [...selectedTags], resume: document.getElementById('resume').value, note: parseInt(document.getElementById('note').value) || 0, coupDeCoeur: document.getElementById('coup-de-coeur').checked, commentaire: document.getElementById('commentaire').value, dateAjout: editingId ? library.find(i=>i.id===editingId).dateAjout : Date.now() }; const idx = library.findIndex(i=>i.id===editingId); if(idx!==-1) library[idx]=item; else library.push(item); saveLibrary(); modalAdd.close(); };
+        window.editItem = id => { const i = library.find(x=>x.id===id); editingId = id; document.querySelector(`input[name="type"][value="${i.type}"]`).checked = true; selectedTags = [...(i.tags||[])]; updateFormUI(i.type); ['titre','createur','serie','tome','format','annee','statut','resume','commentaire'].forEach(k => document.getElementById(k).value = i[k]||''); setStars(i.note||0); document.getElementById('coup-de-coeur').checked = i.coupDeCoeur||false; document.getElementById('statut').dispatchEvent(new Event('change')); modalAdd.showModal(); };
 
-        form.onsubmit = e => {
-            e.preventDefault();
-            const item = { id: editingId || Date.now().toString(), type: document.querySelector('input[name="type"]:checked').value, titre: document.getElementById('titre').value, createur: document.getElementById('createur').value, serie: document.getElementById('serie').value, tome: document.getElementById('tome').value, format: document.getElementById('format').value, annee: document.getElementById('annee').value, statut: document.getElementById('statut').value, tags: [...selectedTags], resume: document.getElementById('resume').value, note: parseInt(document.getElementById('note').value) || 0, coupDeCoeur: document.getElementById('coup-de-coeur').checked, commentaire: document.getElementById('commentaire').value, dateAjout: editingId ? library.find(i=>i.id===editingId).dateAjout : Date.now() };
-            const idx = library.findIndex(i=>i.id===editingId); if(idx!==-1) library[idx]=item; else library.push(item);
-            saveLibrary(); modalAdd.close();
-        };
-
-        window.editItem = id => {
-            const i = library.find(x=>x.id===id); editingId = id; document.querySelector(`input[name="type"][value="${i.type}"]`).checked = true; selectedTags = [...(i.tags||[])]; updateFormUI(i.type);
-            ['titre','createur','serie','tome','format','annee','statut','resume','commentaire'].forEach(k => document.getElementById(k).value = i[k]||'');
-            setStars(i.note||0); document.getElementById('coup-de-coeur').checked = i.coupDeCoeur||false; document.getElementById('statut').dispatchEvent(new Event('change')); modalAdd.showModal();
-        };
-
-        // CSV Import/Export basique conservé (identique à avant)
         function exportToExcel() { let csv = "\ufeffType;Titre;Série;Tome;Créateur;Format;Année;Statut;Tags;Note;Coup de coeur;Commentaire\n"; library.forEach(i => { const q=s=>`"${(s||"").toString().replace(/"/g, '""')}"`; csv += `${i.type};${q(i.titre)};${q(i.serie)};${q(i.tome)};${q(i.createur)};${q(i.format)};${i.annee||''};${i.statut};${q((i.tags||[]).join(','))};${i.note||0};${i.coupDeCoeur};${q(i.commentaire)}\n`; }); const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})); a.download=`Biblio_${new Date().toISOString().split('T')[0]}.csv`; a.click(); }
         function importFromCSV(input) { const f = input.files[0]; if(!f) return; const r=new FileReader(); r.onload=e=>{ const lines=e.target.result.split('\n'); const added=[]; for(let i=1;i<lines.length;i++){ if(!lines[i].trim())continue; let ret=[], keep=false, cur=''; for(let j=0;j<lines[i].length;j++){let c=lines[i][j]; if(c==='"')keep=!keep; else if(c===';'&&!keep){ret.push(cur);cur='';} else cur+=c;} ret.push(cur); const c=ret.map(s=>s.trim().replace(/^"|"$/g,'').replace(/""/g,'"')); if(c.length<2)continue; added.push({id:Date.now().toString()+i, type:c[0]||'book', titre:c[1], serie:c[2], tome:c[3], createur:c[4], format:c[5], annee:c[6], statut:c[7], tags:c[8]?c[8].split(','):[], note:parseInt(c[9])||0, coupDeCoeur:c[10]==='true', commentaire:c[11], dateAjout:Date.now()}); } if(confirm(`Importer ${added.length} items ?`)) { library=[...library,...added]; saveLibrary(); } }; r.readAsText(f); }
 
