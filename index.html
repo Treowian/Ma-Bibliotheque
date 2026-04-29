@@ -28,15 +28,15 @@
         #app-container { max-width: 900px; margin: 0 auto; padding: 20px; }
         header { text-align: center; margin-bottom: 20px; }
 
-        /* 🔍 Recherche Globale Fixe */
+        /* 🔍 Recherche Globale Fixe (Corrigée pour Mobile) */
         .search-area { position: sticky; top: 0; z-index: 80; background: var(--bg-parchment); padding-bottom: 10px; margin-bottom: 20px; }
-        .search-header { display: flex; gap: 10px; align-items: center; }
-        .search-container { position: relative; flex: 1; }
-        #search-input { width: 100%; padding: 12px 15px 12px 45px; border: 2px solid var(--bg-parchment-dark); border-radius: 25px; font-size: 1rem; background: #fff; transition: 0.2s; color: var(--text-ink); }
+        .search-header { display: flex; gap: 8px; align-items: center; width: 100%; }
+        .search-container { position: relative; flex: 1; min-width: 0; /* Essentiel pour mobile */ }
+        #search-input { width: 100%; padding: 10px 15px 10px 40px; border: 2px solid var(--bg-parchment-dark); border-radius: 25px; font-size: 0.95rem; background: #fff; transition: 0.2s; color: var(--text-ink); }
         #search-input:focus { outline: none; border-color: var(--accent-wood); }
-        .search-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 1.2rem; pointer-events: none;}
+        .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 1.1rem; pointer-events: none;}
         
-        .btn-icon-header { background: #fff; border: 2px solid var(--bg-parchment-dark); border-radius: 50%; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; transition: 0.2s; color: var(--text-ink); }
+        .btn-icon-header { background: #fff; border: 2px solid var(--bg-parchment-dark); border-radius: 50%; width: 42px; height: 42px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; transition: 0.2s; color: var(--text-ink); }
         .btn-icon-header.active { border-color: var(--accent-wood); background: var(--bg-parchment-dark); }
         .btn-oracle.active { background: linear-gradient(135deg, #a8c0ff, #3f2b96); border-color: transparent; filter: hue-rotate(45deg); color: white;}
 
@@ -90,11 +90,9 @@
         @media (min-width: 768px) { #btn-fab-add { bottom: 40px; right: 40px; } }
         
         dialog { margin: auto; border: none; border-radius: 12px; background-color: var(--bg-parchment); width: 95%; max-width: 600px; padding: 0; box-shadow: 0 10px 40px rgba(0,0,0,0.4); }
-        /* Remplacement du flou dynamique pour fluidité mobile */
         dialog::backdrop { background: rgba(20, 15, 10, 0.7); } 
         .modal-content { padding: 25px; max-height: 90vh; overflow-y: auto; position: relative; }
         
-        /* Bouton fermeture global (Fixé en haut à droite de la modale) */
         .btn-close-absolute { position: absolute; top: 15px; right: 15px; background: var(--bg-parchment-dark); border: none; font-size: 1.2rem; cursor: pointer; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10; transition: 0.2s; }
         .btn-close-absolute:hover { background: var(--accent-wood); color: white; }
 
@@ -113,7 +111,7 @@
         label { font-weight: 600; font-size: 0.85rem; margin-bottom: 4px; color: var(--text-ink-light); }
         input, select, textarea { padding: 10px; border: 1px solid var(--bg-parchment-dark); border-radius: 8px; font-family: var(--font-body); font-size: 0.95rem; background: #fff; }
         
-        /* Boutons Radios & Tags (Flex-wrap ajouté) */
+        /* Boutons Radios & Tags */
         .type-selector { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 15px; }
         .type-selector label { flex: 1; min-width: 80px; cursor: pointer; }
         .type-selector input { display: none; }
@@ -204,19 +202,8 @@
             </section>
 
             <section id="view-dashboard" class="view-section active">
-                <h3 class="section-title">📊 Ma Collection</h3>
-                <div class="stats-grid" id="dashboard-stats"></div>
-
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <h4 style="color: var(--accent-wood); font-family: var(--font-title); margin-bottom: 5px;">🏆 Top Créateurs</h4>
-                        <ul id="stat-top-auteurs" class="top-list"></ul>
-                    </div>
-                    <div class="stat-card">
-                        <h4 style="color: var(--accent-wood); font-family: var(--font-title); margin-bottom: 5px;">🏷️ Top Genres</h4>
-                        <ul id="stat-top-tags" class="top-list"></ul>
-                    </div>
-                </div>
+                <h3 class="section-title">✨ Récemment ajoutés</h3>
+                <div id="list-recent" class="grid-container" style="margin-bottom: 30px;"></div>
 
                 <h3 class="section-title" id="title-coups-coeur">❤️ Mes Coups de Coeur</h3>
                 <div id="list-favs" class="grid-container" style="margin-bottom: 30px;"></div>
@@ -228,6 +215,25 @@
             <section id="view-games" class="view-section"><div id="list-games" class="grid-container"></div></section>
             
             <section id="view-settings" class="view-section">
+                
+                <div class="settings-card" style="background: transparent; border: none; padding: 0; box-shadow: none;">
+                    <h3 class="section-title" style="margin-top:0;">📊 Mes Statistiques</h3>
+                    <div class="stats-grid" id="dashboard-stats"></div>
+
+                    <div class="stats-grid" style="margin-top: 15px;">
+                        <div class="stat-card">
+                            <h4 style="color: var(--accent-wood); font-family: var(--font-title); margin-bottom: 5px;">🏆 Top Créateurs</h4>
+                            <ul id="stat-top-auteurs" class="top-list"></ul>
+                        </div>
+                        <div class="stat-card">
+                            <h4 style="color: var(--accent-wood); font-family: var(--font-title); margin-bottom: 5px;">🏷️ Top Genres</h4>
+                            <ul id="stat-top-tags" class="top-list"></ul>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="section-title">⚙️ Configuration</h3>
+                
                 <div class="settings-card">
                     <h3>✨ Intelligence Artificielle (Gemini)</h3>
                     <p style="font-size: 0.9rem; color: var(--text-ink-light); margin-bottom: 10px;">Obtiens une clé gratuite sur <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a>.</p>
@@ -269,10 +275,8 @@
                 <div class="view-meta-bar" id="view-meta"></div>
                 <div id="view-stars" style="color:var(--color-star); font-size: 1.5rem; letter-spacing: 2px;"></div>
             </div>
-            
             <div class="view-resume" id="view-resume"></div>
             <div class="view-comment" id="view-comment"></div>
-            
             <div style="display: flex; gap: 10px; margin-top: 20px;">
                 <button class="btn-primary" id="btn-edit-from-view" style="margin:0;">✏️ Modifier la fiche</button>
                 <button class="btn-danger" id="btn-delete-from-view" style="margin:0;">🗑️</button>
@@ -375,7 +379,7 @@
             selectedForOracle = [];
             document.getElementById('oracle-bar').style.display = isOracleMode ? 'flex' : 'none';
             document.getElementById('oracle-count').innerText = 0;
-            renderAll(); // Rafraîchit les cartes pour le mode sélection
+            renderAll(); 
         };
 
         function toggleCardSelection(id, cardElement) {
@@ -394,7 +398,6 @@
             modal.showModal();
             resultBox.innerText = "⏳ L'IA fouille ta bibliothèque et connecte les neurones...";
 
-            // Préparation des données pour le prompt
             const inspirateurs = selectedForOracle.map(id => { const i = library.find(x=>x.id===id); return `${i.titre} de ${i.createur} (${i.tags?i.tags.join(', '):''})`; }).join(" | ");
             const palObjects = library.filter(i => ['alire', 'adecouvrir', 'atester'].includes(i.statut));
             const palList = palObjects.map(i => `${i.titre} de ${i.createur}`).join(" | ");
@@ -402,7 +405,7 @@
             const prompt = `Tu es l'Oracle d'une bibliothèque. L'utilisateur a sélectionné ces œuvres qu'il aime : [ ${inspirateurs} ].
             Sa Pile à Lire/Découvrir actuelle contient : [ ${palList || "Rien pour le moment"} ].
             
-            Fais 2 recommandations chaleureuses et concises :
+            Propose EXACTEMENT DEUX (2) recommandations au total, pas une de plus :
             1. PIOCHE : Une œuvre à choisir EN PRIORITÉ dans sa Pile à Lire (explique le lien avec ses sélections). Si sa PAL est vide, dis-le gentiment.
             2. DÉCOUVERTE : Une œuvre EXTERNE (Livre, BD ou Jeu) qu'il ne possède pas, qui correspond parfaitement à l'ambiance des œuvres sélectionnées.
             
@@ -415,7 +418,6 @@
                 });
                 const data = await response.json();
                 if(data.candidates) {
-                    // Remplacement des sauts de ligne par des balises HTML, et nettoyage markdown gras
                     let finalTxt = data.candidates[0].content.parts[0].text.trim().replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
                     resultBox.innerHTML = finalTxt;
                 } else resultBox.innerText = "❌ L'Oracle est muet. Erreur de l'IA.";
@@ -581,6 +583,8 @@ Renvoie EXACTEMENT ce JSON, sans markdown (pas de balise \`\`\`json) :
             const favs = library.filter(i => i.coupDeCoeur);
             document.getElementById('title-coups-coeur').style.display = favs.length ? 'block' : 'none';
             renderGrid(favs.slice(0, 4), 'list-favs');
+
+            renderGrid([...library].sort((a,b) => b.dateAjout - a.dateAjout).slice(0, 4), 'list-recent');
         }
 
         function switchView(id) {
