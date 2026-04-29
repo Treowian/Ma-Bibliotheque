@@ -88,10 +88,8 @@
         /* Bouton Ajouter (+) */
         #btn-fab-add { position: fixed; bottom: 85px; right: 20px; width: 60px; height: 60px; border-radius: 50%; background-color: var(--accent-wood); color: #fff; font-size: 1.8rem; border: none; box-shadow: 0 6px 16px rgba(140, 90, 64, 0.4); cursor: pointer; z-index: 110; display: flex; align-items: center; justify-content: center; transition: 0.3s opacity, 0.3s transform; }
         @media (min-width: 768px) { #btn-fab-add { bottom: 40px; right: 40px; } }
-        /* Classe pour masquer doucement le bouton + */
         #btn-fab-add.hidden-fab { opacity: 0; transform: scale(0) rotate(90deg); pointer-events: none; }
         
-        /* Modales */
         dialog { margin: auto; border: none; border-radius: 12px; background-color: var(--bg-parchment); width: 95%; max-width: 600px; padding: 0; box-shadow: 0 10px 40px rgba(0,0,0,0.4); }
         dialog::backdrop { background: rgba(20, 15, 10, 0.7); } 
         .modal-content { padding: 25px; max-height: 90vh; overflow-y: auto; position: relative; }
@@ -214,7 +212,6 @@
             <section id="view-games" class="view-section"><div id="list-games" class="grid-container"></div></section>
             
             <section id="view-settings" class="view-section">
-                
                 <div class="settings-card" style="background: transparent; border: none; padding: 0; box-shadow: none;">
                     <h3 class="section-title" style="margin-top:0;">📊 Mes Statistiques</h3>
                     <div class="stats-grid" id="dashboard-stats"></div>
@@ -347,13 +344,12 @@
     </dialog>
 
     <script>
-        // --- ⚙️ LOGIQUE DATA (BLINDÉE CONTRE LES CRASHES) ---
+        // --- ⚙️ LOGIQUE DATA ---
         let library = [];
         try {
             const stored = JSON.parse(localStorage.getItem('myLibrary'));
             if(Array.isArray(stored)) library = stored;
-            else if(stored) console.warn("Données locales ignorées car format invalide.");
-        } catch(e) { console.error("Erreur de lecture du localStorage."); }
+        } catch(e) { console.error("Cache local corrompu."); }
 
         let cloudConfig = { token: '', gistId: '', geminiKey: '' };
         try { const c = JSON.parse(localStorage.getItem('cloudConfig')); if(c) cloudConfig = c; } catch(e) {}
@@ -382,16 +378,11 @@
 
         // --- 🪄 ORACLE IA ---
         document.getElementById('btn-toggle-oracle').onclick = function() {
-            isOracleMode = !isOracleMode; 
-            this.classList.toggle('active'); 
-            selectedForOracle = [];
+            isOracleMode = !isOracleMode; this.classList.toggle('active'); selectedForOracle = [];
             document.getElementById('oracle-bar').style.display = isOracleMode ? 'flex' : 'none';
-            // Masquer ou afficher le bouton +
             if(isOracleMode) document.getElementById('btn-fab-add').classList.add('hidden-fab');
             else document.getElementById('btn-fab-add').classList.remove('hidden-fab');
-            
-            document.getElementById('oracle-count').innerText = 0; 
-            renderAll(); 
+            document.getElementById('oracle-count').innerText = 0; renderAll(); 
         };
 
         function toggleCardSelection(id, cardElement) {
@@ -403,48 +394,36 @@
 
         async function askOracle() {
             if(selectedForOracle.length === 0) return alert("Sélectionne au moins 1 œuvre !");
-            if(!cloudConfig.geminiKey) return alert("Clé API Gemini manquante dans Paramètres.");
-
-            const modal = document.getElementById('modal-oracle');
-            const resultBox = document.getElementById('oracle-result');
-            modal.showModal();
-            resultBox.innerText = "⏳ L'IA fouille ta bibliothèque...";
-
+            if(!cloudConfig.geminiKey) return alert("Clé API Gemini manquante.");
+            const modal = document.getElementById('modal-oracle'); const resultBox = document.getElementById('oracle-result');
+            modal.showModal(); resultBox.innerText = "⏳ L'Oracle analyse ta bibliothèque...";
             const inspirateurs = selectedForOracle.map(id => { const i = library.find(x=>x.id===id); return `${i.titre} de ${i.createur}`; }).join(" | ");
             const palList = library.filter(i => ['alire', 'adecouvrir', 'atester'].includes(i.statut)).map(i => `${i.titre} de ${i.createur}`).join(" | ");
-
-            const prompt = `Tu es l'Oracle d'une bibliothèque. L'utilisateur aime : [ ${inspirateurs} ]. Sa Pile à Lire contient : [ ${palList || "Rien"} ].
-            Fais EXACTEMENT 2 recommandations claires et argumentées :
-            1. PIOCHE : Une œuvre à choisir dans sa Pile à Lire (Si vide, dis-le).
+            const prompt = `Tu es l'Oracle d'une bibliothèque. L'utilisateur aime : [ ${inspirateurs} ]. Sa PAL contient : [ ${palList || "Rien"} ].
+            Fais EXACTEMENT 2 recommandations argumentées :
+            1. PIOCHE : Une œuvre dans sa Pile à Lire.
             2. DÉCOUVERTE : Une nouveauté externe (Livre, BD ou Jeu) qu'il ne possède pas.`;
-
             try {
-                const req = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${cloudConfig.geminiKey}`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-                });
+                const req = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${cloudConfig.geminiKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
                 const data = await req.json();
-                if(data.candidates) {
-                    resultBox.innerHTML = data.candidates[0].content.parts[0].text.trim().replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
-                } else resultBox.innerText = `❌ Erreur : ${data.error ? data.error.message : 'inconnue'}`;
-            } catch(e) { resultBox.innerText = "❌ Erreur de connexion à l'Oracle."; }
+                if(data.candidates) resultBox.innerHTML = data.candidates[0].content.parts[0].text.trim().replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+                else resultBox.innerText = `❌ Erreur Oracle : ${data.error ? data.error.message : 'inconnue'}`;
+            } catch(e) { resultBox.innerText = "❌ Échec connexion Oracle."; }
         }
 
-        // --- 📖 VUE & IA RESUME ---
+        // --- 📖 VUE & RESUME ---
         function viewItem(id) {
-            const i = library.find(x => x.id === id); const s = statusConfig[i.statut];
+            const i = library.find(x => x.id === id); const s = statusConfig[i.statut] || {icon:'?', text:'-'};
             document.getElementById('view-titre').textContent = `${i.serie ? i.serie + ' - ' : ''}${i.titre}`;
             document.getElementById('view-createur').textContent = i.createur || 'Inconnu';
-            
             let metaHtml = `<span class="badge" style="background:#eee">${i.format}</span> <span class="badge" style="background:var(--bg-parchment-dark)">${s.icon} ${s.text}</span>`;
             if(i.annee) metaHtml += `<span class="badge" style="background:#eee">${i.annee}</span>`;
             if(i.coupDeCoeur) metaHtml += `<span class="badge" style="background:var(--color-danger); color:white;">❤️ Coup de coeur</span>`;
             (i.tags || []).forEach(t => metaHtml += `<span class="badge" style="background:#fff; border:1px solid #ddd;">${t}</span>`);
             document.getElementById('view-meta').innerHTML = metaHtml;
             document.getElementById('view-stars').innerHTML = i.note > 0 ? '★'.repeat(i.note) + '☆'.repeat(5-i.note) : '';
-            
             document.getElementById('view-resume').style.display = i.resume ? 'block' : 'none'; document.getElementById('view-resume').textContent = i.resume || '';
             document.getElementById('view-comment').style.display = i.commentaire ? 'block' : 'none'; document.getElementById('view-comment').textContent = i.commentaire || '';
-
             document.getElementById('btn-edit-from-view').onclick = () => { document.getElementById('modal-view').close(); editItem(id); };
             document.getElementById('btn-delete-from-view').onclick = () => { if(confirm('Supprimer cette œuvre ?')) { library = library.filter(x=>x.id!==id); saveLibrary(); document.getElementById('modal-view').close(); } };
             document.getElementById('modal-view').showModal();
@@ -455,87 +434,89 @@
             if(!titre) return alert("Titre requis !"); if(!cloudConfig.geminiKey) return alert("Clé API manquante.");
             const res = document.getElementById('resume'); const com = document.getElementById('commentaire');
             res.value = "⏳ Génération..."; res.disabled = true;
-            
-            const prompt = `Fiche pour : "${titre}" de "${createur}". Renvoie EXACTEMENT ce JSON brut :
-            { "resume": "Pitch 4e de couverture. 3 phrases max.", "anecdote": "Un fun fact (ou vide)." }`;
+            const prompt = `Fiche pour : "${titre}" de "${createur}". Renvoie EXACTEMENT ce JSON brut : { "resume": "Pitch 4e de couv (style auteur si connu). 3 phrases max.", "anecdote": "Fun fact (ou vide)." }`;
             try {
-                const req = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${cloudConfig.geminiKey}`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-                });
+                const req = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${cloudConfig.geminiKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
                 const data = await req.json();
                 if(data.candidates) {
                     let raw = data.candidates[0].content.parts[0].text.replace(/```json/gi, '').replace(/```/g, '').trim();
-                    try { const ia = JSON.parse(raw); res.value = ia.resume || "Introuvable."; if(ia.anecdote) com.value = (com.value ? com.value+"\n\n" : "") + "💡 " + ia.anecdote; } catch(e) { res.value = "❌ Erreur de format IA."; }
-                } else res.value = "❌ Erreur serveur Google.";
+                    try { const ia = JSON.parse(raw); res.value = ia.resume || "Introuvable."; if(ia.anecdote) com.value = (com.value ? com.value+"\n\n" : "") + "💡 " + ia.anecdote; } catch(e) { res.value = "❌ Erreur JSON IA."; }
+                } else res.value = "❌ Erreur serveur.";
             } catch(e) { res.value = "❌ Erreur réseau."; }
             res.disabled = false;
         };
 
-        // --- ☁️ CLOUD SYNC (SÉCURISÉ) ---
+        // --- ☁️ CLOUD (SÉCURISÉ) ---
         function saveCloudSettings() {
             cloudConfig.token = document.getElementById('gh-token').value.trim(); cloudConfig.gistId = document.getElementById('gh-gist-id').value.trim(); cloudConfig.geminiKey = document.getElementById('gemini-api-key').value.trim();
             localStorage.setItem('cloudConfig', JSON.stringify(cloudConfig)); document.getElementById('cloud-status').innerText = "✅ Clés sauvegardées.";
         }
         async function pushToCloud() {
-            if(!cloudConfig.token || !cloudConfig.gistId) return;
+            if(!cloudConfig.token || !cloudConfig.gistId) return alert("Paramètres incomplets.");
             const status = document.getElementById('cloud-status'); status.innerText = "⏳ Envoi...";
             try { 
                 const r = await fetch(`https://api.github.com/gists/${cloudConfig.gistId}`, { method: 'PATCH', headers: { 'Authorization': `Bearer ${cloudConfig.token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ files: { 'library.json': { content: JSON.stringify(library) } } }) });
-                const d = await r.json().catch(()=>null);
-                if(r.ok) status.innerText = "✅ Sauvegardé."; else status.innerText = `❌ Erreur GitHub (Vérifiez la case "gist" du Token): ${d ? d.message : r.status}`;
-            } catch(e) { status.innerText = "❌ Échec de la connexion."; }
+                if(r.ok) status.innerText = "✅ Sauvegardé."; else status.innerText = `❌ Erreur GitHub. Vérifiez la case 'gist' du Token.`;
+            } catch(e) { status.innerText = "❌ Échec connexion."; }
         }
         async function pullFromCloud() {
             if(!cloudConfig.token || !cloudConfig.gistId || !confirm("Écraser les données locales ?")) return;
             const status = document.getElementById('cloud-status'); status.innerText = "⏳ Récupération...";
             try { 
                 const r = await fetch(`https://api.github.com/gists/${cloudConfig.gistId}?t=${Date.now()}`, { headers: { 'Authorization': `Bearer ${cloudConfig.token}` } });
-                const d = await r.json().catch(()=>null);
-                if(!r.ok) { status.innerText = `❌ Erreur GitHub (Vérifiez la case "gist" du Token): ${d ? d.message : r.status}`; return; }
-                if(!d.files) { status.innerText = "❌ Gist invalide ou vide."; return; }
+                const d = await r.json();
+                if(!r.ok) { status.innerText = `❌ Erreur GitHub. Vérifiez le Token.`; return; }
                 const fKey = Object.keys(d.files).find(k => k.endsWith('.json'));
                 if(fKey && d.files[fKey]) { 
-                    const parsed = JSON.parse(d.files[fKey].content);
-                    if(Array.isArray(parsed)) { library = parsed; saveLibrary(); status.innerText = "✅ Données à jour."; }
-                    else { status.innerText = "❌ Le fichier Cloud est corrompu (non-tableau)."; }
+                    const content = JSON.parse(d.files[fKey].content);
+                    library = Array.isArray(content) ? content : Object.values(content); // Réparation automatique si format non-tableau
+                    saveLibrary(); status.innerText = "✅ Données à jour.";
                 } else status.innerText = "❌ Fichier .json introuvable.";
-            } catch(e) { status.innerText = `❌ Échec de la connexion: ${e.message}`; }
+            } catch(e) { status.innerText = `❌ Erreur lecture Cloud.`; }
         }
 
-        // --- 📊 UI & STATS ---
+        // --- 📊 STATISTIQUES (FIXÉES) ---
         function renderDashboard() {
-            const stats = { book: { t: 0, l: 0, a: 0, title: '📖 Livres' }, bd: { t: 0, l: 0, a: 0, title: '💬 BD' }, music: { t: 0, l: 0, a: 0, title: '🎵 Musique' }, game: { t: 0, l: 0, a: 0, title: '🎲 Jeux' } };
+            const stats = { 
+                book: { t: 0, l: 0, a: 0, title: '📖 Livres', done: 'terminés', todo: 'à lire' }, 
+                bd: { t: 0, l: 0, a: 0, title: '💬 BD', done: 'terminées', todo: 'à lire' }, 
+                music: { t: 0, l: 0, a: 0, title: '🎵 Musique', done: 'écoutés', todo: 'à découvrir' }, 
+                game: { t: 0, l: 0, a: 0, title: '🎲 Jeux', done: 'joués', todo: 'à tester' } 
+            };
             let auteurs = {}, tagsCount = {};
             library.forEach(i => { 
-                if (stats[i.type]) { stats[i.type].t++; if (['lu','ecoute','joue'].includes(i.statut)) stats[i.type].l++; else if(['alire','adecouvrir','atester'].includes(i.statut)) stats[i.type].a++; }
+                if (stats[i.type]) { 
+                    stats[i.type].t++; 
+                    if (['lu','ecoute','joue'].includes(i.statut)) stats[i.type].l++; 
+                    else if(['alire','adecouvrir','atester'].includes(i.statut)) stats[i.type].a++; 
+                }
                 if(i.createur) auteurs[i.createur] = (auteurs[i.createur] || 0) + 1;
                 if(i.tags) i.tags.forEach(t => tagsCount[t] = (tagsCount[t] || 0) + 1);
             });
             const sContainer = document.getElementById('dashboard-stats'); sContainer.innerHTML = '';
-            Object.keys(stats).forEach(k => { const s = stats[k]; if(s.t === 0) return; sContainer.innerHTML += `<div class="stat-card"><div class="stat-main"><span>${s.t}</span> <span style="font-size:1rem; color:var(--text-ink)">${s.title}</span></div><div class="stat-details"><div>✅ ${s.l} faits</div><div>📚 ${s.a} à faire</div></div></div>`; });
-            
+            Object.keys(stats).forEach(k => { 
+                const s = stats[k]; if(s.t === 0) return; 
+                sContainer.innerHTML += `<div class="stat-card"><div class="stat-main"><span>${s.t}</span> <span style="font-size:1rem; color:var(--text-ink)">${s.title}</span></div><div class="stat-details"><div>✅ ${s.l} ${s.done}</div><div>📚 ${s.a} ${s.todo}</div></div></div>`; 
+            });
             document.getElementById('stat-top-auteurs').innerHTML = Object.entries(auteurs).sort((a,b)=>b[1]-a[1]).slice(0,3).map((a, i) => `<li>${i===0?'🥇':i===1?'🥈':'🥉'} <b>${a[0]}</b> (${a[1]})</li>`).join('');
             document.getElementById('stat-top-tags').innerHTML = Object.entries(tagsCount).sort((a,b)=>b[1]-a[1]).slice(0,4).map(t => `<li>🏷️ <b>${t[0]}</b> (${t[1]})</li>`).join('');
-
             const favs = library.filter(i => i.coupDeCoeur); document.getElementById('title-coups-coeur').style.display = favs.length ? 'block' : 'none';
             renderGrid(favs.slice(0, 4), 'list-favs'); renderGrid([...library].sort((a,b) => b.dateAjout - a.dateAjout).slice(0, 4), 'list-recent');
         }
 
+        // --- 🔍 RECHERCHE & UI ---
         const activeFilters = { sort: 'date_desc', status: 'all', format: 'all', tag: 'all', favOnly: false };
         function triggerUpdate() { if(document.getElementById('search-input').value.trim() !== '') document.getElementById('search-input').dispatchEvent(new Event('input')); else renderAll(); }
         document.getElementById('btn-toggle-filters').onclick = function() { document.getElementById('filter-panel').classList.toggle('open'); this.classList.toggle('active'); };
         ['sort','status','format','tag'].forEach(id => document.getElementById(`filter-${id}`).onchange = e => { activeFilters[id] = e.target.value; triggerUpdate(); });
         document.getElementById('filter-fav').onchange = e => { activeFilters.favOnly = e.target.checked; triggerUpdate(); };
         document.getElementById('search-input').oninput = function(e) { const term = e.target.value.toLowerCase().trim(); if (term === '') { switchView(document.querySelector('.nav-btn.active').dataset.target); return; } switchView('view-search'); renderGrid(processData(library.filter(i => (i.titre||'').toLowerCase().includes(term) || (i.createur||'').toLowerCase().includes(term) || (i.tags||[]).some(t=>t.toLowerCase().includes(term)))), 'list-search'); };
-
         function processData(data) { let res = data.filter(i => { if(activeFilters.status !== 'all' && i.statut !== activeFilters.status) return false; if(activeFilters.format !== 'all' && i.format !== activeFilters.format) return false; if(activeFilters.tag !== 'all' && !(i.tags && i.tags.includes(activeFilters.tag))) return false; if(activeFilters.favOnly && !i.coupDeCoeur) return false; return true; }); res.sort((a,b) => { if(activeFilters.sort === 'date_desc') return b.dateAjout - a.dateAjout; if(activeFilters.sort === 'alpha_asc') return (a.titre||'').localeCompare(b.titre||''); if(activeFilters.sort === 'createur_asc') return (a.createur||'').localeCompare(b.createur||''); if(activeFilters.sort === 'note_desc') return (b.note||0) - (a.note||0); return 0; }); return res; }
-        
         function createCard(i) {
             const card = document.createElement('div'); card.className = `card ${isOracleMode ? 'mode-selection' : ''} ${selectedForOracle.includes(i.id) ? 'selected' : ''}`;
             card.innerHTML = `<div class="card-header"><div class="card-title-group"><div class="card-title">${{book:'📖',bd:'💬',music:'🎵',game:'🎲'}[i.type]} ${i.serie?i.serie+' - ':''}${i.titre} ${i.coupDeCoeur?'❤️':''}</div><div class="card-creator">${i.createur || ''}</div></div><div class="card-status-group"><span class="badge badge-status" style="background:var(--bg-parchment-dark)">${(statusConfig[i.statut]||{icon:'?'}).icon}</span></div></div><div style="flex:1; pointer-events:none;"></div>${i.note > 0 ? `<div style="color:var(--color-star);font-size:1.1rem;margin:4px 0;">${'★'.repeat(i.note)}</div>`:''}<div class="card-meta"><span class="badge" style="background:#ddd">${i.format}</span>${(i.tags || []).slice(0, 3).map(t => `<span class="badge">${t}</span>`).join('')}</div>`;
             card.onclick = () => isOracleMode ? toggleCardSelection(i.id, card) : viewItem(i.id); return card;
         }
-
         function renderGrid(data, containerId) { const c = document.getElementById(containerId); c.innerHTML = data.length ? '' : '<p style="padding:10px;">Rien à afficher.</p>'; data.forEach(i => c.appendChild(createCard(i))); }
         function switchView(id) { document.querySelectorAll('.view-section').forEach(v => v.classList.toggle('active', v.id === id)); if(id !== 'view-search') { document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.target === id)); renderAll(); } }
         document.querySelectorAll('.nav-btn').forEach(b => b.onclick = () => { document.getElementById('search-input').value=''; switchView(b.dataset.target); });
@@ -552,7 +533,6 @@
         document.querySelectorAll('input[name="type"]').forEach(r => r.onchange = e => { selectedTags=[]; updateFormUI(e.target.value); });
         form.onsubmit = e => { e.preventDefault(); const item = { id: editingId || Date.now().toString(), type: document.querySelector('input[name="type"]:checked').value, titre: document.getElementById('titre').value, createur: document.getElementById('createur').value, serie: document.getElementById('serie').value, tome: document.getElementById('tome').value, format: document.getElementById('format').value, annee: document.getElementById('annee').value, statut: document.getElementById('statut').value, tags: [...selectedTags], resume: document.getElementById('resume').value, note: parseInt(document.getElementById('note').value) || 0, coupDeCoeur: document.getElementById('coup-de-coeur').checked, commentaire: document.getElementById('commentaire').value, dateAjout: editingId ? library.find(i=>i.id===editingId).dateAjout : Date.now() }; const idx = library.findIndex(i=>i.id===editingId); if(idx!==-1) library[idx]=item; else library.push(item); saveLibrary(); modalAdd.close(); };
         window.editItem = id => { const i = library.find(x=>x.id===id); editingId = id; document.querySelector(`input[name="type"][value="${i.type}"]`).checked = true; selectedTags = [...(i.tags||[])]; updateFormUI(i.type); ['titre','createur','serie','tome','format','annee','statut','resume','commentaire'].forEach(k => document.getElementById(k).value = i[k]||''); setStars(i.note||0); document.getElementById('coup-de-coeur').checked = i.coupDeCoeur||false; document.getElementById('statut').dispatchEvent(new Event('change')); modalAdd.showModal(); };
-
         function exportToExcel() { let csv = "\ufeffType;Titre;Série;Tome;Créateur;Format;Année;Statut;Tags;Note;Coup de coeur;Commentaire\n"; library.forEach(i => { const q=s=>`"${(s||"").toString().replace(/"/g, '""')}"`; csv += `${i.type};${q(i.titre)};${q(i.serie)};${q(i.tome)};${q(i.createur)};${q(i.format)};${i.annee||''};${i.statut};${q((i.tags||[]).join(','))};${i.note||0};${i.coupDeCoeur};${q(i.commentaire)}\n`; }); const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})); a.download=`Biblio_${new Date().toISOString().split('T')[0]}.csv`; a.click(); }
         function importFromCSV(input) { const f = input.files[0]; if(!f) return; const r=new FileReader(); r.onload=e=>{ const lines=e.target.result.split('\n'); const added=[]; for(let i=1;i<lines.length;i++){ if(!lines[i].trim())continue; let ret=[], keep=false, cur=''; for(let j=0;j<lines[i].length;j++){let c=lines[i][j]; if(c==='"')keep=!keep; else if(c===';'&&!keep){ret.push(cur);cur='';} else cur+=c;} ret.push(cur); const c=ret.map(s=>s.trim().replace(/^"|"$/g,'').replace(/""/g,'"')); if(c.length<2)continue; added.push({id:Date.now().toString()+i, type:c[0]||'book', titre:c[1], serie:c[2], tome:c[3], createur:c[4], format:c[5], annee:c[6], statut:c[7], tags:c[8]?c[8].split(','):[], note:parseInt(c[9])||0, coupDeCoeur:c[10]==='true', commentaire:c[11], dateAjout:Date.now()}); } if(confirm(`Importer ${added.length} items ?`)) { library=[...library,...added]; saveLibrary(); } }; r.readAsText(f); }
 
