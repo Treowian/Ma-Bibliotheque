@@ -3,7 +3,7 @@ const ASSETS = [
     './',
     './index.html',
     './manifest.json',
-    './icon-512x512.png'
+    './icon.png'
 ];
 
 // Installation : on met les fichiers statiques en cache

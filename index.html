@@ -7,7 +7,7 @@
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2C251F">
-    <link rel="apple-touch-icon" href="icon-512x512.png">
+    <link rel="apple-touch-icon" href="icon.png">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -380,7 +380,22 @@
             game: { createur: "Auteur / Éditeur", formats: ["Plateau", "Cartes", "Dés", "Figurines", "Autre"], tags: ["Coopératif", "Compétitif", "Gestion", "Deckbuilding", "Bluff", "Narratif", "2 Joueurs", "Familial", "Expert"], statuses: [{val:'joue', text:'🎲 Joué'}, {val:'atester', text:'📦 À tester'}, {val:'abandonne', text:'❌ Revendu/Abandonné'}] }
         };
 
-        function saveLibrary() { localStorage.setItem('myLibrary', JSON.stringify(library)); renderAll(); }
+        function saveLibrary() { 
+            localStorage.setItem('myLibrary', JSON.stringify(library)); 
+            renderAll(); 
+            
+            // --- AUTO-PUSH SILENCIEUX ---
+            if(cloudConfig.token && cloudConfig.gistId) {
+                fetch(`https://api.github.com/gists/${cloudConfig.gistId}`, { 
+                    method: 'PATCH', 
+                    headers: { 'Authorization': `Bearer ${cloudConfig.token}`, 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ files: { 'library.json': { content: JSON.stringify(library) } } }) 
+                }).then(r => {
+                    const status = document.getElementById('cloud-status');
+                    if(r.ok && status) status.innerText = "☁️ Auto-sauvegardé à l'instant.";
+                }).catch(e => console.error("Échec de l'auto-push"));
+            }
+        }
 
         // --- 🪄 ORACLE IA ---
         document.getElementById('btn-toggle-oracle').onclick = function() {
@@ -407,17 +422,23 @@
             const inspirateurs = selectedForOracle.map(id => { const i = library.find(x=>x.id===id); return `${i.titre} de ${i.createur}`; }).join(" | ");
             const palList = library.filter(i => ['alire', 'adecouvrir', 'atester'].includes(i.statut)).map(i => `${i.titre} de ${i.createur}`).join(" | ");
             
-            const prompt = `L'utilisateur aime ces œuvres : [ ${inspirateurs} ]. Sa Pile à Lire contient : [ ${palList || "Rien"} ].
-Agis comme un Oracle concis. Fais EXACTEMENT 2 recommandations.
+            const prompt = `Tu es l'Oracle d'une bibliothèque.
+L'utilisateur aime ces œuvres : [ ${inspirateurs} ]. 
+Voici sa Pile à Lire EXACTE : [ ${palList || "VIDE"} ].
+
+Fais EXACTEMENT 2 recommandations en respectant ces RÈGLES ABSOLUES :
+1. PIOCHE : Tu DOIS sélectionner une œuvre en faisant un COPIER-COLLER EXACT depuis sa Pile à Lire. N'INVENTE AUCUN TITRE. Ne modifie aucun mot. Si la liste est "VIDE" ou que rien ne correspond, dis "Ta pile à lire ne contient pas de correspondance parfaite."
+2. DÉCOUVERTE : Recommande une vraie œuvre EXISTANTE ET CONNUE (Livre, BD ou Jeu) qu'il ne possède pas.
+
 Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises markdown \`\`\`html) :
 
 <div style="background: rgba(255,255,255,0.7); padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #3f2b96;">
   <h3 style="color: #3f2b96; margin-top:0; margin-bottom:5px; font-size:1.1rem;">📚 Dans ta Pile à Lire</h3>
-  <b>[Titre]</b> de [Auteur]<br><i style="font-size:0.9rem;">[1 seule phrase d'explication courte et percutante]</i>
+  <b>[Titre Exact Copié]</b> de [Auteur]<br><i style="font-size:0.9rem;">[1 seule phrase d'explication courte]</i>
 </div>
 <div style="background: rgba(255,255,255,0.7); padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #a8c0ff;">
   <h3 style="color: #3f2b96; margin-top:0; margin-bottom:5px; font-size:1.1rem;">✨ Nouveauté à découvrir</h3>
-  <b>[Titre]</b> de [Auteur]<br><i style="font-size:0.9rem;">[1 seule phrase d'explication courte et percutante]</i>
+  <b>[Titre Vrai]</b> de [Auteur Vrai]<br><i style="font-size:0.9rem;">[1 seule phrase d'explication courte]</i>
 </div>`;
             
             try {
