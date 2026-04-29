@@ -464,14 +464,18 @@
             const status = document.getElementById('cloud-status'); status.innerText = "⏳ Récupération...";
             try { 
                 const r = await fetch(`https://api.github.com/gists/${cloudConfig.gistId}?t=${Date.now()}`, { headers: { 'Authorization': `Bearer ${cloudConfig.token}` } });
-                const d = await r.json();
+                const d = await r.json().catch(()=>null);
                 if(!r.ok) { status.innerText = `❌ Erreur GitHub. Vérifiez le Token.`; return; }
-                const fKey = Object.keys(d.files).find(k => k.endsWith('.json'));
+                if(!d.files) { status.innerText = "❌ Gist invalide ou vide."; return; }
+                
+                // 🛑 LE CORRECTIF EST LÀ : On cible expressément le bon fichier !
+                const fKey = d.files['library.json'] ? 'library.json' : Object.keys(d.files).find(k => k.endsWith('.json'));
+                
                 if(fKey && d.files[fKey]) { 
                     const content = JSON.parse(d.files[fKey].content);
-                    library = Array.isArray(content) ? content : Object.values(content); // Réparation automatique si format non-tableau
-                    saveLibrary(); status.innerText = "✅ Données à jour.";
-                } else status.innerText = "❌ Fichier .json introuvable.";
+                    library = Array.isArray(content) ? content : Object.values(content); 
+                    saveLibrary(); status.innerText = `✅ Données à jour (${library.length} éléments).`;
+                } else status.innerText = "❌ Fichier introuvable.";
             } catch(e) { status.innerText = `❌ Erreur lecture Cloud.`; }
         }
 
