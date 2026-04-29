@@ -360,6 +360,20 @@
         // --- ⚙️ LOGIQUE DATA ---
         let library = [];
         try { const stored = JSON.parse(localStorage.getItem('myLibrary')); if(Array.isArray(stored)) library = stored; } catch(e) { console.error("Cache local corrompu."); }
+        
+        // 🧹 AUTO-NETTOYAGE DES TAGS (Supprime les espaces et les doublons liés à l'ancien import CSV)
+        let needsSave = false;
+        library.forEach(item => {
+            if (item.tags && item.tags.length > 0) {
+                const cleanedTags = [...new Set(item.tags.map(t => t.trim()).filter(t => t !== ''))];
+                if (JSON.stringify(item.tags) !== JSON.stringify(cleanedTags)) {
+                    item.tags = cleanedTags;
+                    needsSave = true;
+                }
+            }
+        });
+        if(needsSave) { localStorage.setItem('myLibrary', JSON.stringify(library)); }
+
         let cloudConfig = { token: '', gistId: '', geminiKey: '' };
         try { const c = JSON.parse(localStorage.getItem('cloudConfig')); if(c) cloudConfig = c; } catch(e) {}
         let editingId = null; let isOracleMode = false; let selectedForOracle = [];
@@ -383,7 +397,6 @@
         function saveLibrary() { 
             localStorage.setItem('myLibrary', JSON.stringify(library)); 
             renderAll(); 
-            
             // --- AUTO-PUSH SILENCIEUX ---
             if(cloudConfig.token && cloudConfig.gistId) {
                 fetch(`https://api.github.com/gists/${cloudConfig.gistId}`, { 
@@ -455,7 +468,7 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
         // --- 📖 VUE & RESUME ---
         function viewItem(id) {
             const i = library.find(x => x.id === id); const s = statusConfig[i.statut] || {icon:'?', text:'-'};
-            document.getElementById('view-titre').textContent = `${i.serie ? i.serie + ' - ' : ''}${i.titre}`;
+            document.getElementById('view-titre').textContent = `${i.serie ? i.serie + ' - ' : ''}${i.tome ? 'Tome '+i.tome+' - ' : ''}${i.titre}`;
             document.getElementById('view-createur').textContent = i.createur || 'Inconnu';
             let metaHtml = `<span class="badge" style="background:#eee">${i.format}</span> <span class="badge" style="background:var(--bg-parchment-dark)">${s.icon} ${s.text}</span>`;
             if(i.annee) metaHtml += `<span class="badge" style="background:#eee">${i.annee}</span>`;
@@ -590,14 +603,26 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
         const stars = document.querySelectorAll('#star-rating span'); function setStars(val) { document.getElementById('note').value = val; stars.forEach(s => s.style.color = parseInt(s.dataset.val) <= val ? 'var(--color-star)' : '#ccc'); } stars.forEach(s => s.onclick = () => setStars(parseInt(s.dataset.val)));
         function renderTagsUI(type) { const container = document.getElementById('tags-container'); container.innerHTML = ''; let all = new Set(uiConfig[type].tags); library.filter(i=>i.type===type && i.tags).forEach(i=>i.tags.forEach(t=>all.add(t))); selectedTags.forEach(t=>all.add(t)); Array.from(all).sort().forEach(t => { const p = document.createElement('span'); p.className = 'tag-pill' + (selectedTags.includes(t)?' active':''); p.textContent = t; p.onclick = () => { p.classList.toggle('active'); selectedTags = selectedTags.includes(t) ? selectedTags.filter(x=>x!==t) : [...selectedTags, t]; }; container.appendChild(p); }); }
         document.getElementById('custom-tag-input').addEventListener('keydown', function(e) { if(e.key==='Enter') { e.preventDefault(); const v=this.value.trim(); if(v&&!selectedTags.includes(v)) { selectedTags.push(v); renderTagsUI(document.querySelector('input[name="type"]:checked').value); } this.value=''; }});
-        function updateFormUI(type) { document.getElementById('label-createur').textContent = uiConfig[type].createur; const f = document.getElementById('format'); f.innerHTML=''; uiConfig[type].formats.forEach(x => f.appendChild(new Option(x,x))); const s = document.getElementById('statut'); s.innerHTML=''; uiConfig[type].statuses.forEach(x => s.appendChild(new Option(x.text, x.val))); document.getElementById('group-tome').style.display = type==='bd'?'flex':'none'; document.getElementById('group-resume').style.display = (type==='book'||type==='bd')?'flex':'none'; renderTagsUI(type); document.getElementById('review-section').style.display = ['lu','ecoute','joue','abandonne'].includes(document.getElementById('statut').value) ? 'block' : 'none'; }
+        
+        function updateFormUI(type) { 
+            document.getElementById('label-createur').textContent = uiConfig[type].createur; 
+            const f = document.getElementById('format'); f.innerHTML=''; uiConfig[type].formats.forEach(x => f.appendChild(new Option(x,x))); 
+            const s = document.getElementById('statut'); s.innerHTML=''; uiConfig[type].statuses.forEach(x => s.appendChild(new Option(x.text, x.val))); 
+            document.getElementById('group-tome').style.display = (type==='book'||type==='bd')?'flex':'none'; 
+            document.getElementById('group-resume').style.display = (type==='book'||type==='bd')?'flex':'none'; 
+            renderTagsUI(type); 
+            document.getElementById('review-section').style.display = ['lu','ecoute','joue','abandonne'].includes(document.getElementById('statut').value) ? 'block' : 'none'; 
+        }
+        
         document.getElementById('statut').onchange = () => document.getElementById('review-section').style.display = ['lu','ecoute','joue','abandonne'].includes(document.getElementById('statut').value) ? 'block' : 'none';
         document.getElementById('btn-fab-add').onclick = () => { editingId=null; form.reset(); selectedTags=[]; setStars(0); document.querySelector('input[name="type"][value="book"]').checked=true; updateFormUI('book'); modalAdd.showModal(); };
         document.querySelectorAll('input[name="type"]').forEach(r => r.onchange = e => { selectedTags=[]; updateFormUI(e.target.value); });
         form.onsubmit = e => { e.preventDefault(); const item = { id: editingId || Date.now().toString(), type: document.querySelector('input[name="type"]:checked').value, titre: document.getElementById('titre').value, createur: document.getElementById('createur').value, serie: document.getElementById('serie').value, tome: document.getElementById('tome').value, format: document.getElementById('format').value, annee: document.getElementById('annee').value, statut: document.getElementById('statut').value, tags: [...selectedTags], resume: document.getElementById('resume').value, note: parseInt(document.getElementById('note').value) || 0, coupDeCoeur: document.getElementById('coup-de-coeur').checked, commentaire: document.getElementById('commentaire').value, dateAjout: editingId ? library.find(i=>i.id===editingId).dateAjout : Date.now() }; const idx = library.findIndex(i=>i.id===editingId); if(idx!==-1) library[idx]=item; else library.push(item); saveLibrary(); modalAdd.close(); };
         window.editItem = id => { const i = library.find(x=>x.id===id); editingId = id; document.querySelector(`input[name="type"][value="${i.type}"]`).checked = true; selectedTags = [...(i.tags||[])]; updateFormUI(i.type); ['titre','createur','serie','tome','format','annee','statut','resume','commentaire'].forEach(k => document.getElementById(k).value = i[k]||''); setStars(i.note||0); document.getElementById('coup-de-coeur').checked = i.coupDeCoeur||false; document.getElementById('statut').dispatchEvent(new Event('change')); modalAdd.showModal(); };
+        
         function exportToExcel() { let csv = "\ufeffType;Titre;Série;Tome;Créateur;Format;Année;Statut;Tags;Note;Coup de coeur;Commentaire\n"; library.forEach(i => { const q=s=>`"${(s||"").toString().replace(/"/g, '""')}"`; csv += `${i.type};${q(i.titre)};${q(i.serie)};${q(i.tome)};${q(i.createur)};${q(i.format)};${i.annee||''};${i.statut};${q((i.tags||[]).join(','))};${i.note||0};${i.coupDeCoeur};${q(i.commentaire)}\n`; }); const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})); a.download=`Biblio_${new Date().toISOString().split('T')[0]}.csv`; a.click(); }
-        function importFromCSV(input) { const f = input.files[0]; if(!f) return; const r=new FileReader(); r.onload=e=>{ const lines=e.target.result.split('\n'); const added=[]; for(let i=1;i<lines.length;i++){ if(!lines[i].trim())continue; let ret=[], keep=false, cur=''; for(let j=0;j<lines[i].length;j++){let c=lines[i][j]; if(c==='"')keep=!keep; else if(c===';'&&!keep){ret.push(cur);cur='';} else cur+=c;} ret.push(cur); const c=ret.map(s=>s.trim().replace(/^"|"$/g,'').replace(/""/g,'"')); if(c.length<2)continue; added.push({id:Date.now().toString()+i, type:c[0]||'book', titre:c[1], serie:c[2], tome:c[3], createur:c[4], format:c[5], annee:c[6], statut:c[7], tags:c[8]?c[8].split(','):[], note:parseInt(c[9])||0, coupDeCoeur:c[10]==='true', commentaire:c[11], dateAjout:Date.now()}); } if(confirm(`Importer ${added.length} items ?`)) { library=[...library,...added]; saveLibrary(); } }; r.readAsText(f); }
+        
+        function importFromCSV(input) { const f = input.files[0]; if(!f) return; const r=new FileReader(); r.onload=e=>{ const lines=e.target.result.split('\n'); const added=[]; for(let i=1;i<lines.length;i++){ if(!lines[i].trim())continue; let ret=[], keep=false, cur=''; for(let j=0;j<lines[i].length;j++){let c=lines[i][j]; if(c==='"')keep=!keep; else if(c===';'&&!keep){ret.push(cur);cur='';} else cur+=c;} ret.push(cur); const c=ret.map(s=>s.trim().replace(/^"|"$/g,'').replace(/""/g,'"')); if(c.length<2)continue; added.push({id:Date.now().toString()+i, type:c[0]||'book', titre:c[1], serie:c[2], tome:c[3], createur:c[4], format:c[5], annee:c[6], statut:c[7], tags:c[8]?c[8].split(',').map(t=>t.trim()).filter(Boolean):[], note:parseInt(c[9])||0, coupDeCoeur:c[10]==='true', commentaire:c[11], dateAjout:Date.now()}); } if(confirm(`Importer ${added.length} items ?`)) { library=[...library,...added]; saveLibrary(); } }; r.readAsText(f); }
 
         renderAll();
 
