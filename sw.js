@@ -1,4 +1,4 @@
-const CACHE_NAME = 'biblio-cache-v1';
+const CACHE_NAME = 'biblio-cache-v2';
 const ASSETS = [
     './',
     './index.html',
@@ -6,8 +6,8 @@ const ASSETS = [
     './icon.png'
 ];
 
-// Installation : on met les fichiers statiques en cache
 self.addEventListener('install', (event) => {
+    self.skipWaiting();
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
             return cache.addAll(ASSETS);
@@ -15,14 +15,25 @@ self.addEventListener('install', (event) => {
     );
 });
 
-// Interception des requêtes
+// Supprime les vieux caches (v1) quand la v2 s'installe
+self.addEventListener('activate', (event) => {
+    event.waitUntil(
+        caches.keys().then((cacheNames) => {
+            return Promise.all(
+                cacheNames.map((cacheName) => {
+                    if (cacheName !== CACHE_NAME) {
+                        return caches.delete(cacheName);
+                    }
+                })
+            );
+        })
+    );
+});
+
 self.addEventListener('fetch', (event) => {
-    // 🚨 Règle d'or : On ne met JAMAIS en cache les appels vers les API externes
     if (event.request.url.includes('api.github.com') || event.request.url.includes('generativelanguage.googleapis.com')) {
         return; 
     }
-
-    // Pour le reste (HTML, icône), on cherche dans le cache d'abord, sinon on télécharge
     event.respondWith(
         caches.match(event.request).then((cachedResponse) => {
             return cachedResponse || fetch(event.request);
