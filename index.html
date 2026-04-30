@@ -87,12 +87,12 @@
         .top-list { font-size: 0.85rem; padding-left: 15px; margin-top: 5px; color: var(--text-ink-light); }
         .top-list li { margin-bottom: 5px; }
 
-        #selection-bar { position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%); background: #fff; border: 2px solid var(--accent-wood); padding: 10px 15px; border-radius: 30px; display: none; align-items: center; gap: 10px; z-index: 90; box-shadow: 0 8px 20px rgba(140, 90, 64, 0.3); white-space: nowrap;}
+        #selection-bar { position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%); background: #fff; border: 2px solid var(--accent-wood); padding: 10px 15px; border-radius: 30px; display: none; align-items: center; gap: 10px; z-index: 200; box-shadow: 0 8px 20px rgba(140, 90, 64, 0.4); white-space: nowrap;}
         @media (min-width: 768px) { #selection-bar { bottom: 30px; } }
         .selection-count { font-weight: bold; color: var(--accent-wood); padding-right: 10px; border-right: 1px solid var(--bg-parchment-dark); }
         .btn-action { background: none; border: none; font-size: 1.2rem; cursor: pointer; transition: 0.2s; padding: 5px; display: flex; align-items: center; justify-content: center; border-radius: 50%;}
         .btn-action:hover { background: var(--bg-parchment); transform: scale(1.1); }
-        .btn-action.btn-oracle { background: linear-gradient(135deg, #a8c0ff, #3f2b96); color: white; font-size: 1rem; padding: 5px 10px; border-radius: 20px;}
+        .btn-action.btn-oracle { background: linear-gradient(135deg, #a8c0ff, #3f2b96); color: white; font-size: 1rem; padding: 5px 12px; border-radius: 20px; font-weight: bold;}
 
         #btn-fab-add { position: fixed; bottom: 85px; right: 20px; width: 60px; height: 60px; border-radius: 50%; background-color: var(--accent-wood); color: #fff; font-size: 1.8rem; border: none; box-shadow: 0 6px 16px rgba(140, 90, 64, 0.4); cursor: pointer; z-index: 110; display: flex; align-items: center; justify-content: center; transition: 0.3s opacity, 0.3s transform; }
         @media (min-width: 768px) { #btn-fab-add { bottom: 40px; right: 40px; } }
@@ -116,7 +116,7 @@
         .form-row { display: flex; flex-wrap: wrap; gap: 10px; }
         .form-row .form-group { flex: 1; min-width: 120px; }
         label { font-weight: 600; font-size: 0.85rem; margin-bottom: 4px; color: var(--text-ink-light); }
-        input[type="text"], input[type="number"], input[type="password"], textarea { padding: 10px; border: 1px solid var(--bg-parchment-dark); border-radius: 8px; font-family: var(--font-body); font-size: 0.95rem; background: #fff; }
+        input[type="text"], input[type="number"], input[type="password"], select, textarea { padding: 10px; border: 1px solid var(--bg-parchment-dark); border-radius: 8px; font-family: var(--font-body); font-size: 0.95rem; background: #fff; }
         
         .type-selector { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 15px; }
         .type-selector label { flex: 1; min-width: 80px; cursor: pointer; }
@@ -186,9 +186,9 @@
 
         <div id="selection-bar">
             <span class="selection-count"><span id="oracle-count">0</span></span>
-            <button class="btn-action btn-oracle" onclick="askOracle()" title="Invoquer l'Oracle">🪄 Oracle</button>
-            <button class="btn-action" style="color: var(--color-success);" onclick="markSelectedAsDone()" title="Passer en Terminé">✅</button>
-            <button class="btn-action" style="color: var(--color-danger);" onclick="deleteSelected()" title="Supprimer">🗑️</button>
+            <button id="btn-ask-oracle" class="btn-action btn-oracle" onclick="askOracle()" title="Invoquer l'Oracle">🪄 Oracle</button>
+            <button id="btn-mark-done" class="btn-action" style="color: var(--color-success);" onclick="markSelectedAsDone()" title="Passer en Terminé">✅</button>
+            <button id="btn-delete-selected" class="btn-action" style="color: var(--color-danger);" onclick="deleteSelected()" title="Supprimer">🗑️</button>
         </div>
 
         <nav id="main-nav">
@@ -308,6 +308,14 @@
                 <button class="btn-primary" id="btn-edit-from-view" style="margin:0;">✏️ Modifier la fiche</button>
                 <button class="btn-danger" id="btn-delete-from-view" style="margin:0;">🗑️</button>
             </div>
+        </div>
+    </dialog>
+
+    <dialog id="modal-oracle">
+        <div class="modal-content">
+            <button class="btn-close-absolute" onclick="document.getElementById('modal-oracle').close()">❌</button>
+            <h2 style="font-family: var(--font-title); color: #3f2b96; margin-bottom: 15px;">🔮 L'Oracle a parlé</h2>
+            <div id="oracle-result" style="font-size: 0.95rem; line-height: 1.5;">⏳ L'IA analyse tes goûts...</div>
         </div>
     </dialog>
 
@@ -439,20 +447,13 @@
             }
         }
 
-        // Radar IA 
         async function findBestModel(apiKey) {
             try {
                 const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
                 const data = await res.json();
                 if (!data.models) return 'gemini-1.5-flash'; 
-                
                 const validModels = data.models.filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent') && m.name.includes('gemini'));
-                
-                const best = validModels.find(m => m.name.includes('1.5-flash')) 
-                          || validModels.find(m => m.name.includes('flash')) 
-                          || validModels.find(m => m.name.includes('pro')) 
-                          || validModels[0];
-                          
+                const best = validModels.find(m => m.name.includes('1.5-flash')) || validModels.find(m => m.name.includes('flash')) || validModels.find(m => m.name.includes('pro')) || validModels[0];
                 return best ? best.name.replace('models/', '') : 'gemini-1.5-flash';
             } catch (e) {
                 return 'gemini-1.5-flash'; 
@@ -499,21 +500,37 @@
             }, true);
         }
 
+        // --- 🪄 LA FONCTION ORACLE BLINDÉE ---
         async function askOracle() {
-            if(selectedForOracle.length === 0) return customConfirm("🪄 Tu dois d'abord sélectionner au moins une œuvre (en cliquant dessus) pour inspirer l'Oracle !", null, false);
-            if(!cloudConfig.geminiKey) return customConfirm("❌ Clé API Gemini manquante dans les réglages.", null, true);
+            if(selectedForOracle.length === 0) {
+                customConfirm("🪄 Tu dois d'abord sélectionner au moins une œuvre (en cliquant dessus) pour inspirer l'Oracle !", null, false);
+                return;
+            }
+            if(!cloudConfig.geminiKey || cloudConfig.geminiKey.trim() === '') {
+                customConfirm("❌ Clé API Gemini manquante ! Va dans l'onglet ⚙️ Réglages pour l'ajouter.", null, true);
+                return;
+            }
             
-            const modal = document.getElementById('modal-oracle'); const resultBox = document.getElementById('oracle-result');
-            modal.showModal(); resultBox.innerText = "📡 Le Radar cherche un modèle IA compatible...";
+            const modal = document.getElementById('modal-oracle'); 
+            const resultBox = document.getElementById('oracle-result');
             
-            const inspirateurs = selectedForOracle.map(id => { 
-                const i = library.find(x=>x.id===id); 
-                return i ? `${i.titre} de ${i.createur}` : null; 
-            }).filter(Boolean).join(" | ");
+            if(modal && typeof modal.showModal === 'function') {
+                modal.showModal(); 
+            } else {
+                console.error("Modale Oracle introuvable ou non supportée");
+            }
             
-            const palList = library.filter(i => ['alire', 'adecouvrir', 'atester'].includes(i.statut)).map(i => `${i.titre} de ${i.createur}`).join(" | ");
+            resultBox.innerHTML = "📡 Le Radar cherche le meilleur modèle IA...<br><br><small><i>Vérification de ta clé API en cours...</i></small>";
             
-            const prompt = `Tu es l'Oracle d'une bibliothèque.
+            try {
+                const inspirateurs = selectedForOracle.map(id => { 
+                    const i = library.find(x=>x.id===id); 
+                    return i ? `"${i.titre}" de ${i.createur}` : null; 
+                }).filter(Boolean).join(" | ");
+                
+                const palList = library.filter(i => ['alire', 'adecouvrir', 'atester'].includes(i.statut)).map(i => `"${i.titre}" de ${i.createur}`).join(" | ");
+                
+                const prompt = `Tu es l'Oracle d'une bibliothèque.
 L'utilisateur aime ces œuvres : [ ${inspirateurs} ]. 
 Voici sa Pile à Lire EXACTE : [ ${palList || "VIDE"} ].
 
@@ -532,21 +549,29 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
   <b>[Titre Vrai]</b> de [Auteur Vrai]<br><i style="font-size:0.9rem;">[1 seule phrase d'explication courte]</i>
 </div>`;
             
-            try {
                 const modelToUse = await findBestModel(cloudConfig.geminiKey);
-                resultBox.innerText = `⏳ L'Oracle connecte ses neurones via ${modelToUse}...`;
+                resultBox.innerHTML = `⏳ Connexion établie avec <b>${modelToUse}</b>...<br><br><small><i>Analyse de tes goûts en cours...</i></small>`;
 
-                const req = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${cloudConfig.geminiKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
+                const req = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${cloudConfig.geminiKey}`, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) 
+                });
+                
                 const data = await req.json();
+                
                 if(data.candidates) {
                     let rawHtml = data.candidates[0].content.parts[0].text.replace(/```html/gi, '').replace(/```/g, '').trim();
                     resultBox.innerHTML = rawHtml;
                 }
-                else resultBox.innerText = `❌ Erreur IA : ${data.error ? data.error.message : 'inconnue'}`;
-            } catch(e) { resultBox.innerText = "❌ Échec de la connexion à l'Oracle."; }
+                else {
+                    resultBox.innerHTML = `❌ <b>Erreur de l'API Google :</b><br><br>${data.error ? data.error.message : 'Clé API invalide ou quota dépassé.'}`;
+                }
+            } catch(e) { 
+                resultBox.innerHTML = `❌ <b>Échec de la connexion.</b><br><br>Impossible de joindre l'API Google. Vérifie ta connexion internet.`; 
+            }
         }
 
-        // --- 🤖 NOUVEAU MOTEUR DE TRI ---
         function getSortString(i) {
             const s = (i.serie || i.titre || '').trim().toLowerCase();
             const t = String(i.tome || '').padStart(4, '0');
