@@ -116,7 +116,7 @@
         .form-row { display: flex; flex-wrap: wrap; gap: 10px; }
         .form-row .form-group { flex: 1; min-width: 120px; }
         label { font-weight: 600; font-size: 0.85rem; margin-bottom: 4px; color: var(--text-ink-light); }
-        input[type="text"], input[type="number"], input[type="password"], textarea { padding: 10px; border: 1px solid var(--bg-parchment-dark); border-radius: 8px; font-family: var(--font-body); font-size: 0.95rem; background: #fff; }
+        input[type="text"], input[type="number"], input[type="password"], select, textarea { padding: 10px; border: 1px solid var(--bg-parchment-dark); border-radius: 8px; font-family: var(--font-body); font-size: 0.95rem; background: #fff; }
         
         .type-selector { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 15px; }
         .type-selector label { flex: 1; min-width: 80px; cursor: pointer; }
@@ -541,9 +541,25 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
             } catch(e) { resultBox.innerText = "❌ Échec connexion Oracle."; }
         }
 
+        // --- 🤖 NOUVEAU MOTEUR DE TRI ---
+        function getSortString(i) {
+            const s = (i.serie || i.titre || '').trim().toLowerCase();
+            const t = String(i.tome || '').padStart(4, '0');
+            const title = (i.titre || '').trim().toLowerCase();
+            return `${s} ${t} ${title}`;
+        }
+
         function viewItem(id) {
             const i = library.find(x => x.id === id); const s = statusConfig[i.statut] || {icon:'?', text:'-'};
-            document.getElementById('view-titre').textContent = `${i.serie ? i.serie + ' - ' : ''}${i.tome ? 'Tome '+i.tome+' - ' : ''}${i.titre}`;
+            
+            // TITRE ÉPURÉ POUR LA VUE DÉTAILLÉE
+            let titleHtml = '';
+            if (i.serie) {
+                titleHtml += `<div style="font-size:0.9rem; color:var(--accent-wood); text-transform:uppercase; font-weight:bold; margin-bottom:5px; letter-spacing: 1px;">${i.serie} ${i.tome ? '• T.'+i.tome : ''}</div>`;
+            }
+            titleHtml += i.titre;
+            
+            document.getElementById('view-titre').innerHTML = titleHtml;
             document.getElementById('view-createur').textContent = i.createur || 'Inconnu';
             let metaHtml = `<span class="badge" style="background:#eee">${i.format}</span> <span class="badge" style="background:var(--bg-parchment-dark)">${s.icon} ${s.text}</span>`;
             if(i.annee) metaHtml += `<span class="badge" style="background:#eee">${i.annee}</span>`;
@@ -667,7 +683,6 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
             renderGrid(recents, 'list-recent', 'title-recent');
         }
 
-        // --- 🏷️ NOUVEAU GESTIONNAIRE DE TAGS PAR CATÉGORIE ---
         function renderSettingsTags() {
             const container = document.getElementById('settings-tags-list');
             if(!container) return;
@@ -712,11 +727,6 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
             if(!hasTags) container.innerHTML = '<p style="font-size:0.85rem; color:var(--text-ink-light);">Aucun tag à nettoyer.</p>';
         }
 
-        // --- 🤖 NOUVEAU MOTEUR DE TRI ---
-        function getSortString(i) {
-            return (i.serie ? i.serie + ' ' + String(i.tome||'').padStart(4, '0') + ' ' : '') + (i.titre || '');
-        }
-
         const activeFilters = { sort: 'date_desc', status: 'all', format: 'all', tag: 'all', favOnly: false };
         function triggerUpdate() { if(document.getElementById('search-input').value.trim() !== '') document.getElementById('search-input').dispatchEvent(new Event('input')); else renderAll(); }
         document.getElementById('btn-toggle-filters').onclick = function() { document.getElementById('filter-panel').classList.toggle('open'); this.classList.toggle('active'); };
@@ -756,7 +766,14 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
         
         function createCard(i) {
             const card = document.createElement('div'); card.className = `card ${isOracleMode ? 'mode-selection' : ''} ${selectedForOracle.includes(i.id) ? 'selected' : ''}`;
-            card.innerHTML = `<div class="card-header"><div class="card-title-group"><div class="card-title">${{book:'📖',bd:'💬',music:'🎵',game:'🎲'}[i.type]} ${i.serie?i.serie+' - ':''}${i.tome?'Tome '+i.tome+' - ':''}${i.titre} ${i.coupDeCoeur?'❤️':''}</div><div class="card-creator">${i.createur || ''}</div></div><div class="card-status-group"><span class="badge badge-status" style="background:var(--bg-parchment-dark)">${(statusConfig[i.statut]||{icon:'?'}).icon}</span></div></div><div style="flex:1; pointer-events:none;"></div>${i.note > 0 ? `<div style="color:var(--color-star);font-size:1.1rem;margin:4px 0;">${'★'.repeat(i.note)}</div>`:''}<div class="card-meta"><span class="badge" style="background:#ddd">${i.format}</span>${(i.tags || []).slice(0, 3).map(t => `<span class="badge">${t}</span>`).join('')}</div>`;
+            
+            // AFFICHAGE ÉPURÉ SUR LA CARTE
+            let serieHtml = '';
+            if (i.serie) {
+                serieHtml = `<div style="font-size:0.75rem; color:var(--accent-wood); font-weight:700; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">${i.serie} ${i.tome ? '<span style="opacity:0.7">• T.'+i.tome+'</span>' : ''}</div>`;
+            }
+
+            card.innerHTML = `<div class="card-header"><div class="card-title-group" style="flex:1; min-width:0;">${serieHtml}<div class="card-title">${{book:'📖',bd:'💬',music:'🎵',game:'🎲'}[i.type]} ${i.titre} ${i.coupDeCoeur?'❤️':''}</div><div class="card-creator" style="margin-top:4px;">${i.createur || ''}</div></div><div class="card-status-group"><span class="badge badge-status" style="background:var(--bg-parchment-dark)">${(statusConfig[i.statut]||{icon:'?'}).icon}</span></div></div><div style="flex:1; pointer-events:none;"></div>${i.note > 0 ? `<div style="color:var(--color-star);font-size:1.1rem;margin:4px 0;">${'★'.repeat(i.note)}</div>`:''}<div class="card-meta"><span class="badge" style="background:#ddd">${i.format}</span>${(i.tags || []).slice(0, 3).map(t => `<span class="badge">${t}</span>`).join('')}</div>`;
             card.onclick = () => isOracleMode ? toggleCardSelection(i.id, card) : viewItem(i.id); return card;
         }
         
