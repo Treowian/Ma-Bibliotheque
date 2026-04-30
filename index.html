@@ -508,13 +508,14 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
 </div>`;
             
             try {
-                const req = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${cloudConfig.geminiKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
+                // FIX: Modèle mis à jour vers 1.5-flash
+                const req = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${cloudConfig.geminiKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
                 const data = await req.json();
                 if(data.candidates) {
                     let rawHtml = data.candidates[0].content.parts[0].text.replace(/```html/gi, '').replace(/```/g, '').trim();
                     resultBox.innerHTML = rawHtml;
                 }
-                else resultBox.innerText = `❌ Erreur Oracle : ${data.error ? data.error.message : 'inconnue'}`;
+                else resultBox.innerText = `❌ Erreur IA : ${data.error ? data.error.message : 'inconnue'}`;
             } catch(e) { resultBox.innerText = "❌ Échec connexion Oracle."; }
         }
 
@@ -546,12 +547,13 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
             res.value = "⏳ Génération..."; res.disabled = true;
             const prompt = `Fiche pour : "${titre}" de "${createur}". Renvoie EXACTEMENT ce JSON brut : { "resume": "Pitch 4e de couv (style auteur si connu). 3 phrases max.", "anecdote": "Fun fact (ou vide)." }`;
             try {
-                const req = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${cloudConfig.geminiKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
+                // FIX: Modèle mis à jour vers 1.5-flash et meilleure gestion d'erreur
+                const req = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${cloudConfig.geminiKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
                 const data = await req.json();
                 if(data.candidates) {
                     let raw = data.candidates[0].content.parts[0].text.replace(/```json/gi, '').replace(/```/g, '').trim();
                     try { const ia = JSON.parse(raw); res.value = ia.resume || "Introuvable."; if(ia.anecdote) com.value = (com.value ? com.value+"\n\n" : "") + "💡 " + ia.anecdote; } catch(e) { res.value = "❌ Erreur JSON IA."; }
-                } else res.value = "❌ Erreur serveur.";
+                } else res.value = `❌ Erreur : ${data.error ? data.error.message : 'inconnue'}`;
             } catch(e) { res.value = "❌ Erreur réseau."; }
             res.disabled = false;
         };
@@ -698,7 +700,6 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
             Object.keys(maps).forEach(k => renderGrid(processData(library.filter(i=>i.type===k)), maps[k])); 
         }
 
-        // --- 💻 FORMULAIRE ET NOUVEAUX BOUTONS ---
         const modalAdd = document.getElementById('modal-add'); const form = document.getElementById('form-add'); let selectedTags = [];
         const stars = document.querySelectorAll('#star-rating span'); function setStars(val) { document.getElementById('note').value = val; stars.forEach(s => s.style.color = parseInt(s.dataset.val) <= val ? 'var(--color-star)' : '#ccc'); } stars.forEach(s => s.onclick = () => setStars(parseInt(s.dataset.val)));
         
@@ -722,7 +723,6 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
         function updateFormUI(type) { 
             document.getElementById('label-createur').textContent = uiConfig[type].createur; 
             
-            // Remplacer les select par des boutons cliquables
             const fCont = document.getElementById('format-container'); fCont.innerHTML = '';
             uiConfig[type].formats.forEach((x, i) => fCont.innerHTML += `<label><input type="radio" name="format_radio" value="${x}" ${i===0?'checked':''}><span class="type-btn">${x}</span></label>`);
             
