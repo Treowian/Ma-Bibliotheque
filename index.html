@@ -116,7 +116,7 @@
         .form-row { display: flex; flex-wrap: wrap; gap: 10px; }
         .form-row .form-group { flex: 1; min-width: 120px; }
         label { font-weight: 600; font-size: 0.85rem; margin-bottom: 4px; color: var(--text-ink-light); }
-        input[type="text"], input[type="number"], input[type="password"], select, textarea { padding: 10px; border: 1px solid var(--bg-parchment-dark); border-radius: 8px; font-family: var(--font-body); font-size: 0.95rem; background: #fff; }
+        input[type="text"], input[type="number"], input[type="password"], textarea { padding: 10px; border: 1px solid var(--bg-parchment-dark); border-radius: 8px; font-family: var(--font-body); font-size: 0.95rem; background: #fff; }
         
         .type-selector { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 15px; }
         .type-selector label { flex: 1; min-width: 80px; cursor: pointer; }
@@ -500,12 +500,17 @@
         }
 
         async function askOracle() {
-            if(selectedForOracle.length === 0) return alert("Sélectionne au moins 1 œuvre !");
-            if(!cloudConfig.geminiKey) return alert("Clé API Gemini manquante.");
+            if(selectedForOracle.length === 0) return customConfirm("🪄 Tu dois d'abord sélectionner au moins une œuvre (en cliquant dessus) pour inspirer l'Oracle !", null, false);
+            if(!cloudConfig.geminiKey) return customConfirm("❌ Clé API Gemini manquante dans les réglages.", null, true);
+            
             const modal = document.getElementById('modal-oracle'); const resultBox = document.getElementById('oracle-result');
             modal.showModal(); resultBox.innerText = "📡 Le Radar cherche un modèle IA compatible...";
             
-            const inspirateurs = selectedForOracle.map(id => { const i = library.find(x=>x.id===id); return `${i.titre} de ${i.createur}`; }).join(" | ");
+            const inspirateurs = selectedForOracle.map(id => { 
+                const i = library.find(x=>x.id===id); 
+                return i ? `${i.titre} de ${i.createur}` : null; 
+            }).filter(Boolean).join(" | ");
+            
             const palList = library.filter(i => ['alire', 'adecouvrir', 'atester'].includes(i.statut)).map(i => `${i.titre} de ${i.createur}`).join(" | ");
             
             const prompt = `Tu es l'Oracle d'une bibliothèque.
@@ -538,7 +543,7 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
                     resultBox.innerHTML = rawHtml;
                 }
                 else resultBox.innerText = `❌ Erreur IA : ${data.error ? data.error.message : 'inconnue'}`;
-            } catch(e) { resultBox.innerText = "❌ Échec connexion Oracle."; }
+            } catch(e) { resultBox.innerText = "❌ Échec de la connexion à l'Oracle."; }
         }
 
         // --- 🤖 NOUVEAU MOTEUR DE TRI ---
@@ -552,7 +557,6 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
         function viewItem(id) {
             const i = library.find(x => x.id === id); const s = statusConfig[i.statut] || {icon:'?', text:'-'};
             
-            // TITRE ÉPURÉ POUR LA VUE DÉTAILLÉE
             let titleHtml = '';
             if (i.serie) {
                 titleHtml += `<div style="font-size:0.9rem; color:var(--accent-wood); text-transform:uppercase; font-weight:bold; margin-bottom:5px; letter-spacing: 1px;">${i.serie} ${i.tome ? '• T.'+i.tome : ''}</div>`;
@@ -580,7 +584,9 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
 
         document.getElementById('btn-ai-summary').onclick = async () => {
             const titre = document.getElementById('titre').value.trim(); const createur = document.getElementById('createur').value.trim();
-            if(!titre) return alert("Titre requis !"); if(!cloudConfig.geminiKey) return alert("Clé API manquante.");
+            if(!titre) return customConfirm("❌ Titre requis pour générer un résumé !", null, true); 
+            if(!cloudConfig.geminiKey) return customConfirm("❌ Clé API manquante dans les réglages.", null, true);
+            
             const res = document.getElementById('resume'); const com = document.getElementById('commentaire');
             res.value = "📡 Recherche d'un modèle..."; res.disabled = true;
             const prompt = `Fiche pour : "${titre}" de "${createur}". Renvoie EXACTEMENT ce JSON brut : { "resume": "Pitch 4e de couv (style auteur si connu). 3 phrases max.", "anecdote": "Fun fact (ou vide)." }`;
@@ -767,7 +773,6 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
         function createCard(i) {
             const card = document.createElement('div'); card.className = `card ${isOracleMode ? 'mode-selection' : ''} ${selectedForOracle.includes(i.id) ? 'selected' : ''}`;
             
-            // AFFICHAGE ÉPURÉ SUR LA CARTE
             let serieHtml = '';
             if (i.serie) {
                 serieHtml = `<div style="font-size:0.75rem; color:var(--accent-wood); font-weight:700; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">${i.serie} ${i.tome ? '<span style="opacity:0.7">• T.'+i.tome+'</span>' : ''}</div>`;
