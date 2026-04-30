@@ -58,7 +58,6 @@
 
         .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-top: 10px; }
         
-        /* 🛒 Carrousel horizontal pour la liste de souhaits */
         .horizontal-scroll { display: flex; overflow-x: auto; gap: 15px; padding-bottom: 15px; margin-top: 10px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none;}
         .horizontal-scroll::-webkit-scrollbar { display: none; }
         .horizontal-scroll .card { min-width: 260px; max-width: 300px; flex: 0 0 auto; scroll-snap-align: start; }
@@ -88,7 +87,6 @@
         .top-list { font-size: 0.85rem; padding-left: 15px; margin-top: 5px; color: var(--text-ink-light); }
         .top-list li { margin-bottom: 5px; }
 
-        /* Barre de sélection multiple */
         #selection-bar { position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%); background: #fff; border: 2px solid var(--accent-wood); padding: 10px 15px; border-radius: 30px; display: none; align-items: center; gap: 10px; z-index: 90; box-shadow: 0 8px 20px rgba(140, 90, 64, 0.3); white-space: nowrap;}
         @media (min-width: 768px) { #selection-bar { bottom: 30px; } }
         .selection-count { font-weight: bold; color: var(--accent-wood); padding-right: 10px; border-right: 1px solid var(--bg-parchment-dark); }
@@ -118,7 +116,7 @@
         .form-row { display: flex; flex-wrap: wrap; gap: 10px; }
         .form-row .form-group { flex: 1; min-width: 120px; }
         label { font-weight: 600; font-size: 0.85rem; margin-bottom: 4px; color: var(--text-ink-light); }
-        input, select, textarea { padding: 10px; border: 1px solid var(--bg-parchment-dark); border-radius: 8px; font-family: var(--font-body); font-size: 0.95rem; background: #fff; }
+        input[type="text"], input[type="number"], input[type="password"], select, textarea { padding: 10px; border: 1px solid var(--bg-parchment-dark); border-radius: 8px; font-family: var(--font-body); font-size: 0.95rem; background: #fff; }
         
         .type-selector { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 15px; }
         .type-selector label { flex: 1; min-width: 80px; cursor: pointer; }
@@ -225,7 +223,6 @@
             <section id="view-games" class="view-section"><div id="list-games" class="grid-container"></div></section>
             
             <section id="view-settings" class="view-section">
-                
                 <details class="stats-collapse" open>
                     <summary class="section-title">📊 Mes Statistiques</summary>
                     <div style="padding-top: 10px;">
@@ -314,14 +311,6 @@
         </div>
     </dialog>
 
-    <dialog id="modal-oracle">
-        <div class="modal-content">
-            <button class="btn-close-absolute" onclick="document.getElementById('modal-oracle').close()">❌</button>
-            <h2 style="font-family: var(--font-title); color: #3f2b96; margin-bottom: 15px;">🔮 L'Oracle a parlé</h2>
-            <div id="oracle-result" style="font-size: 0.95rem; line-height: 1.5;">⏳ L'IA analyse tes goûts...</div>
-        </div>
-    </dialog>
-
     <dialog id="modal-add">
         <div class="modal-content">
             <button class="btn-close-absolute" onclick="document.getElementById('modal-add').close()">❌</button>
@@ -339,16 +328,26 @@
                     <div class="form-group"><label>N° Tome</label><input type="text" id="tome"></div>
                 </div>
                 <div class="form-group"><label id="label-createur">Auteur</label><input type="text" id="createur"></div>
+                
                 <div class="form-row">
-                    <div class="form-group"><label>Format</label><select id="format"></select></div>
-                    <div class="form-group"><label>Année</label><input type="number" id="annee"></div>
+                    <div class="form-group" style="flex: 2;">
+                        <label>Format</label>
+                        <div id="format-container" class="type-selector" style="margin-bottom: 0;"></div>
+                    </div>
+                    <div class="form-group" style="flex: 1; min-width: 80px;"><label>Année</label><input type="number" id="annee"></div>
                 </div>
+                
                 <div class="form-group">
                     <label>Tags</label>
                     <div id="tags-container" class="tags-container"></div>
                     <input type="text" id="custom-tag-input" class="custom-tag-input" placeholder="+ Tag (Entrée)">
                 </div>
-                <div class="form-group"><label>Statut</label><select id="statut" required></select></div>
+
+                <div class="form-group">
+                    <label>Statut</label>
+                    <div id="statut-container" class="type-selector" style="margin-bottom: 0; gap: 6px;"></div>
+                </div>
+
                 <div id="group-resume" class="form-group" style="display: none;">
                     <label style="display: flex; justify-content: space-between; align-items: center;">
                         Résumé / 4e de couv.
@@ -377,7 +376,6 @@
     </dialog>
 
     <script>
-        // --- ⚙️ LOGIQUE DATA ---
         let library = [];
         try { const stored = JSON.parse(localStorage.getItem('myLibrary')); if(Array.isArray(stored)) library = stored; } catch(e) { console.error("Cache local corrompu."); }
         
@@ -401,7 +399,6 @@
         document.getElementById('gh-gist-id').value = cloudConfig.gistId || '';
         document.getElementById('gemini-api-key').value = cloudConfig.geminiKey || '';
 
-        // NOUVEAU STATUT : A ACHETER
         const statusConfig = {
             'lu': { icon: '✅', text: 'Terminé' }, 'encours': { icon: '⏳', text: 'En cours' }, 'alire': { icon: '📚', text: 'À lire' }, 'aacheter': { icon: '🛒', text: 'À acheter' }, 'abandonne': { icon: '❌', text: 'Abandonné' },
             'ecoute': { icon: '🎧', text: 'Écouté' }, 'adecouvrir': { icon: '💿', text: 'À découvrir' }, 'joue': { icon: '🎲', text: 'Joué' }, 'atester': { icon: '📦', text: 'À tester' }
@@ -414,7 +411,6 @@
             game: { createur: "Auteur / Éditeur", formats: ["Plateau", "Cartes", "Dés", "Figurines", "Autre"], tags: ["Coopératif", "Compétitif", "Gestion", "Deckbuilding", "Bluff", "Narratif", "2 Joueurs", "Familial", "Expert"], statuses: [{val:'joue', text:'🎲 Joué'}, {val:'atester', text:'📦 À tester'}, {val:'aacheter', text:'🛒 À acheter'}, {val:'abandonne', text:'❌ Revendu/Abandonné'}] }
         };
 
-        // --- 🌟 CUSTOM CONFIRM MODAL ---
         let confirmAction = null;
         function customConfirm(msg, action, isDanger = true) {
             document.getElementById('confirm-msg').innerHTML = msg;
@@ -443,7 +439,6 @@
             }
         }
 
-        // --- 🪄 SÉLECTION MULTIPLE ---
         document.getElementById('btn-toggle-oracle').onclick = function() {
             isOracleMode = !isOracleMode; this.classList.toggle('active'); selectedForOracle = [];
             document.getElementById('selection-bar').style.display = isOracleMode ? 'flex' : 'none';
@@ -470,7 +465,7 @@
                         else item.statut = 'lu';
                     }
                 });
-                document.getElementById('btn-toggle-oracle').click(); // Quitter mode sélection
+                document.getElementById('btn-toggle-oracle').click();
                 saveLibrary();
             }, false);
         }
@@ -479,7 +474,7 @@
             if(selectedForOracle.length === 0) return;
             customConfirm(`🚨 Supprimer DÉFINITIVEMENT ces ${selectedForOracle.length} œuvres ?`, () => {
                 library = library.filter(x => !selectedForOracle.includes(x.id));
-                document.getElementById('btn-toggle-oracle').click(); // Quitter mode sélection
+                document.getElementById('btn-toggle-oracle').click();
                 saveLibrary();
             }, true);
         }
@@ -523,7 +518,6 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
             } catch(e) { resultBox.innerText = "❌ Échec connexion Oracle."; }
         }
 
-        // --- 📖 VUE & RESUME ---
         function viewItem(id) {
             const i = library.find(x => x.id === id); const s = statusConfig[i.statut] || {icon:'?', text:'-'};
             document.getElementById('view-titre').textContent = `${i.serie ? i.serie + ' - ' : ''}${i.tome ? 'Tome '+i.tome+' - ' : ''}${i.titre}`;
@@ -562,7 +556,6 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
             res.disabled = false;
         };
 
-        // --- ☁️ CLOUD ---
         function saveCloudSettings() {
             cloudConfig.token = document.getElementById('gh-token').value.trim(); cloudConfig.gistId = document.getElementById('gh-gist-id').value.trim(); cloudConfig.geminiKey = document.getElementById('gemini-api-key').value.trim();
             localStorage.setItem('cloudConfig', JSON.stringify(cloudConfig)); document.getElementById('cloud-status').innerText = "✅ Clés sauvegardées.";
@@ -593,7 +586,6 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
             }, true);
         }
 
-        // --- 📊 STATISTIQUES & TAGS ---
         function renderDashboard() {
             const stats = { 
                 book: { t: 0, l: 0, a: 0, title: '📖 Livres', done: 'terminés', todo: 'à lire' }, 
@@ -603,7 +595,6 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
             };
             let auteurs = {}, tagsCount = {};
             
-            // On exclut les achats des totaux de possession
             const ownedItems = library.filter(i => i.statut !== 'aacheter');
             const totalItems = ownedItems.length;
             const notes = ownedItems.filter(i => i.note > 0).map(i => i.note);
@@ -640,7 +631,6 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
             document.getElementById('stat-top-auteurs').innerHTML = Object.entries(auteurs).sort((a,b)=>b[1]-a[1]).slice(0,3).map((a, i) => `<li>${i===0?'🥇':i===1?'🥈':'🥉'} <b>${a[0]}</b> (${a[1]})</li>`).join('');
             document.getElementById('stat-top-tags').innerHTML = Object.entries(tagsCount).sort((a,b)=>b[1]-a[1]).slice(0,4).map(t => `<li>🏷️ <b>${t[0]}</b> (${t[1]})</li>`).join('');
             
-            // Masquage intelligent des sections vides sur l'accueil
             const favs = library.filter(i => i.coupDeCoeur); 
             renderGrid(favs.slice(0, 4), 'list-favs', 'title-coups-coeur'); 
             
@@ -651,7 +641,6 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
             renderGrid(recents, 'list-recent', 'title-recent');
         }
 
-        // --- 🏷️ GESTIONNAIRE DE TAGS ---
         function renderSettingsTags() {
             const container = document.getElementById('settings-tags-list');
             if(!container) return;
@@ -673,7 +662,6 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
             });
         }
 
-        // --- 🔍 RECHERCHE & UI ---
         const activeFilters = { sort: 'date_desc', status: 'all', format: 'all', tag: 'all', favOnly: false };
         function triggerUpdate() { if(document.getElementById('search-input').value.trim() !== '') document.getElementById('search-input').dispatchEvent(new Event('input')); else renderAll(); }
         document.getElementById('btn-toggle-filters').onclick = function() { document.getElementById('filter-panel').classList.toggle('open'); this.classList.toggle('active'); };
@@ -710,7 +698,7 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
             Object.keys(maps).forEach(k => renderGrid(processData(library.filter(i=>i.type===k)), maps[k])); 
         }
 
-        // --- 💻 FORMULAIRE ---
+        // --- 💻 FORMULAIRE ET NOUVEAUX BOUTONS ---
         const modalAdd = document.getElementById('modal-add'); const form = document.getElementById('form-add'); let selectedTags = [];
         const stars = document.querySelectorAll('#star-rating span'); function setStars(val) { document.getElementById('note').value = val; stars.forEach(s => s.style.color = parseInt(s.dataset.val) <= val ? 'var(--color-star)' : '#ccc'); } stars.forEach(s => s.onclick = () => setStars(parseInt(s.dataset.val)));
         
@@ -726,37 +714,75 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
         
         document.getElementById('custom-tag-input').addEventListener('keydown', function(e) { if(e.key==='Enter') { e.preventDefault(); const v=this.value.trim(); if(v&&!selectedTags.includes(v)) { selectedTags.push(v); renderTagsUI(document.querySelector('input[name="type"]:checked').value); } this.value=''; }});
         
+        function toggleReviewSection() {
+            const stat = document.querySelector('input[name="statut_radio"]:checked')?.value || 'alire';
+            document.getElementById('review-section').style.display = ['lu','ecoute','joue','abandonne'].includes(stat) ? 'block' : 'none'; 
+        }
+
         function updateFormUI(type) { 
             document.getElementById('label-createur').textContent = uiConfig[type].createur; 
-            const f = document.getElementById('format'); f.innerHTML=''; uiConfig[type].formats.forEach(x => f.appendChild(new Option(x,x))); 
-            const s = document.getElementById('statut'); s.innerHTML=''; uiConfig[type].statuses.forEach(x => s.appendChild(new Option(x.text, x.val))); 
+            
+            // Remplacer les select par des boutons cliquables
+            const fCont = document.getElementById('format-container'); fCont.innerHTML = '';
+            uiConfig[type].formats.forEach((x, i) => fCont.innerHTML += `<label><input type="radio" name="format_radio" value="${x}" ${i===0?'checked':''}><span class="type-btn">${x}</span></label>`);
+            
+            const sCont = document.getElementById('statut-container'); sCont.innerHTML = '';
+            uiConfig[type].statuses.forEach((x, i) => sCont.innerHTML += `<label style="flex: 1 1 45%;"><input type="radio" name="statut_radio" value="${x.val}" ${i===0?'checked':''} onchange="toggleReviewSection()"><span class="type-btn">${x.text}</span></label>`);
             
             const groupTome = document.getElementById('group-tome');
             groupTome.style.display = (type === 'book' || type === 'bd') ? 'flex' : 'none';
-            
             document.getElementById('group-resume').style.display = (type === 'book' || type === 'bd') ? 'flex' : 'none'; 
+            
             renderTagsUI(type); 
-            document.getElementById('review-section').style.display = ['lu','ecoute','joue','abandonne'].includes(document.getElementById('statut').value) ? 'block' : 'none'; 
+            toggleReviewSection();
         }
-        
-        document.getElementById('statut').onchange = () => document.getElementById('review-section').style.display = ['lu','ecoute','joue','abandonne'].includes(document.getElementById('statut').value) ? 'block' : 'none';
         
         document.getElementById('btn-fab-add').onclick = () => { editingId=null; form.reset(); selectedTags=[]; setStars(0); document.querySelector('input[name="type"][value="book"]').checked=true; updateFormUI('book'); modalAdd.showModal(); };
         
         document.querySelectorAll('input[name="type"]').forEach(r => r.onchange = e => { selectedTags=[]; updateFormUI(e.target.value); });
         
-        form.onsubmit = e => { e.preventDefault(); const item = { id: editingId || Date.now().toString(), type: document.querySelector('input[name="type"]:checked').value, titre: document.getElementById('titre').value, createur: document.getElementById('createur').value, serie: document.getElementById('serie').value, tome: document.getElementById('tome').value, format: document.getElementById('format').value, annee: document.getElementById('annee').value, statut: document.getElementById('statut').value, tags: [...selectedTags], resume: document.getElementById('resume').value, note: parseInt(document.getElementById('note').value) || 0, coupDeCoeur: document.getElementById('coup-de-coeur').checked, commentaire: document.getElementById('commentaire').value, dateAjout: editingId ? library.find(i=>i.id===editingId).dateAjout : Date.now() }; const idx = library.findIndex(i=>i.id===editingId); if(idx!==-1) library[idx]=item; else library.push(item); saveLibrary(); modalAdd.close(); };
+        form.onsubmit = e => { 
+            e.preventDefault(); 
+            const item = { 
+                id: editingId || Date.now().toString(), 
+                type: document.querySelector('input[name="type"]:checked').value, 
+                titre: document.getElementById('titre').value, 
+                createur: document.getElementById('createur').value, 
+                serie: document.getElementById('serie').value, 
+                tome: document.getElementById('tome').value, 
+                format: document.querySelector('input[name="format_radio"]:checked')?.value || '', 
+                annee: document.getElementById('annee').value, 
+                statut: document.querySelector('input[name="statut_radio"]:checked')?.value || 'alire', 
+                tags: [...selectedTags], 
+                resume: document.getElementById('resume').value, 
+                note: parseInt(document.getElementById('note').value) || 0, 
+                coupDeCoeur: document.getElementById('coup-de-coeur').checked, 
+                commentaire: document.getElementById('commentaire').value, 
+                dateAjout: editingId ? library.find(i=>i.id===editingId).dateAjout : Date.now() 
+            }; 
+            const idx = library.findIndex(i=>i.id===editingId); 
+            if(idx!==-1) library[idx]=item; else library.push(item); 
+            saveLibrary(); modalAdd.close(); 
+        };
         
         window.editItem = id => { 
             const i = library.find(x=>x.id===id); editingId = id; 
             document.querySelector(`input[name="type"][value="${i.type}"]`).checked = true; 
             selectedTags = [...(i.tags||[])]; 
             updateFormUI(i.type); 
-            ['titre','createur','serie','tome','format','annee','statut','resume','commentaire'].forEach(k => {
+            ['titre','createur','serie','tome','annee','resume','commentaire'].forEach(k => {
                 const el = document.getElementById(k);
                 if(el) el.value = i[k]||'';
             }); 
-            setStars(i.note||0); document.getElementById('coup-de-coeur').checked = i.coupDeCoeur||false; document.getElementById('statut').dispatchEvent(new Event('change')); 
+            
+            const fRad = document.querySelector(`input[name="format_radio"][value="${i.format}"]`);
+            if(fRad) fRad.checked = true;
+            
+            const sRad = document.querySelector(`input[name="statut_radio"][value="${i.statut}"]`);
+            if(sRad) sRad.checked = true;
+
+            setStars(i.note||0); document.getElementById('coup-de-coeur').checked = i.coupDeCoeur||false; 
+            toggleReviewSection();
             modalAdd.showModal(); 
         };
         
@@ -783,7 +809,6 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
 
         renderAll();
 
-        // --- 🚀 INITIALISATION PWA ---
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
