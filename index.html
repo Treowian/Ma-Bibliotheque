@@ -116,7 +116,7 @@
         .form-row { display: flex; flex-wrap: wrap; gap: 10px; }
         .form-row .form-group { flex: 1; min-width: 120px; }
         label { font-weight: 600; font-size: 0.85rem; margin-bottom: 4px; color: var(--text-ink-light); }
-        input[type="text"], input[type="number"], input[type="password"], select, textarea { padding: 10px; border: 1px solid var(--bg-parchment-dark); border-radius: 8px; font-family: var(--font-body); font-size: 0.95rem; background: #fff; }
+        input[type="text"], input[type="number"], input[type="password"], textarea { padding: 10px; border: 1px solid var(--bg-parchment-dark); border-radius: 8px; font-family: var(--font-body); font-size: 0.95rem; background: #fff; }
         
         .type-selector { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 15px; }
         .type-selector label { flex: 1; min-width: 80px; cursor: pointer; }
@@ -168,16 +168,16 @@
             <div id="filter-panel" class="filter-panel">
                 <div class="filter-group">
                     <label>Trier par</label>
-                    <select id="filter-sort" class="filter-select">
+                    <select id="filter-sort" class="filter-select" style="background:#fff; border: 1px solid var(--bg-parchment-dark); padding: 8px; border-radius: 6px;">
                         <option value="date_desc">📅 Ajout (Récent)</option>
                         <option value="alpha_asc">📖 Titre (A-Z)</option>
                         <option value="createur_asc">👤 Créateur (A-Z)</option>
                         <option value="note_desc">★ Mieux notés</option>
                     </select>
                 </div>
-                <div class="filter-group"><label>Statut</label><select id="filter-status" class="filter-select"><option value="all">Tous</option></select></div>
-                <div class="filter-group"><label>Format</label><select id="filter-format" class="filter-select"><option value="all">Tous</option></select></div>
-                <div class="filter-group"><label>Tag</label><select id="filter-tag" class="filter-select"><option value="all">Tous</option></select></div>
+                <div class="filter-group"><label>Statut</label><select id="filter-status" class="filter-select" style="background:#fff; border: 1px solid var(--bg-parchment-dark); padding: 8px; border-radius: 6px;"><option value="all">Tous</option></select></div>
+                <div class="filter-group"><label>Format</label><select id="filter-format" class="filter-select" style="background:#fff; border: 1px solid var(--bg-parchment-dark); padding: 8px; border-radius: 6px;"><option value="all">Tous</option></select></div>
+                <div class="filter-group"><label>Tag</label><select id="filter-tag" class="filter-select" style="background:#fff; border: 1px solid var(--bg-parchment-dark); padding: 8px; border-radius: 6px;"><option value="all">Tous</option></select></div>
                 <div class="filter-group" style="flex-direction:row; align-items:center; gap:8px; grid-column: 1 / -1; justify-content: center; padding-top: 5px;">
                     <input type="checkbox" id="filter-fav" style="transform: scale(1.2);"> <label for="filter-fav" style="margin:0; font-size:0.9rem; text-transform:none;">Coups de ❤️ uniquement</label>
                 </div>
@@ -439,6 +439,26 @@
             }
         }
 
+        // Radar IA 
+        async function findBestModel(apiKey) {
+            try {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+                const data = await res.json();
+                if (!data.models) return 'gemini-1.5-flash'; 
+                
+                const validModels = data.models.filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent') && m.name.includes('gemini'));
+                
+                const best = validModels.find(m => m.name.includes('1.5-flash')) 
+                          || validModels.find(m => m.name.includes('flash')) 
+                          || validModels.find(m => m.name.includes('pro')) 
+                          || validModels[0];
+                          
+                return best ? best.name.replace('models/', '') : 'gemini-1.5-flash';
+            } catch (e) {
+                return 'gemini-1.5-flash'; 
+            }
+        }
+
         document.getElementById('btn-toggle-oracle').onclick = function() {
             isOracleMode = !isOracleMode; this.classList.toggle('active'); selectedForOracle = [];
             document.getElementById('selection-bar').style.display = isOracleMode ? 'flex' : 'none';
@@ -483,7 +503,7 @@
             if(selectedForOracle.length === 0) return alert("Sélectionne au moins 1 œuvre !");
             if(!cloudConfig.geminiKey) return alert("Clé API Gemini manquante.");
             const modal = document.getElementById('modal-oracle'); const resultBox = document.getElementById('oracle-result');
-            modal.showModal(); resultBox.innerText = "⏳ L'Oracle connecte ses neurones...";
+            modal.showModal(); resultBox.innerText = "📡 Le Radar cherche un modèle IA compatible...";
             
             const inspirateurs = selectedForOracle.map(id => { const i = library.find(x=>x.id===id); return `${i.titre} de ${i.createur}`; }).join(" | ");
             const palList = library.filter(i => ['alire', 'adecouvrir', 'atester'].includes(i.statut)).map(i => `${i.titre} de ${i.createur}`).join(" | ");
@@ -508,8 +528,10 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
 </div>`;
             
             try {
-                // FIX: Modèle mis à jour vers 1.5-flash
-                const req = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${cloudConfig.geminiKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
+                const modelToUse = await findBestModel(cloudConfig.geminiKey);
+                resultBox.innerText = `⏳ L'Oracle connecte ses neurones via ${modelToUse}...`;
+
+                const req = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${cloudConfig.geminiKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
                 const data = await req.json();
                 if(data.candidates) {
                     let rawHtml = data.candidates[0].content.parts[0].text.replace(/```html/gi, '').replace(/```/g, '').trim();
@@ -544,11 +566,13 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
             const titre = document.getElementById('titre').value.trim(); const createur = document.getElementById('createur').value.trim();
             if(!titre) return alert("Titre requis !"); if(!cloudConfig.geminiKey) return alert("Clé API manquante.");
             const res = document.getElementById('resume'); const com = document.getElementById('commentaire');
-            res.value = "⏳ Génération..."; res.disabled = true;
+            res.value = "📡 Recherche d'un modèle..."; res.disabled = true;
             const prompt = `Fiche pour : "${titre}" de "${createur}". Renvoie EXACTEMENT ce JSON brut : { "resume": "Pitch 4e de couv (style auteur si connu). 3 phrases max.", "anecdote": "Fun fact (ou vide)." }`;
             try {
-                // FIX: Modèle mis à jour vers 1.5-flash et meilleure gestion d'erreur
-                const req = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${cloudConfig.geminiKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
+                const modelToUse = await findBestModel(cloudConfig.geminiKey);
+                res.value = `⏳ Génération via ${modelToUse}...`;
+
+                const req = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${cloudConfig.geminiKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
                 const data = await req.json();
                 if(data.candidates) {
                     let raw = data.candidates[0].content.parts[0].text.replace(/```json/gi, '').replace(/```/g, '').trim();
