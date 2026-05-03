@@ -186,9 +186,9 @@
 
         <div id="selection-bar">
             <span class="selection-count"><span id="oracle-count">0</span></span>
-            <button id="btn-ask-oracle" class="btn-action btn-oracle" onclick="askOracle()" title="Invoquer l'Oracle">🪄 Oracle</button>
-            <button id="btn-mark-done" class="btn-action" style="color: var(--color-success);" onclick="markSelectedAsDone()" title="Passer en Terminé">✅</button>
-            <button id="btn-delete-selected" class="btn-action" style="color: var(--color-danger);" onclick="deleteSelected()" title="Supprimer">🗑️</button>
+            <button id="btn-ask-oracle" class="btn-action btn-oracle" title="Invoquer l'Oracle">🪄 Oracle</button>
+            <button id="btn-mark-done" class="btn-action" style="color: var(--color-success);" title="Passer en Terminé">✅</button>
+            <button id="btn-delete-selected" class="btn-action" style="color: var(--color-danger);" title="Supprimer">🗑️</button>
         </div>
 
         <nav id="main-nav">
@@ -475,7 +475,7 @@
             document.getElementById('oracle-count').innerText = selectedForOracle.length;
         }
 
-        function markSelectedAsDone() {
+        document.getElementById('btn-mark-done').addEventListener('click', () => {
             if(selectedForOracle.length === 0) return;
             customConfirm(`Marquer ces ${selectedForOracle.length} œuvres comme terminées ?`, () => {
                 selectedForOracle.forEach(id => {
@@ -489,48 +489,34 @@
                 document.getElementById('btn-toggle-oracle').click();
                 saveLibrary();
             }, false);
-        }
+        });
 
-        function deleteSelected() {
+        document.getElementById('btn-delete-selected').addEventListener('click', () => {
             if(selectedForOracle.length === 0) return;
             customConfirm(`🚨 Supprimer DÉFINITIVEMENT ces ${selectedForOracle.length} œuvres ?`, () => {
                 library = library.filter(x => !selectedForOracle.includes(x.id));
                 document.getElementById('btn-toggle-oracle').click();
                 saveLibrary();
             }, true);
-        }
+        });
 
-        // --- 🪄 LA FONCTION ORACLE BLINDÉE ---
-        async function askOracle() {
+        document.getElementById('btn-ask-oracle').addEventListener('click', async () => {
             if(selectedForOracle.length === 0) {
-                customConfirm("🪄 Tu dois d'abord sélectionner au moins une œuvre (en cliquant dessus) pour inspirer l'Oracle !", null, false);
+                customConfirm("🪄 Tu dois d'abord sélectionner au moins une œuvre pour inspirer l'Oracle !", null, false);
                 return;
             }
-            if(!cloudConfig.geminiKey || cloudConfig.geminiKey.trim() === '') {
-                customConfirm("❌ Clé API Gemini manquante ! Va dans l'onglet ⚙️ Réglages pour l'ajouter.", null, true);
+            if(!cloudConfig.geminiKey) {
+                customConfirm("❌ Clé API Gemini manquante dans les réglages.", null, true);
                 return;
             }
             
-            const modal = document.getElementById('modal-oracle'); 
-            const resultBox = document.getElementById('oracle-result');
+            const modal = document.getElementById('modal-oracle'); const resultBox = document.getElementById('oracle-result');
+            modal.showModal(); resultBox.innerText = "📡 Le Radar cherche un modèle IA compatible...";
             
-            if(modal && typeof modal.showModal === 'function') {
-                modal.showModal(); 
-            } else {
-                console.error("Modale Oracle introuvable ou non supportée");
-            }
+            const inspirateurs = selectedForOracle.map(id => { const i = library.find(x=>x.id===id); return i ? `${i.titre} de ${i.createur}` : null; }).filter(Boolean).join(" | ");
+            const palList = library.filter(i => ['alire', 'adecouvrir', 'atester'].includes(i.statut)).map(i => `${i.titre} de ${i.createur}`).join(" | ");
             
-            resultBox.innerHTML = "📡 Le Radar cherche le meilleur modèle IA...<br><br><small><i>Vérification de ta clé API en cours...</i></small>";
-            
-            try {
-                const inspirateurs = selectedForOracle.map(id => { 
-                    const i = library.find(x=>x.id===id); 
-                    return i ? `"${i.titre}" de ${i.createur}` : null; 
-                }).filter(Boolean).join(" | ");
-                
-                const palList = library.filter(i => ['alire', 'adecouvrir', 'atester'].includes(i.statut)).map(i => `"${i.titre}" de ${i.createur}`).join(" | ");
-                
-                const prompt = `Tu es l'Oracle d'une bibliothèque.
+            const prompt = `Tu es l'Oracle d'une bibliothèque.
 L'utilisateur aime ces œuvres : [ ${inspirateurs} ]. 
 Voici sa Pile à Lire EXACTE : [ ${palList || "VIDE"} ].
 
@@ -549,27 +535,28 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
   <b>[Titre Vrai]</b> de [Auteur Vrai]<br><i style="font-size:0.9rem;">[1 seule phrase d'explication courte]</i>
 </div>`;
             
+            try {
                 const modelToUse = await findBestModel(cloudConfig.geminiKey);
-                resultBox.innerHTML = `⏳ Connexion établie avec <b>${modelToUse}</b>...<br><br><small><i>Analyse de tes goûts en cours...</i></small>`;
+                resultBox.innerText = `⏳ L'Oracle connecte ses neurones via ${modelToUse}...`;
 
-                const req = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${cloudConfig.geminiKey}`, { 
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) 
-                });
-                
+                const req = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${cloudConfig.geminiKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
                 const data = await req.json();
-                
                 if(data.candidates) {
                     let rawHtml = data.candidates[0].content.parts[0].text.replace(/```html/gi, '').replace(/```/g, '').trim();
                     resultBox.innerHTML = rawHtml;
                 }
-                else {
-                    resultBox.innerHTML = `❌ <b>Erreur de l'API Google :</b><br><br>${data.error ? data.error.message : 'Clé API invalide ou quota dépassé.'}`;
-                }
-            } catch(e) { 
-                resultBox.innerHTML = `❌ <b>Échec de la connexion.</b><br><br>Impossible de joindre l'API Google. Vérifie ta connexion internet.`; 
-            }
+                else resultBox.innerText = `❌ Erreur IA : ${data.error ? data.error.message : 'inconnue'}`;
+            } catch(e) { resultBox.innerText = "❌ Échec connexion Oracle."; }
+        });
+
+        // --- 🤖 NOUVEAU MOTEUR DE TRI (Prénom Nom -> Nom) ---
+        function getLastNameForSort(creatorString) {
+            if (!creatorString) return "";
+            // Isole le premier auteur s'il y a un "&" ou "et"
+            let firstAuthor = creatorString.split(/&|,| et /i)[0].trim();
+            // Récupère le dernier mot
+            let words = firstAuthor.split(' ');
+            return words[words.length - 1].toLowerCase();
         }
 
         function getSortString(i) {
@@ -781,8 +768,11 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
 
                 if(activeFilters.sort === 'alpha_asc') return sortA.localeCompare(sortB, 'fr', {numeric: true, sensitivity: 'base'}); 
                 
+                // LE NOUVEAU TRI MAGIQUE EST ICI
                 if(activeFilters.sort === 'createur_asc') {
-                    let cr = (a.createur||'').localeCompare(b.createur||'', 'fr', {sensitivity: 'base'});
+                    let nomA = getLastNameForSort(a.createur);
+                    let nomB = getLastNameForSort(b.createur);
+                    let cr = nomA.localeCompare(nomB, 'fr', {sensitivity: 'base'});
                     return cr === 0 ? sortA.localeCompare(sortB, 'fr', {numeric: true, sensitivity: 'base'}) : cr;
                 }
                 
