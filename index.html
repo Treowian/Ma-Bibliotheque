@@ -40,15 +40,21 @@
         .btn-icon-header { background: #fff; border: 2px solid var(--bg-parchment-dark); border-radius: 50%; width: 42px; height: 42px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; transition: 0.2s; color: var(--text-ink); }
         .btn-icon-header.active { border-color: var(--accent-wood); background: var(--bg-parchment-dark); }
 
-        /* NOUVEAU DESIGN DU PANNEAU DE FILTRES */
         .filter-panel { background: rgba(255, 255, 255, 0.95); border: 1px solid var(--bg-parchment-dark); border-radius: 12px; padding: 15px; margin-top: 10px; display: none; flex-direction: column; gap: 15px; box-shadow: var(--shadow-soft); }
         .filter-panel.open { display: flex; }
         .filter-group { display: flex; flex-direction: column; gap: 8px; }
         .filter-group label { font-size: 0.75rem; font-weight: 700; color: var(--text-ink-light); text-transform: uppercase; letter-spacing: 0.5px;}
-        .filter-chips-container { display: flex; overflow-x: auto; gap: 8px; padding-bottom: 5px; scrollbar-width: none; }
-        .filter-chips-container::-webkit-scrollbar { display: none; }
+        
+        /* CORRECTION PC : Les chips se mettent à la ligne en nuage */
+        .filter-chips-container { display: flex; flex-wrap: wrap; gap: 8px; padding-bottom: 5px; }
         .filter-chip { padding: 6px 14px; border-radius: 20px; background: #fff; border: 1px solid var(--bg-parchment-dark); font-size: 0.85rem; white-space: nowrap; cursor: pointer; transition: 0.2s; color: var(--text-ink); user-select: none; }
         .filter-chip.active { background: var(--accent-wood); color: #fff; border-color: var(--accent-wood); font-weight: 600; }
+        
+        /* Zone spécifique pour la longue liste des tags avec défilement vertical élégant */
+        #filter-tag { max-height: 180px; overflow-y: auto; padding-right: 5px; align-content: flex-start;}
+        #filter-tag::-webkit-scrollbar { width: 6px; }
+        #filter-tag::-webkit-scrollbar-track { background: var(--bg-parchment); border-radius: 4px; }
+        #filter-tag::-webkit-scrollbar-thumb { background: var(--bg-parchment-dark); border-radius: 4px; }
 
         nav { position: fixed; bottom: 0; left: 0; width: 100%; background-color: var(--bg-parchment-dark); box-shadow: 0 -2px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-around; padding: 6px 0; z-index: 100; }
         .nav-btn { background: none; border: none; color: var(--text-ink-light); font-family: var(--font-body); font-size: 0.65rem; font-weight: 600; cursor: pointer; padding: 8px 2px; display: flex; flex-direction: column; align-items: center; gap: 2px; border-radius: 12px; transition: 0.2s; flex: 1; text-align: center;}
@@ -434,6 +440,11 @@
             game: { createur: "Auteur / Éditeur", formats: ["Plateau", "Cartes", "Dés", "Figurines", "Autre"], tags: ["Coopératif", "Compétitif", "Gestion", "Deckbuilding", "Bluff", "Narratif", "2 Joueurs", "Familial", "Expert"], statuses: [{val:'joue', text:'🎲 Joué'}, {val:'atester', text:'📦 À tester'}, {val:'aacheter', text:'🛒 À acheter'}, {val:'abandonne', text:'❌ Revendu/Abandonné'}] }
         };
 
+        // Fonction centralisée pour un tri alphabétique absolu
+        function sortTagsArray(tags) {
+            return Array.from(tags).sort((a, b) => a.localeCompare(b, 'fr', {sensitivity: 'base', ignorePunctuation: true}));
+        }
+
         let confirmAction = null;
         function customConfirm(msg, action, isDanger = true) {
             document.getElementById('confirm-msg').innerHTML = msg;
@@ -447,9 +458,17 @@
             document.getElementById('modal-confirm').close();
         }
 
+        // Utilitaire pour scroller en haut d'une modale
+        function openModal(id) {
+            const modal = document.getElementById(id);
+            modal.showModal();
+            const content = modal.querySelector('.modal-content');
+            if(content) content.scrollTop = 0;
+        }
+
         function saveLibrary() { 
             localStorage.setItem('myLibrary', JSON.stringify(library)); 
-            renderData(); 
+            renderAll(); 
             if(cloudConfig.token && cloudConfig.gistId) {
                 fetch(`https://api.github.com/gists/${cloudConfig.gistId}`, { 
                     method: 'PATCH', 
@@ -480,7 +499,7 @@
             document.getElementById('selection-bar').style.display = isOracleMode ? 'flex' : 'none';
             if(isOracleMode) document.getElementById('btn-fab-add').classList.add('hidden-fab');
             else document.getElementById('btn-fab-add').classList.remove('hidden-fab');
-            document.getElementById('oracle-count').innerText = 0; renderData(); 
+            document.getElementById('oracle-count').innerText = 0; renderAll(); 
         };
 
         function toggleCardSelection(id, cardElement) {
@@ -525,8 +544,9 @@
                 return;
             }
             
-            const modal = document.getElementById('modal-oracle'); const resultBox = document.getElementById('oracle-result');
-            modal.showModal(); resultBox.innerText = "📡 Le Radar cherche un modèle IA compatible...";
+            const resultBox = document.getElementById('oracle-result');
+            openModal('modal-oracle');
+            resultBox.innerText = "📡 Le Radar cherche un modèle IA compatible...";
             
             const inspirateurs = selectedForOracle.map(id => { const i = library.find(x=>x.id===id); return i ? `${i.titre} de ${i.createur}` : null; }).filter(Boolean).join(" | ");
             const palList = library.filter(i => ['alire', 'adecouvrir', 'atester'].includes(i.statut)).map(i => `${i.titre} de ${i.createur}`).join(" | ");
@@ -564,9 +584,9 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
             } catch(e) { resultBox.innerText = "❌ Échec connexion Oracle."; }
         });
 
-        // NOUVEAU TRI : L'auteur vide descend tout en bas
+        // TRI : Si pas de créateur, on le repousse à la fin ('zzzzz')
         function getLastNameForSort(creatorString) {
-            if (!creatorString || creatorString.trim() === '') return "";
+            if (!creatorString || creatorString.trim() === '') return "zzzzz";
             let firstAuthor = creatorString.split(/&|,| et /i)[0].trim();
             let words = firstAuthor.split(' ');
             return words[words.length - 1].toLowerCase();
@@ -604,7 +624,7 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
                     library = library.filter(x=>x.id!==id); saveLibrary(); document.getElementById('modal-view').close(); 
                 }, true);
             };
-            document.getElementById('modal-view').showModal();
+            openModal('modal-view');
         }
 
         document.getElementById('btn-ai-summary').onclick = async () => {
@@ -740,7 +760,7 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
                     container.appendChild(section);
                     
                     let tagsContainer = section.querySelector(`#tags-group-${t.id}`);
-                    Array.from(tagsForType).sort((a,b) => a.localeCompare(b, 'fr', {sensitivity: 'base'})).forEach(tag => {
+                    sortTagsArray(tagsForType).forEach(tag => {
                         const p = document.createElement('span');
                         p.className = 'tag-pill';
                         p.innerHTML = `${tag} <span style="color:var(--color-danger); margin-left:4px;">✖</span>`;
@@ -758,7 +778,6 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
             if(!hasTags) container.innerHTML = '<p style="font-size:0.85rem; color:var(--text-ink-light);">Aucun tag à nettoyer.</p>';
         }
 
-        // INITIALISATION DES PILULES DE FILTRE
         const activeFilters = { sort: 'date_desc', status: 'all', format: 'all', tag: 'all', favOnly: false };
         
         function updateFilterUI() {
@@ -793,15 +812,14 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
             let allFormats = new Set();
             library.forEach(i => { if(i.format) allFormats.add(i.format); });
             formatCont.innerHTML = `<div class="filter-chip" data-type="format" data-val="all">Tous</div>` + 
-                Array.from(allFormats).sort().map(f => `<div class="filter-chip" data-type="format" data-val="${f}">${f}</div>`).join('');
+                sortTagsArray(allFormats).map(f => `<div class="filter-chip" data-type="format" data-val="${f}">${f}</div>`).join('');
 
             const tagCont = document.getElementById('filter-tag');
             let allTags = new Set();
             library.forEach(i => (i.tags||[]).forEach(t => allTags.add(t)));
             tagCont.innerHTML = `<div class="filter-chip" data-type="tag" data-val="all">Tous</div>` + 
-                Array.from(allTags).sort((a,b)=>a.localeCompare(b,'fr', {sensitivity:'base'})).map(t => `<div class="filter-chip" data-type="tag" data-val="${t}">${t}</div>`).join('');
+                sortTagsArray(allTags).map(t => `<div class="filter-chip" data-type="tag" data-val="${t}">${t}</div>`).join('');
 
-            // Add click events to all chips
             document.querySelectorAll('.filter-chip').forEach(chip => {
                 chip.onclick = () => setFilter(chip.dataset.type, chip.dataset.val);
             });
@@ -850,9 +868,8 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
                     let nomA = getLastNameForSort(a.createur);
                     let nomB = getLastNameForSort(b.createur);
                     
-                    if (!nomA && nomB) return 1;  
-                    if (nomA && !nomB) return -1; 
-                    if (!nomA && !nomB) return sortA.localeCompare(sortB, 'fr', {numeric: true, sensitivity: 'base'});
+                    if (nomA === "zzzzz" && nomB !== "zzzzz") return 1;  
+                    if (nomA !== "zzzzz" && nomB === "zzzzz") return -1; 
                     
                     let cr = nomA.localeCompare(nomB, 'fr', {sensitivity: 'base'});
                     return cr === 0 ? sortA.localeCompare(sortB, 'fr', {numeric: true, sensitivity: 'base'}) : cr;
@@ -911,7 +928,7 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
         function renderTagsUI(type) { 
             const container = document.getElementById('tags-container'); container.innerHTML = ''; 
             let all = new Set(uiConfig[type].tags); library.filter(i=>i.type===type && i.tags).forEach(i=>i.tags.forEach(t=>all.add(t))); selectedTags.forEach(t=>all.add(t)); 
-            Array.from(all).sort().forEach(t => { 
+            sortTagsArray(all).forEach(t => { 
                 const p = document.createElement('span'); p.className = 'tag-pill' + (selectedTags.includes(t)?' active':''); p.textContent = t; 
                 p.onclick = () => { p.classList.toggle('active'); selectedTags = selectedTags.includes(t) ? selectedTags.filter(x=>x!==t) : [...selectedTags, t]; }; 
                 container.appendChild(p); 
@@ -942,7 +959,7 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
             toggleReviewSection();
         }
         
-        document.getElementById('btn-fab-add').onclick = () => { editingId=null; form.reset(); selectedTags=[]; setStars(0); document.querySelector('input[name="type"][value="book"]').checked=true; updateFormUI('book'); modalAdd.showModal(); };
+        document.getElementById('btn-fab-add').onclick = () => { editingId=null; form.reset(); selectedTags=[]; setStars(0); document.querySelector('input[name="type"][value="book"]').checked=true; updateFormUI('book'); openModal('modal-add'); };
         
         document.querySelectorAll('input[name="type"]').forEach(r => r.onchange = e => { selectedTags=[]; updateFormUI(e.target.value); });
         
@@ -988,7 +1005,7 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
 
             setStars(i.note||0); document.getElementById('coup-de-coeur').checked = i.coupDeCoeur||false; 
             toggleReviewSection();
-            modalAdd.showModal(); 
+            openModal('modal-add'); 
         };
         
         function exportToExcel() { let csv = "\ufeffType;Titre;Série;Tome;Créateur;Format;Année;Statut;Tags;Note;Coup de coeur;Commentaire\n"; library.forEach(i => { const q=s=>`"${(s||"").toString().replace(/"/g, '""')}"`; csv += `${i.type};${q(i.titre)};${q(i.serie)};${q(i.tome)};${q(i.createur)};${q(i.format)};${i.annee||''};${i.statut};${q((i.tags||[]).join(','))};${i.note||0};${i.coupDeCoeur};${q(i.commentaire)}\n`; }); const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})); a.download=`Biblio_${new Date().toISOString().split('T')[0]}.csv`; a.click(); }
