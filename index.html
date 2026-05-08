@@ -45,12 +45,10 @@
         .filter-group { display: flex; flex-direction: column; gap: 8px; }
         .filter-group label { font-size: 0.75rem; font-weight: 700; color: var(--text-ink-light); text-transform: uppercase; letter-spacing: 0.5px;}
         
-        /* CORRECTION PC : Les chips se mettent à la ligne en nuage */
         .filter-chips-container { display: flex; flex-wrap: wrap; gap: 8px; padding-bottom: 5px; }
         .filter-chip { padding: 6px 14px; border-radius: 20px; background: #fff; border: 1px solid var(--bg-parchment-dark); font-size: 0.85rem; white-space: nowrap; cursor: pointer; transition: 0.2s; color: var(--text-ink); user-select: none; }
         .filter-chip.active { background: var(--accent-wood); color: #fff; border-color: var(--accent-wood); font-weight: 600; }
         
-        /* Zone spécifique pour la longue liste des tags avec défilement vertical élégant */
         #filter-tag { max-height: 180px; overflow-y: auto; padding-right: 5px; align-content: flex-start;}
         #filter-tag::-webkit-scrollbar { width: 6px; }
         #filter-tag::-webkit-scrollbar-track { background: var(--bg-parchment); border-radius: 4px; }
@@ -137,8 +135,10 @@
         .tags-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px; margin-bottom: 8px; }
         .tag-pill { padding: 6px 12px; border-radius: 20px; background: #fff; border: 1px solid var(--bg-parchment-dark); font-size: 0.8rem; cursor: pointer; transition: 0.2s; user-select: none; display: flex; align-items: center;}
         .tag-pill.active { background: var(--accent-wood); color: #fff; border-color: var(--accent-wood); }
-        .custom-tag-input { border: 1px dashed var(--accent-wood); background: transparent; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; outline: none; width: 150px; color: var(--text-ink);}
         
+        .custom-tag-input { border: 1px dashed var(--accent-wood); background: transparent; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; outline: none; color: var(--text-ink); flex: 1;}
+        .custom-tag-input:focus { border: 1px solid var(--accent-wood); background: #fff; }
+
         .star-rating { display: flex; gap: 5px; font-size: 1.5rem; cursor: pointer; color: #ccc; }
         .star-rating span { transition: color 0.2s; }
         .star-rating span:hover, .star-rating span.active { color: var(--color-star); }
@@ -369,7 +369,10 @@
                 <div class="form-group">
                     <label>Tags</label>
                     <div id="tags-container" class="tags-container"></div>
-                    <input type="text" id="custom-tag-input" class="custom-tag-input" placeholder="+ Tag (Entrée)">
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="custom-tag-input" class="custom-tag-input" placeholder="Nouveau tag...">
+                        <button type="button" id="btn-add-tag" class="btn-secondary" style="padding: 6px 16px; margin: 0; width: auto; font-size: 1.2rem;">＋</button>
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -440,7 +443,6 @@
             game: { createur: "Auteur / Éditeur", formats: ["Plateau", "Cartes", "Dés", "Figurines", "Autre"], tags: ["Coopératif", "Compétitif", "Gestion", "Deckbuilding", "Bluff", "Narratif", "2 Joueurs", "Familial", "Expert"], statuses: [{val:'joue', text:'🎲 Joué'}, {val:'atester', text:'📦 À tester'}, {val:'aacheter', text:'🛒 À acheter'}, {val:'abandonne', text:'❌ Revendu/Abandonné'}] }
         };
 
-        // Fonction centralisée pour un tri alphabétique absolu
         function sortTagsArray(tags) {
             return Array.from(tags).sort((a, b) => a.localeCompare(b, 'fr', {sensitivity: 'base', ignorePunctuation: true}));
         }
@@ -458,7 +460,6 @@
             document.getElementById('modal-confirm').close();
         }
 
-        // Utilitaire pour scroller en haut d'une modale
         function openModal(id) {
             const modal = document.getElementById(id);
             modal.showModal();
@@ -499,7 +500,7 @@
             document.getElementById('selection-bar').style.display = isOracleMode ? 'flex' : 'none';
             if(isOracleMode) document.getElementById('btn-fab-add').classList.add('hidden-fab');
             else document.getElementById('btn-fab-add').classList.remove('hidden-fab');
-            document.getElementById('oracle-count').innerText = 0; renderAll(); 
+            document.getElementById('oracle-count').innerText = 0; renderData(); 
         };
 
         function toggleCardSelection(id, cardElement) {
@@ -536,22 +537,27 @@
 
         document.getElementById('btn-ask-oracle').addEventListener('click', async () => {
             if(selectedForOracle.length === 0) {
-                customConfirm("🪄 Tu dois d'abord sélectionner au moins une œuvre pour inspirer l'Oracle !", null, false);
+                customConfirm("🪄 Tu dois d'abord sélectionner au moins une œuvre (en cliquant dessus) pour inspirer l'Oracle !", null, false);
                 return;
             }
-            if(!cloudConfig.geminiKey) {
-                customConfirm("❌ Clé API Gemini manquante dans les réglages.", null, true);
+            if(!cloudConfig.geminiKey || cloudConfig.geminiKey.trim() === '') {
+                customConfirm("❌ Clé API Gemini manquante ! Va dans l'onglet ⚙️ Réglages pour l'ajouter.", null, true);
                 return;
             }
             
             const resultBox = document.getElementById('oracle-result');
             openModal('modal-oracle');
-            resultBox.innerText = "📡 Le Radar cherche un modèle IA compatible...";
+            resultBox.innerHTML = "📡 Le Radar cherche le meilleur modèle IA...<br><br><small><i>Vérification de ta clé API en cours...</i></small>";
             
-            const inspirateurs = selectedForOracle.map(id => { const i = library.find(x=>x.id===id); return i ? `${i.titre} de ${i.createur}` : null; }).filter(Boolean).join(" | ");
-            const palList = library.filter(i => ['alire', 'adecouvrir', 'atester'].includes(i.statut)).map(i => `${i.titre} de ${i.createur}`).join(" | ");
-            
-            const prompt = `Tu es l'Oracle d'une bibliothèque.
+            try {
+                const inspirateurs = selectedForOracle.map(id => { 
+                    const i = library.find(x=>x.id===id); 
+                    return i ? `"${i.titre}" de ${i.createur}` : null; 
+                }).filter(Boolean).join(" | ");
+                
+                const palList = library.filter(i => ['alire', 'adecouvrir', 'atester'].includes(i.statut)).map(i => `"${i.titre}" de ${i.createur}`).join(" | ");
+                
+                const prompt = `Tu es l'Oracle d'une bibliothèque.
 L'utilisateur aime ces œuvres : [ ${inspirateurs} ]. 
 Voici sa Pile à Lire EXACTE : [ ${palList || "VIDE"} ].
 
@@ -570,21 +576,29 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
   <b>[Titre Vrai]</b> de [Auteur Vrai]<br><i style="font-size:0.9rem;">[1 seule phrase d'explication courte]</i>
 </div>`;
             
-            try {
                 const modelToUse = await findBestModel(cloudConfig.geminiKey);
-                resultBox.innerText = `⏳ L'Oracle connecte ses neurones via ${modelToUse}...`;
+                resultBox.innerHTML = `⏳ Connexion établie avec <b>${modelToUse}</b>...<br><br><small><i>Analyse de tes goûts en cours...</i></small>`;
 
-                const req = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${cloudConfig.geminiKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
+                const req = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${cloudConfig.geminiKey}`, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) 
+                });
+                
                 const data = await req.json();
+                
                 if(data.candidates) {
                     let rawHtml = data.candidates[0].content.parts[0].text.replace(/```html/gi, '').replace(/```/g, '').trim();
                     resultBox.innerHTML = rawHtml;
                 }
-                else resultBox.innerText = `❌ Erreur IA : ${data.error ? data.error.message : 'inconnue'}`;
-            } catch(e) { resultBox.innerText = "❌ Échec connexion Oracle."; }
+                else {
+                    resultBox.innerHTML = `❌ <b>Erreur de l'API Google :</b><br><br>${data.error ? data.error.message : 'Clé API invalide ou quota dépassé.'}`;
+                }
+            } catch(e) { 
+                resultBox.innerHTML = `❌ <b>Échec de la connexion.</b><br><br>Impossible de joindre l'API Google. Vérifie ta connexion internet.`; 
+            }
         });
 
-        // TRI : Si pas de créateur, on le repousse à la fin ('zzzzz')
         function getLastNameForSort(creatorString) {
             if (!creatorString || creatorString.trim() === '') return "zzzzz";
             let firstAuthor = creatorString.split(/&|,| et /i)[0].trim();
@@ -935,7 +949,25 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
             }); 
         }
         
-        document.getElementById('custom-tag-input').addEventListener('keydown', function(e) { if(e.key==='Enter') { e.preventDefault(); const v=this.value.trim(); if(v&&!selectedTags.includes(v)) { selectedTags.push(v); renderTagsUI(document.querySelector('input[name="type"]:checked').value); } this.value=''; }});
+        // --- NOUVELLE FONCTION D'AJOUT DE TAG ---
+        function addCustomTag() {
+            const input = document.getElementById('custom-tag-input');
+            const v = input.value.trim(); 
+            if(v && !selectedTags.includes(v)) { 
+                selectedTags.push(v); 
+                renderTagsUI(document.querySelector('input[name="type"]:checked').value); 
+            } 
+            input.value = '';
+        }
+
+        document.getElementById('btn-add-tag').addEventListener('click', addCustomTag);
+        
+        document.getElementById('custom-tag-input').addEventListener('keydown', function(e) { 
+            if(e.key === 'Enter') { 
+                e.preventDefault(); // Bloque la soumission du formulaire par le clavier mobile
+                addCustomTag();
+            }
+        });
         
         function toggleReviewSection() {
             const stat = document.querySelector('input[name="statut_radio"]:checked')?.value || 'alire';
