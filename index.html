@@ -40,11 +40,15 @@
         .btn-icon-header { background: #fff; border: 2px solid var(--bg-parchment-dark); border-radius: 50%; width: 42px; height: 42px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; transition: 0.2s; color: var(--text-ink); }
         .btn-icon-header.active { border-color: var(--accent-wood); background: var(--bg-parchment-dark); }
 
-        .filter-panel { background: rgba(255, 255, 255, 0.9); border: 1px solid var(--bg-parchment-dark); border-radius: 12px; padding: 15px; margin-top: 10px; display: none; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; box-shadow: var(--shadow-soft); }
-        .filter-panel.open { display: grid; }
-        .filter-group { display: flex; flex-direction: column; gap: 4px; }
-        .filter-group label { font-size: 0.75rem; font-weight: 700; color: var(--text-ink-light); text-transform: uppercase; }
-        .filter-select { padding: 8px; border-radius: 6px; border: 1px solid var(--bg-parchment-dark); font-size: 0.85rem; }
+        /* NOUVEAU DESIGN DU PANNEAU DE FILTRES */
+        .filter-panel { background: rgba(255, 255, 255, 0.95); border: 1px solid var(--bg-parchment-dark); border-radius: 12px; padding: 15px; margin-top: 10px; display: none; flex-direction: column; gap: 15px; box-shadow: var(--shadow-soft); }
+        .filter-panel.open { display: flex; }
+        .filter-group { display: flex; flex-direction: column; gap: 8px; }
+        .filter-group label { font-size: 0.75rem; font-weight: 700; color: var(--text-ink-light); text-transform: uppercase; letter-spacing: 0.5px;}
+        .filter-chips-container { display: flex; overflow-x: auto; gap: 8px; padding-bottom: 5px; scrollbar-width: none; }
+        .filter-chips-container::-webkit-scrollbar { display: none; }
+        .filter-chip { padding: 6px 14px; border-radius: 20px; background: #fff; border: 1px solid var(--bg-parchment-dark); font-size: 0.85rem; white-space: nowrap; cursor: pointer; transition: 0.2s; color: var(--text-ink); user-select: none; }
+        .filter-chip.active { background: var(--accent-wood); color: #fff; border-color: var(--accent-wood); font-weight: 600; }
 
         nav { position: fixed; bottom: 0; left: 0; width: 100%; background-color: var(--bg-parchment-dark); box-shadow: 0 -2px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-around; padding: 6px 0; z-index: 100; }
         .nav-btn { background: none; border: none; color: var(--text-ink-light); font-family: var(--font-body); font-size: 0.65rem; font-weight: 600; cursor: pointer; padding: 8px 2px; display: flex; flex-direction: column; align-items: center; gap: 2px; border-radius: 12px; transition: 0.2s; flex: 1; text-align: center;}
@@ -116,7 +120,7 @@
         .form-row { display: flex; flex-wrap: wrap; gap: 10px; }
         .form-row .form-group { flex: 1; min-width: 120px; }
         label { font-weight: 600; font-size: 0.85rem; margin-bottom: 4px; color: var(--text-ink-light); }
-        input[type="text"], input[type="number"], input[type="password"], select, textarea { padding: 10px; border: 1px solid var(--bg-parchment-dark); border-radius: 8px; font-family: var(--font-body); font-size: 0.95rem; background: #fff; }
+        input[type="text"], input[type="number"], input[type="password"], textarea { padding: 10px; border: 1px solid var(--bg-parchment-dark); border-radius: 8px; font-family: var(--font-body); font-size: 0.95rem; background: #fff; }
         
         .type-selector { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 15px; }
         .type-selector label { flex: 1; min-width: 80px; cursor: pointer; }
@@ -168,18 +172,29 @@
             <div id="filter-panel" class="filter-panel">
                 <div class="filter-group">
                     <label>Trier par</label>
-                    <select id="filter-sort" class="filter-select" style="background:#fff; border: 1px solid var(--bg-parchment-dark); padding: 8px; border-radius: 6px;">
-                        <option value="date_desc">📅 Ajout (Récent)</option>
-                        <option value="alpha_asc">📖 Titre (A-Z)</option>
-                        <option value="createur_asc">👤 Créateur (A-Z)</option>
-                        <option value="note_desc">★ Mieux notés</option>
-                    </select>
+                    <div class="filter-chips-container" id="filter-sort">
+                        <div class="filter-chip active" data-type="sort" data-val="date_desc">📅 Récent</div>
+                        <div class="filter-chip" data-type="sort" data-val="alpha_asc">📖 Titre (A-Z)</div>
+                        <div class="filter-chip" data-type="sort" data-val="createur_asc">👤 Créateur (A-Z)</div>
+                        <div class="filter-chip" data-type="sort" data-val="note_desc">★ Mieux notés</div>
+                    </div>
                 </div>
-                <div class="filter-group"><label>Statut</label><select id="filter-status" class="filter-select" style="background:#fff; border: 1px solid var(--bg-parchment-dark); padding: 8px; border-radius: 6px;"><option value="all">Tous</option></select></div>
-                <div class="filter-group"><label>Format</label><select id="filter-format" class="filter-select" style="background:#fff; border: 1px solid var(--bg-parchment-dark); padding: 8px; border-radius: 6px;"><option value="all">Tous</option></select></div>
-                <div class="filter-group"><label>Tag</label><select id="filter-tag" class="filter-select" style="background:#fff; border: 1px solid var(--bg-parchment-dark); padding: 8px; border-radius: 6px;"><option value="all">Tous</option></select></div>
-                <div class="filter-group" style="flex-direction:row; align-items:center; gap:8px; grid-column: 1 / -1; justify-content: center; padding-top: 5px;">
-                    <input type="checkbox" id="filter-fav" style="transform: scale(1.2);"> <label for="filter-fav" style="margin:0; font-size:0.9rem; text-transform:none;">Coups de ❤️ uniquement</label>
+                <div class="filter-group">
+                    <label>Statut</label>
+                    <div class="filter-chips-container" id="filter-status"></div>
+                </div>
+                <div class="filter-group">
+                    <label>Format</label>
+                    <div class="filter-chips-container" id="filter-format"></div>
+                </div>
+                <div class="filter-group">
+                    <label>Tag</label>
+                    <div class="filter-chips-container" id="filter-tag"></div>
+                </div>
+                <div class="filter-group" style="align-items:center; padding-top: 5px;">
+                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer; text-transform:none; font-size:0.9rem;">
+                        <input type="checkbox" id="filter-fav" style="transform: scale(1.2);"> Coups de ❤️ uniquement
+                    </label>
                 </div>
             </div>
         </div>
@@ -434,7 +449,7 @@
 
         function saveLibrary() { 
             localStorage.setItem('myLibrary', JSON.stringify(library)); 
-            renderAll(); 
+            renderData(); 
             if(cloudConfig.token && cloudConfig.gistId) {
                 fetch(`https://api.github.com/gists/${cloudConfig.gistId}`, { 
                     method: 'PATCH', 
@@ -465,7 +480,7 @@
             document.getElementById('selection-bar').style.display = isOracleMode ? 'flex' : 'none';
             if(isOracleMode) document.getElementById('btn-fab-add').classList.add('hidden-fab');
             else document.getElementById('btn-fab-add').classList.remove('hidden-fab');
-            document.getElementById('oracle-count').innerText = 0; renderAll(); 
+            document.getElementById('oracle-count').innerText = 0; renderData(); 
         };
 
         function toggleCardSelection(id, cardElement) {
@@ -549,12 +564,10 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
             } catch(e) { resultBox.innerText = "❌ Échec connexion Oracle."; }
         });
 
-        // --- 🤖 NOUVEAU MOTEUR DE TRI (Prénom Nom -> Nom) ---
+        // NOUVEAU TRI : L'auteur vide descend tout en bas
         function getLastNameForSort(creatorString) {
-            if (!creatorString) return "";
-            // Isole le premier auteur s'il y a un "&" ou "et"
+            if (!creatorString || creatorString.trim() === '') return "";
             let firstAuthor = creatorString.split(/&|,| et /i)[0].trim();
-            // Récupère le dernier mot
             let words = firstAuthor.split(' ');
             return words[words.length - 1].toLowerCase();
         }
@@ -745,12 +758,77 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
             if(!hasTags) container.innerHTML = '<p style="font-size:0.85rem; color:var(--text-ink-light);">Aucun tag à nettoyer.</p>';
         }
 
+        // INITIALISATION DES PILULES DE FILTRE
         const activeFilters = { sort: 'date_desc', status: 'all', format: 'all', tag: 'all', favOnly: false };
-        function triggerUpdate() { if(document.getElementById('search-input').value.trim() !== '') document.getElementById('search-input').dispatchEvent(new Event('input')); else renderAll(); }
+        
+        function updateFilterUI() {
+            document.querySelectorAll('.filter-chip').forEach(chip => {
+                const type = chip.dataset.type;
+                if (!type) return;
+                if (activeFilters[type] === chip.dataset.val) {
+                    chip.classList.add('active');
+                } else {
+                    chip.classList.remove('active');
+                }
+            });
+            document.getElementById('filter-fav').checked = activeFilters.favOnly;
+        }
+
+        function setFilter(type, val) {
+            activeFilters[type] = val;
+            updateFilterUI();
+            triggerUpdate();
+        }
+
+        function initFilters() {
+            const statusCont = document.getElementById('filter-status');
+            const allStatuses = [
+                {val:'all', label:'Tous'},
+                {val:'lu', label:'✅ Terminé'}, {val:'encours', label:'⏳ En cours'}, 
+                {val:'alire', label:'📚 À faire'}, {val:'aacheter', label:'🛒 À acheter'}
+            ];
+            statusCont.innerHTML = allStatuses.map(s => `<div class="filter-chip" data-type="status" data-val="${s.val}">${s.label}</div>`).join('');
+
+            const formatCont = document.getElementById('filter-format');
+            let allFormats = new Set();
+            library.forEach(i => { if(i.format) allFormats.add(i.format); });
+            formatCont.innerHTML = `<div class="filter-chip" data-type="format" data-val="all">Tous</div>` + 
+                Array.from(allFormats).sort().map(f => `<div class="filter-chip" data-type="format" data-val="${f}">${f}</div>`).join('');
+
+            const tagCont = document.getElementById('filter-tag');
+            let allTags = new Set();
+            library.forEach(i => (i.tags||[]).forEach(t => allTags.add(t)));
+            tagCont.innerHTML = `<div class="filter-chip" data-type="tag" data-val="all">Tous</div>` + 
+                Array.from(allTags).sort((a,b)=>a.localeCompare(b,'fr', {sensitivity:'base'})).map(t => `<div class="filter-chip" data-type="tag" data-val="${t}">${t}</div>`).join('');
+
+            // Add click events to all chips
+            document.querySelectorAll('.filter-chip').forEach(chip => {
+                chip.onclick = () => setFilter(chip.dataset.type, chip.dataset.val);
+            });
+            
+            document.getElementById('filter-fav').onchange = e => setFilter('favOnly', e.target.checked);
+            updateFilterUI();
+        }
+
+        function triggerUpdate() { 
+            if(document.getElementById('search-input').value.trim() !== '') {
+                document.getElementById('search-input').dispatchEvent(new Event('input')); 
+            } else {
+                renderData(); 
+            }
+        }
+        
         document.getElementById('btn-toggle-filters').onclick = function() { document.getElementById('filter-panel').classList.toggle('open'); this.classList.toggle('active'); };
-        ['sort','status','format','tag'].forEach(id => document.getElementById(`filter-${id}`).onchange = e => { activeFilters[id] = e.target.value; triggerUpdate(); });
-        document.getElementById('filter-fav').onchange = e => { activeFilters.favOnly = e.target.checked; triggerUpdate(); };
-        document.getElementById('search-input').oninput = function(e) { const term = e.target.value.toLowerCase().trim(); if (term === '') { switchView(document.querySelector('.nav-btn.active').dataset.target); return; } switchView('view-search'); renderGrid(processData(library.filter(i => (i.titre||'').toLowerCase().includes(term) || (i.createur||'').toLowerCase().includes(term) || (i.tags||[]).some(t=>t.toLowerCase().includes(term)))), 'list-search', 'title-search'); };
+        
+        document.getElementById('search-input').oninput = function(e) { 
+            const term = e.target.value.toLowerCase().trim(); 
+            if (term === '') { 
+                switchView(document.querySelector('.nav-btn.active').dataset.target); 
+                return; 
+            } 
+            switchView('view-search'); 
+            renderGrid(processData(library.filter(i => (i.titre||'').toLowerCase().includes(term) || (i.createur||'').toLowerCase().includes(term) || (i.tags||[]).some(t=>t.toLowerCase().includes(term)))), 'list-search', 'title-search'); 
+        };
         
         function processData(data) { 
             let res = data.filter(i => { 
@@ -768,10 +846,14 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
 
                 if(activeFilters.sort === 'alpha_asc') return sortA.localeCompare(sortB, 'fr', {numeric: true, sensitivity: 'base'}); 
                 
-                // LE NOUVEAU TRI MAGIQUE EST ICI
                 if(activeFilters.sort === 'createur_asc') {
                     let nomA = getLastNameForSort(a.createur);
                     let nomB = getLastNameForSort(b.createur);
+                    
+                    if (!nomA && nomB) return 1;  
+                    if (nomA && !nomB) return -1; 
+                    if (!nomA && !nomB) return sortA.localeCompare(sortB, 'fr', {numeric: true, sensitivity: 'base'});
+                    
                     let cr = nomA.localeCompare(nomB, 'fr', {sensitivity: 'base'});
                     return cr === 0 ? sortA.localeCompare(sortB, 'fr', {numeric: true, sensitivity: 'base'}) : cr;
                 }
@@ -811,11 +893,16 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
         function switchView(id) { document.querySelectorAll('.view-section').forEach(v => v.classList.toggle('active', v.id === id)); if(id !== 'view-search') { document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.target === id)); renderAll(); } }
         document.querySelectorAll('.nav-btn').forEach(b => b.onclick = () => { document.getElementById('search-input').value=''; switchView(b.dataset.target); });
         
+        function renderData() {
+            const maps = { book:'list-books', bd:'list-bd', music:'list-music', game:'list-games' }; 
+            Object.keys(maps).forEach(k => renderGrid(processData(library.filter(i=>i.type===k)), maps[k])); 
+        }
+
         function renderAll() { 
             renderDashboard(); 
             renderSettingsTags(); 
-            const maps = { book:'list-books', bd:'list-bd', music:'list-music', game:'list-games' }; 
-            Object.keys(maps).forEach(k => renderGrid(processData(library.filter(i=>i.type===k)), maps[k])); 
+            initFilters();
+            renderData();
         }
 
         const modalAdd = document.getElementById('modal-add'); const form = document.getElementById('form-add'); let selectedTags = [];
