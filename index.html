@@ -173,6 +173,8 @@
 <body>
 
     <div id="app-container">
+        <div id="error-banner" style="display:none; background: #e74c3c; color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-weight: bold;"></div>
+
         <header><h1>Ma Bibliothèque</h1></header>
 
         <div class="search-area">
@@ -352,9 +354,7 @@
             <button class="btn-close-absolute" onclick="document.getElementById('modal-jukebox').close()">❌</button>
             <h2 style="font-family: var(--font-title); color: var(--color-ambiance-dark); margin-bottom: 5px;">🎵 Le Jukebox</h2>
             <p style="font-size: 0.9rem; color: var(--text-ink-light); margin-bottom: 15px;">Sélectionne ton humeur du moment :</p>
-            
             <div class="filter-chips-container scrollable-chips" id="jukebox-ambiances" style="max-height: 120px; margin-bottom: 20px;"></div>
-            
             <div id="jukebox-results"></div>
         </div>
     </dialog>
@@ -436,29 +436,57 @@
     </dialog>
 
     <script>
+        function showError(msg, err) {
+            const b = document.getElementById('error-banner');
+            b.style.display = 'block';
+            b.innerHTML = `🚨 <b>Erreur Système :</b> ${msg}<br><span style="font-size:0.8rem; font-weight:normal;">${err.message || err}</span>`;
+            console.error("Erreur détaillée:", err);
+        }
+
         let library = [];
-        try { const stored = JSON.parse(localStorage.getItem('myLibrary')); if(Array.isArray(stored)) library = stored; } catch(e) { console.error("Cache local corrompu."); }
+        try { 
+            const stored = JSON.parse(localStorage.getItem('myLibrary')); 
+            if(Array.isArray(stored)) library = stored; 
+        } catch(e) { 
+            console.error("Cache local corrompu."); 
+        }
         
-        // --- 🩺 L'AUTO-NETTOYEUR V20 : RÉPARE LES ERREURS EXCEL ---
+        // --- AUTO-NETTOYEUR V21 BLINDÉ ---
         function normalizeLibrary() {
             let needsSave = false;
             library.forEach(i => {
-                // 1. Force le type en minuscules (Ex: "Book" -> "book")
-                if (i.type && i.type !== String(i.type).toLowerCase().trim()) {
-                    i.type = String(i.type).toLowerCase().trim();
-                    needsSave = true;
+                // Forcer le type en minuscules (corrige le syndrome Excel "Book" au lieu de "book")
+                if (i.type && typeof i.type === 'string') {
+                    let t = i.type.toLowerCase().trim();
+                    if (t !== i.type) { i.type = t; needsSave = true; }
+                } else if (!i.type) {
+                    i.type = 'book'; needsSave = true;
                 }
-                // 2. Répare le coup de coeur abîmé par Excel ("TRUE" au lieu du vrai booléen)
+
+                // Forcer le Coup de Coeur en Vrai/Faux
                 if (typeof i.coupDeCoeur === 'string') {
                     i.coupDeCoeur = (i.coupDeCoeur.toLowerCase() === 'true' || i.coupDeCoeur === '1');
                     needsSave = true;
+                } else if (typeof i.coupDeCoeur !== 'boolean') {
+                    i.coupDeCoeur = false; needsSave = true;
                 }
-                // 3. Effectue la migration Tags -> Genres si elle n'a pas été faite
-                if (!i.genres) { i.genres = []; needsSave = true; }
-                if (!i.ambiances) { i.ambiances = []; needsSave = true; }
+
+                // Forcer la note en chiffre
+                if (typeof i.note !== 'number') {
+                    i.note = parseInt(i.note) || 0;
+                    needsSave = true;
+                }
+
+                // Initialiser les tableaux si manquants
+                if (!Array.isArray(i.genres)) { i.genres = []; needsSave = true; }
+                if (!Array.isArray(i.ambiances)) { i.ambiances = []; needsSave = true; }
+
+                // Migration ultra-sécurisée des anciens Tags
                 if (i.tags) {
-                    if (i.tags.length > 0) {
+                    if (Array.isArray(i.tags)) {
                         i.genres = [...new Set([...i.genres, ...i.tags.map(t => String(t).trim()).filter(t => t !== '')])];
+                    } else if (typeof i.tags === 'string') {
+                        i.genres = [...new Set([...i.genres, ...i.tags.split(',').map(t => String(t).trim()).filter(t => t !== '')])];
                     }
                     delete i.tags;
                     needsSave = true;
@@ -468,9 +496,6 @@
                 localStorage.setItem('myLibrary', JSON.stringify(library));
             }
         }
-        
-        // On lance le nettoyage immédiatement au démarrage
-        normalizeLibrary();
 
         let cloudConfig = { token: '', gistId: '', geminiKey: '' };
         try { const c = JSON.parse(localStorage.getItem('cloudConfig')); if(c) cloudConfig = c; } catch(e) {}
@@ -493,7 +518,7 @@
         };
 
         function sortTagsArray(tags) {
-            return Array.from(tags).sort((a, b) => a.localeCompare(b, 'fr', {sensitivity: 'base', ignorePunctuation: true}));
+            return Array.from(tags).sort((a, b) => String(a).localeCompare(String(b), 'fr', {sensitivity: 'base', ignorePunctuation: true}));
         }
 
         let confirmAction = null;
@@ -534,22 +559,13 @@
             try { 
                 const r = await fetch(`https://api.github.com/gists/${cloudConfig.gistId.trim()}`, { 
                     method: 'PATCH', 
-                    headers: { 
-                        'Authorization': `Bearer ${cloudConfig.token.trim()}`, 
-                        'Content-Type': 'application/json' 
-                    }, 
+                    headers: { 'Authorization': `Bearer ${cloudConfig.token.trim()}`, 'Content-Type': 'application/json' }, 
                     body: JSON.stringify({ files: { 'library.json': { content: JSON.stringify(library) } } }) 
                 });
                 
-                if(r.ok) {
-                    status.innerText = "✅ Sauvegardé avec succès !"; 
-                } else {
-                    const err = await r.json();
-                    status.innerText = `❌ Erreur GitHub (${r.status}): ${err.message}`;
-                }
-            } catch(e) { 
-                status.innerText = `❌ Échec connexion : ${e.message}`; 
-            }
+                if(r.ok) { status.innerText = "✅ Sauvegardé avec succès !"; } 
+                else { const err = await r.json(); status.innerText = `❌ Erreur GitHub (${r.status}): ${err.message}`; }
+            } catch(e) { status.innerText = `❌ Échec connexion : ${e.message}`; }
         }
 
         function pullFromCloud() {
@@ -561,15 +577,8 @@
                 const status = document.getElementById('cloud-status'); 
                 status.innerText = "⏳ Récupération...";
                 try { 
-                    const r = await fetch(`https://api.github.com/gists/${cloudConfig.gistId.trim()}?t=${Date.now()}`, { 
-                        headers: { 'Authorization': `Bearer ${cloudConfig.token.trim()}` } 
-                    });
-                    
-                    if(!r.ok) { 
-                        const err = await r.json();
-                        status.innerText = `❌ Erreur GitHub (${r.status}): ${err.message}`; 
-                        return; 
-                    }
+                    const r = await fetch(`https://api.github.com/gists/${cloudConfig.gistId.trim()}?t=${Date.now()}`, { headers: { 'Authorization': `Bearer ${cloudConfig.token.trim()}` } });
+                    if(!r.ok) { const err = await r.json(); status.innerText = `❌ Erreur GitHub (${r.status}): ${err.message}`; return; }
                     
                     const d = await r.json();
                     const fKey = d.files['library.json'] ? 'library.json' : Object.keys(d.files).find(k => k.endsWith('.json'));
@@ -577,22 +586,18 @@
                     if(fKey && d.files[fKey]) { 
                         const content = JSON.parse(d.files[fKey].content);
                         library = Array.isArray(content) ? content : Object.values(content);
-                        normalizeLibrary(); // On nettoie les erreurs Excel immédiatement
+                        normalizeLibrary(); 
                         localStorage.setItem('myLibrary', JSON.stringify(library));
                         status.innerText = `✅ Données à jour (${library.length} items).`;
                         setTimeout(() => location.reload(), 1000);
-                    } else { 
-                        status.innerText = "❌ Fichier library.json introuvable dans ce Gist."; 
-                    }
-                } catch(e) { 
-                    status.innerText = `❌ Erreur lecture Cloud : ${e.message}`; 
-                }
+                    } else { status.innerText = "❌ Fichier library.json introuvable dans ce Gist."; }
+                } catch(e) { status.innerText = `❌ Erreur lecture Cloud : ${e.message}`; }
             }, true);
         }
 
         function saveLibrary() { 
             localStorage.setItem('myLibrary', JSON.stringify(library)); 
-            renderAll(); 
+            safeRenderAll(); 
             if(cloudConfig.token && cloudConfig.gistId) {
                 fetch(`https://api.github.com/gists/${cloudConfig.gistId.trim()}`, { 
                     method: 'PATCH', 
@@ -618,13 +623,9 @@
         function openJukeboxModal() {
             let allAmbiances = new Set();
             library.forEach(i => (i.ambiances||[]).forEach(a => allAmbiances.add(a)));
-            
             const container = document.getElementById('jukebox-ambiances');
-            if (allAmbiances.size === 0) {
-                container.innerHTML = `<p style="font-size:0.85rem; color:var(--text-ink-light);">Il faut d'abord ajouter des "Ambiances" à tes œuvres !</p>`;
-            } else {
-                container.innerHTML = sortTagsArray(allAmbiances).map(a => `<div class="filter-chip ambiance-chip" style="background:var(--bg-parchment); color:var(--text-ink);" onclick="spinJukebox('${a}')">${a}</div>`).join('');
-            }
+            if (allAmbiances.size === 0) { container.innerHTML = `<p style="font-size:0.85rem; color:var(--text-ink-light);">Il faut d'abord ajouter des "Ambiances" à tes œuvres !</p>`; } 
+            else { container.innerHTML = sortTagsArray(allAmbiances).map(a => `<div class="filter-chip ambiance-chip" style="background:var(--bg-parchment); color:var(--text-ink);" onclick="spinJukebox('${String(a).replace(/'/g, "\\'")}')">${a}</div>`).join(''); }
             document.getElementById('jukebox-results').innerHTML = '';
             openModal('modal-jukebox');
         }
@@ -634,28 +635,23 @@
                 c.style.background = c.innerText === ambiance ? 'var(--color-ambiance-dark)' : 'var(--bg-parchment)';
                 c.style.color = c.innerText === ambiance ? '#fff' : 'var(--text-ink)';
             });
-
             const matching = library.filter(i => (i.ambiances||[]).includes(ambiance));
             const todos = matching.filter(i => ['alire','adecouvrir','atester'].includes(i.statut));
             const dones = matching.filter(i => ['lu','ecoute','joue'].includes(i.statut));
-
             let discovery = null, safeBet = null, alternative = null;
 
             if (todos.length > 0) discovery = todos[Math.floor(Math.random() * todos.length)];
-            
             if (dones.length > 0) {
                 let tickets = [];
                 dones.forEach(i => { tickets.push(i); if(i.coupDeCoeur) { tickets.push(i); tickets.push(i); } }); 
                 safeBet = tickets[Math.floor(Math.random() * tickets.length)];
             }
-
             const remaining = matching.filter(i => i.id !== (discovery?.id) && i.id !== (safeBet?.id));
             if (remaining.length > 0) alternative = remaining[Math.floor(Math.random() * remaining.length)];
 
             let html = '';
-            if(!discovery && !safeBet && !alternative) {
-                html = `<p style="color:var(--text-ink-light);">Rien trouvé pour cette ambiance...</p>`;
-            } else {
+            if(!discovery && !safeBet && !alternative) { html = `<p style="color:var(--text-ink-light);">Rien trouvé pour cette ambiance...</p>`; } 
+            else {
                 if (discovery) html += `<div class="jukebox-card" onclick="document.getElementById('modal-jukebox').close(); viewItem('${discovery.id}')"><div class="jukebox-card-title">✨ La Découverte (À Faire)</div><b>${discovery.titre}</b><br><small style="color:var(--text-ink-light)">de ${discovery.createur}</small></div>`;
                 if (safeBet) html += `<div class="jukebox-card" onclick="document.getElementById('modal-jukebox').close(); viewItem('${safeBet.id}')"><div class="jukebox-card-title">🧸 La Valeur Sûre (Terminé)</div><b>${safeBet.titre}</b> ${safeBet.coupDeCoeur?'❤️':''}<br><small style="color:var(--text-ink-light)">de ${safeBet.createur}</small></div>`;
                 if (alternative) html += `<div class="jukebox-card" onclick="document.getElementById('modal-jukebox').close(); viewItem('${alternative.id}')"><div class="jukebox-card-title">🎲 L'Alternative</div><b>${alternative.titre}</b><br><small style="color:var(--text-ink-light)">de ${alternative.createur}</small></div>`;
@@ -668,7 +664,7 @@
             document.getElementById('selection-bar').style.display = isOracleMode ? 'flex' : 'none';
             if(isOracleMode) document.getElementById('btn-fab-add').classList.add('hidden-fab');
             else document.getElementById('btn-fab-add').classList.remove('hidden-fab');
-            document.getElementById('oracle-count').innerText = 0; renderData(); 
+            document.getElementById('oracle-count').innerText = 0; safeRenderAll(); 
         };
 
         function toggleCardSelection(id, cardElement) {
@@ -710,7 +706,6 @@
             const resultBox = document.getElementById('oracle-result');
             openModal('modal-oracle');
             resultBox.innerHTML = "📡 Le Radar cherche le meilleur modèle IA...";
-            
             try {
                 const inspirateurs = selectedForOracle.map(id => { const i = library.find(x=>x.id===id); return i ? `"${i.titre}" de ${i.createur}` : null; }).filter(Boolean).join(" | ");
                 const palList = library.filter(i => ['alire', 'adecouvrir', 'atester'].includes(i.statut)).map(i => `"${i.titre}" de ${i.createur}`).join(" | ");
@@ -720,10 +715,8 @@ Formate en HTML : <div style="background:rgba(255,255,255,0.7); padding:15px; bo
             
                 const modelToUse = await findBestModel(cloudConfig.geminiKey);
                 resultBox.innerHTML = `⏳ Connexion établie avec <b>${modelToUse}</b>...`;
-
                 const req = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${cloudConfig.geminiKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
                 const data = await req.json();
-                
                 if(data.candidates) resultBox.innerHTML = data.candidates[0].content.parts[0].text.replace(/```html/gi, '').replace(/```/g, '').trim();
                 else resultBox.innerHTML = `❌ Erreur : ${data.error ? data.error.message : 'inconnue'}`;
             } catch(e) { resultBox.innerHTML = `❌ Échec de la connexion.`; }
@@ -745,7 +738,6 @@ Formate en HTML : <div style="background:rgba(255,255,255,0.7); padding:15px; bo
 
         function viewItem(id) {
             const i = library.find(x => x.id === id); const s = statusConfig[i.statut] || {icon:'?', text:'-'};
-            
             let titleHtml = '';
             if (i.serie) titleHtml += `<div style="font-size:0.9rem; color:var(--accent-wood); text-transform:uppercase; font-weight:bold; margin-bottom:5px; letter-spacing: 1px;">${i.serie} ${i.tome ? '• T.'+i.tome : ''}</div>`;
             titleHtml += i.titre;
@@ -791,17 +783,11 @@ Formate en HTML : <div style="background:rgba(255,255,255,0.7); padding:15px; bo
         };
 
         function renderDashboard() {
-            const stats = { 
-                book: { t: 0, l: 0, a: 0, title: '📖 Livres', done: 'terminés', todo: 'à lire' }, 
-                bd: { t: 0, l: 0, a: 0, title: '💬 BD', done: 'terminées', todo: 'à lire' }, 
-                music: { t: 0, l: 0, a: 0, title: '🎵 Musique', done: 'écoutés', todo: 'à découvrir' }, 
-                game: { t: 0, l: 0, a: 0, title: '🎲 Jeux', done: 'joués', todo: 'à tester' } 
-            };
+            const stats = { book: { t: 0, l: 0, a: 0, title: '📖 Livres', done: 'terminés', todo: 'à lire' }, bd: { t: 0, l: 0, a: 0, title: '💬 BD', done: 'terminées', todo: 'à lire' }, music: { t: 0, l: 0, a: 0, title: '🎵 Musique', done: 'écoutés', todo: 'à découvrir' }, game: { t: 0, l: 0, a: 0, title: '🎲 Jeux', done: 'joués', todo: 'à tester' } };
             let auteurs = {}, tagsCount = {};
-            
             const ownedItems = library.filter(i => i.statut !== 'aacheter');
             const totalItems = ownedItems.length;
-            const notes = ownedItems.filter(i => i.note > 0).map(i => i.note);
+            const notes = ownedItems.filter(i => i.note > 0).map(i => parseInt(i.note) || 0);
             const avgNote = notes.length ? (notes.reduce((a,b)=>a+b,0)/notes.length).toFixed(1) : '-';
             const phys = ownedItems.filter(i=>i.format==='Physique').length;
             const demat = ownedItems.filter(i=>i.format && i.format !== 'Physique').length;
@@ -817,23 +803,12 @@ Formate en HTML : <div style="background:rgba(255,255,255,0.7); padding:15px; bo
             });
 
             const mainContainer = document.getElementById('dashboard-stats-main');
-            mainContainer.innerHTML = `
-                <div class="stat-card" style="grid-column: 1 / -1; background: var(--bg-parchment-dark); border-color: var(--accent-wood);">
-                    <h4 style="color: var(--accent-wood); font-family: var(--font-title); margin-bottom: 8px;">🌍 Vue d'ensemble</h4>
-                    <ul class="top-list" style="display: flex; flex-wrap: wrap; gap: 15px; padding-left: 0; list-style: none;">
-                        <li>📦 <b>${totalItems}</b> œuvres poss.</li>
-                        <li>⭐ Note moy. : <b>${avgNote}</b>/5</li>
-                        <li>📚 Physique : <b>${phys}</b> | ☁️ Démat. : <b>${demat}</b></li>
-                    </ul>
-                </div>
-            `;
+            mainContainer.innerHTML = `<div class="stat-card" style="grid-column: 1 / -1; background: var(--bg-parchment-dark); border-color: var(--accent-wood);"><h4 style="color: var(--accent-wood); font-family: var(--font-title); margin-bottom: 8px;">🌍 Vue d'ensemble</h4><ul class="top-list" style="display: flex; flex-wrap: wrap; gap: 15px; padding-left: 0; list-style: none;"><li>📦 <b>${totalItems}</b> œuvres poss.</li><li>⭐ Note moy. : <b>${avgNote}</b>/5</li><li>📚 Physique : <b>${phys}</b> | ☁️ Démat. : <b>${demat}</b></li></ul></div>`;
             const typeContainer = document.getElementById('dashboard-stats-types'); typeContainer.innerHTML = '';
             Object.keys(stats).forEach(k => { 
                 const s = stats[k]; if(s.t === 0) return; 
                 typeContainer.innerHTML += `<div class="stat-card"><div class="stat-main"><span>${s.t}</span> <span style="font-size:1rem; color:var(--text-ink)">${s.title}</span></div><div class="stat-details"><div>✅ ${s.l} ${s.done}</div><div>📚 ${s.a} ${s.todo}</div></div></div>`; 
             });
-            document.getElementById('stat-top-auteurs').innerHTML = Object.entries(auteurs).sort((a,b)=>b[1]-a[1]).slice(0,3).map((a, i) => `<li>${i===0?'🥇':i===1?'🥈':'🥉'} <b>${a[0]}</b> (${a[1]})</li>`).join('');
-            document.getElementById('stat-top-tags').innerHTML = Object.entries(tagsCount).sort((a,b)=>b[1]-a[1]).slice(0,4).map(t => `<li>🏷️ <b>${t[0]}</b> (${t[1]})</li>`).join('');
             
             const favs = library.filter(i => i.coupDeCoeur); 
             renderGrid(favs.slice(0, 4), 'list-favs', 'title-coups-coeur'); 
@@ -847,14 +822,8 @@ Formate en HTML : <div style="background:rgba(255,255,255,0.7); padding:15px; bo
 
         function renderSettingsTags() {
             const container = document.getElementById('settings-tags-list');
-            if(!container) return;
-            container.innerHTML = '';
-            
-            const types = [
-                {id: 'book', icon: '📖', name: 'Livres'}, {id: 'bd', icon: '💬', name: 'BD'},
-                {id: 'music', icon: '🎵', name: 'Musique'}, {id: 'game', icon: '🎲', name: 'Jeux'}
-            ];
-
+            if(!container) return; container.innerHTML = '';
+            const types = [{id: 'book', icon: '📖', name: 'Livres'}, {id: 'bd', icon: '💬', name: 'BD'}, {id: 'music', icon: '🎵', name: 'Musique'}, {id: 'game', icon: '🎲', name: 'Jeux'}];
             let hasTags = false;
             types.forEach(t => {
                 let genresSet = new Set(), ambiancesSet = new Set();
@@ -862,22 +831,20 @@ Formate en HTML : <div style="background:rgba(255,255,255,0.7); padding:15px; bo
                     (i.genres||[]).forEach(g => genresSet.add(g));
                     (i.ambiances||[]).forEach(a => ambiancesSet.add(a));
                 });
-                
                 if(genresSet.size > 0 || ambiancesSet.size > 0) {
                     hasTags = true;
-                    let section = document.createElement('div');
-                    section.style.marginBottom = '15px';
+                    let section = document.createElement('div'); section.style.marginBottom = '15px';
                     let html = `<h4 style="margin-bottom:8px; color:var(--text-ink-light); font-family: var(--font-body); font-size: 0.95rem;">${t.icon} ${t.name}</h4><div class="tags-container" id="settings-group-${t.id}">`;
-                    
                     sortTagsArray(genresSet).forEach(tag => {
-                        html += `<span class="tag-pill" style="background:#ffebee; border-color:#ffcdd2;" onclick="customConfirm('⚠️ Supprimer le genre <b>${tag}</b> ?', () => { library.forEach(i => { if(i.type === '${t.id}' && i.genres) i.genres = i.genres.filter(x => x !== '${tag}'); }); saveLibrary(); })">${tag} <span style="color:var(--color-danger); margin-left:4px;">✖</span></span>`;
+                        let safeTag = String(tag).replace(/'/g, "\\'");
+                        html += `<span class="tag-pill" style="background:#ffebee; border-color:#ffcdd2;" onclick="customConfirm('⚠️ Supprimer le genre <b>${safeTag}</b> ?', () => { library.forEach(i => { if(i.type === '${t.id}' && i.genres) i.genres = i.genres.filter(x => x !== '${safeTag}'); }); saveLibrary(); })">${tag} <span style="color:var(--color-danger); margin-left:4px;">✖</span></span>`;
                     });
                     sortTagsArray(ambiancesSet).forEach(tag => {
-                        html += `<span class="tag-pill ambiance-chip" style="background:var(--color-ambiance); border-color:var(--color-ambiance-dark); color:var(--color-ambiance-dark);" onclick="customConfirm('⚠️ Supprimer l\\'ambiance <b>${tag}</b> ?', () => { library.forEach(i => { if(i.type === '${t.id}' && i.ambiances) i.ambiances = i.ambiances.filter(x => x !== '${tag}'); }); saveLibrary(); })">${tag} <span style="color:var(--color-ambiance-dark); margin-left:4px;">✖</span></span>`;
+                        let safeTag = String(tag).replace(/'/g, "\\'");
+                        html += `<span class="tag-pill ambiance-chip" style="background:var(--color-ambiance); border-color:var(--color-ambiance-dark); color:var(--color-ambiance-dark);" onclick="customConfirm('⚠️ Supprimer l\\'ambiance <b>${safeTag}</b> ?', () => { library.forEach(i => { if(i.type === '${t.id}' && i.ambiances) i.ambiances = i.ambiances.filter(x => x !== '${safeTag}'); }); saveLibrary(); })">${tag} <span style="color:var(--color-ambiance-dark); margin-left:4px;">✖</span></span>`;
                     });
                     html += `</div>`;
-                    section.innerHTML = html;
-                    container.appendChild(section);
+                    section.innerHTML = html; container.appendChild(section);
                 }
             });
             if(!hasTags) container.innerHTML = '<p style="font-size:0.85rem; color:var(--text-ink-light);">Aucun tag à nettoyer.</p>';
@@ -887,22 +854,18 @@ Formate en HTML : <div style="background:rgba(255,255,255,0.7); padding:15px; bo
         
         function updateFilterUI() {
             document.querySelectorAll('.filter-chip').forEach(chip => {
-                const type = chip.dataset.type;
-                if (!type) return;
+                const type = chip.dataset.type; if (!type) return;
                 if (activeFilters[type] === chip.dataset.val) chip.classList.add('active');
                 else chip.classList.remove('active');
             });
             document.getElementById('filter-fav').checked = activeFilters.favOnly;
         }
 
-        function setFilter(type, val) {
-            activeFilters[type] = val; updateFilterUI(); triggerUpdate();
-        }
+        function setFilter(type, val) { activeFilters[type] = val; updateFilterUI(); triggerUpdate(); }
 
         function initFilters() {
             let statusCount = { 'lu':0, 'encours':0, 'alire':0, 'aacheter':0 };
             let formatCount = {}, genreCount = {}, ambianceCount = {};
-            
             library.forEach(i => {
                 if(statusCount[i.statut] !== undefined) statusCount[i.statut]++;
                 if(i.format) formatCount[i.format] = (formatCount[i.format] || 0) + 1;
@@ -916,13 +879,13 @@ Formate en HTML : <div style="background:rgba(255,255,255,0.7); padding:15px; bo
             ].map(s => `<div class="filter-chip" data-type="status" data-val="${s.val}">${s.label} <small style="opacity:0.7">(${s.val==='all'?library.length:statusCount[s.val]||0})</small></div>`).join('');
 
             document.getElementById('filter-format').innerHTML = `<div class="filter-chip" data-type="format" data-val="all">Tous <small style="opacity:0.7">(${library.length})</small></div>` + 
-                sortTagsArray(Object.keys(formatCount)).map(f => `<div class="filter-chip" data-type="format" data-val="${f}">${f} <small style="opacity:0.7">(${formatCount[f]})</small></div>`).join('');
+                sortTagsArray(Object.keys(formatCount)).map(f => `<div class="filter-chip" data-type="format" data-val="${String(f).replace(/"/g, '&quot;')}">${f} <small style="opacity:0.7">(${formatCount[f]})</small></div>`).join('');
 
             document.getElementById('filter-genre').innerHTML = `<div class="filter-chip" data-type="genre" data-val="all">Tous <small style="opacity:0.7">(${library.length})</small></div>` + 
-                sortTagsArray(Object.keys(genreCount)).map(t => `<div class="filter-chip" data-type="genre" data-val="${t}">${t} <small style="opacity:0.7">(${genreCount[t]})</small></div>`).join('');
+                sortTagsArray(Object.keys(genreCount)).map(t => `<div class="filter-chip" data-type="genre" data-val="${String(t).replace(/"/g, '&quot;')}">${t} <small style="opacity:0.7">(${genreCount[t]})</small></div>`).join('');
                 
             document.getElementById('filter-ambiance').innerHTML = `<div class="filter-chip ambiance-chip" data-type="ambiance" data-val="all">Toutes <small style="opacity:0.7">(${library.length})</small></div>` + 
-                sortTagsArray(Object.keys(ambianceCount)).map(t => `<div class="filter-chip ambiance-chip" data-type="ambiance" data-val="${t}">${t} <small style="opacity:0.7">(${ambianceCount[t]})</small></div>`).join('');
+                sortTagsArray(Object.keys(ambianceCount)).map(t => `<div class="filter-chip ambiance-chip" data-type="ambiance" data-val="${String(t).replace(/"/g, '&quot;')}">${t} <small style="opacity:0.7">(${ambianceCount[t]})</small></div>`).join('');
 
             document.querySelectorAll('.filter-chip').forEach(chip => { chip.onclick = () => setFilter(chip.dataset.type, chip.dataset.val); });
             document.getElementById('filter-fav').onchange = e => setFilter('favOnly', e.target.checked);
@@ -931,7 +894,7 @@ Formate en HTML : <div style="background:rgba(255,255,255,0.7); padding:15px; bo
 
         function triggerUpdate() { 
             if(document.getElementById('search-input').value.trim() !== '') document.getElementById('search-input').dispatchEvent(new Event('input')); 
-            else renderData(); 
+            else safeRenderData(); 
         }
         
         document.getElementById('btn-toggle-filters').onclick = function() { document.getElementById('filter-panel').classList.toggle('open'); this.classList.toggle('active'); };
@@ -940,7 +903,7 @@ Formate en HTML : <div style="background:rgba(255,255,255,0.7); padding:15px; bo
             const term = e.target.value.toLowerCase().trim(); 
             if (term === '') { switchView(document.querySelector('.nav-btn.active').dataset.target); return; } 
             switchView('view-search'); 
-            renderGrid(processData(library.filter(i => String(i.titre||'').toLowerCase().includes(term) || String(i.createur||'').toLowerCase().includes(term) || (i.genres||[]).some(t=>t.toLowerCase().includes(term)) || (i.ambiances||[]).some(t=>t.toLowerCase().includes(term)))), 'list-search', 'title-search'); 
+            renderGrid(processData(library.filter(i => String(i.titre||'').toLowerCase().includes(term) || String(i.createur||'').toLowerCase().includes(term) || (i.genres||[]).some(t=>String(t).toLowerCase().includes(term)) || (i.ambiances||[]).some(t=>String(t).toLowerCase().includes(term)))), 'list-search', 'title-search'); 
         };
         
         function processData(data) { 
@@ -976,7 +939,7 @@ Formate en HTML : <div style="background:rgba(255,255,255,0.7); padding:15px; bo
             const card = document.createElement('div'); card.className = `card ${isOracleMode ? 'mode-selection' : ''} ${selectedForOracle.includes(i.id) ? 'selected' : ''}`;
             let serieHtml = i.serie ? `<div style="font-size:0.75rem; color:var(--accent-wood); font-weight:700; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">${i.serie} ${i.tome ? '<span style="opacity:0.7">• T.'+i.tome+'</span>' : ''}</div>` : '';
             const iconeType = {'book':'📖','bd':'💬','music':'🎵','game':'🎲'}[i.type] || '❓';
-            card.innerHTML = `<div class="card-header"><div class="card-title-group" style="flex:1; min-width:0;">${serieHtml}<div class="card-title">${iconeType} ${i.titre} ${i.coupDeCoeur?'❤️':''}</div><div class="card-creator" style="margin-top:4px;">${i.createur || ''}</div></div><div class="card-status-group"><span class="badge badge-status" style="background:var(--bg-parchment-dark)">${(statusConfig[i.statut]||{icon:'?'}).icon}</span></div></div><div style="flex:1; pointer-events:none;"></div>${i.note > 0 ? `<div style="color:var(--color-star);font-size:1.1rem;margin:4px 0;">${'★'.repeat(i.note)}</div>`:''}<div class="card-meta"><span class="badge" style="background:#ddd">${i.format}</span>${(i.genres || []).slice(0, 2).map(t => `<span class="badge">${t}</span>`).join('')}${(i.ambiances || []).slice(0, 1).map(t => `<span class="badge badge-ambiance">${t}</span>`).join('')}</div>`;
+            card.innerHTML = `<div class="card-header"><div class="card-title-group" style="flex:1; min-width:0;">${serieHtml}<div class="card-title">${iconeType} ${i.titre} ${i.coupDeCoeur?'❤️':''}</div><div class="card-creator" style="margin-top:4px;">${i.createur || ''}</div></div><div class="card-status-group"><span class="badge badge-status" style="background:var(--bg-parchment-dark)">${(statusConfig[i.statut]||{icon:'?'}).icon}</span></div></div><div style="flex:1; pointer-events:none;"></div>${(i.note > 0 && i.note <= 5) ? `<div style="color:var(--color-star);font-size:1.1rem;margin:4px 0;">${'★'.repeat(i.note)}</div>`:''}<div class="card-meta"><span class="badge" style="background:#ddd">${i.format}</span>${(i.genres || []).slice(0, 2).map(t => `<span class="badge">${t}</span>`).join('')}${(i.ambiances || []).slice(0, 1).map(t => `<span class="badge badge-ambiance">${t}</span>`).join('')}</div>`;
             card.onclick = () => isOracleMode ? toggleCardSelection(i.id, card) : viewItem(i.id); return card;
         }
         
@@ -991,16 +954,24 @@ Formate en HTML : <div style="background:rgba(255,255,255,0.7); padding:15px; bo
             data.forEach(i => c.appendChild(createCard(i))); 
         }
 
-        function switchView(id) { document.querySelectorAll('.view-section').forEach(v => v.classList.toggle('active', v.id === id)); if(id !== 'view-search') { document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.target === id)); renderAll(); } }
+        function switchView(id) { document.querySelectorAll('.view-section').forEach(v => v.classList.toggle('active', v.id === id)); if(id !== 'view-search') { document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.target === id)); safeRenderAll(); } }
         document.querySelectorAll('.nav-btn').forEach(b => b.onclick = () => { document.getElementById('search-input').value=''; switchView(b.dataset.target); });
         
-        function renderData() {
-            const maps = { book:'list-books', bd:'list-bd', music:'list-music', game:'list-games' }; 
-            Object.keys(maps).forEach(k => renderGrid(processData(library.filter(i=>(i.type||'').toLowerCase()===k)), maps[k])); 
+        function safeRenderData() {
+            try {
+                const maps = { book:'list-books', bd:'list-bd', music:'list-music', game:'list-games' }; 
+                Object.keys(maps).forEach(k => renderGrid(processData(library.filter(i=>(i.type||'').toLowerCase()===k)), maps[k])); 
+            } catch(e) { showError('Rendu des listes', e); }
         }
 
-        function renderAll() { renderDashboard(); renderSettingsTags(); initFilters(); renderData(); }
+        function safeRenderAll() {
+            try { renderDashboard(); } catch(e) { showError('Tableau de bord', e); }
+            try { renderSettingsTags(); } catch(e) { showError('Réglages Tags', e); }
+            try { initFilters(); } catch(e) { showError('Filtres', e); }
+            safeRenderData();
+        }
 
+        // --- LES ACTIONS DU FORMULAIRE ---
         const modalAdd = document.getElementById('modal-add'); const form = document.getElementById('form-add'); 
         let selectedGenres = []; let selectedAmbiances = [];
         const stars = document.querySelectorAll('#star-rating span'); function setStars(val) { document.getElementById('note').value = val; stars.forEach(s => s.style.color = parseInt(s.dataset.val) <= val ? 'var(--color-star)' : '#ccc'); } stars.forEach(s => s.onclick = () => setStars(parseInt(s.dataset.val)));
@@ -1098,7 +1069,6 @@ Formate en HTML : <div style="background:rgba(255,255,255,0.7); padding:15px; bo
             r.onload = e => { 
                 const lines=e.target.result.split('\n'); const added=[]; 
                 if(lines.length < 2) return;
-                
                 let header = lines[0].split(';').map(h => h.trim().replace(/^"|"$/g,''));
                 let hasOldTags = header.includes('Tags');
 
@@ -1123,6 +1093,14 @@ Formate en HTML : <div style="background:rgba(255,255,255,0.7); padding:15px; bo
                 customConfirm(`Importer ${added.length} œuvres depuis ce fichier ?`, () => { library=[...library,...added]; normalizeLibrary(); saveLibrary(); }, false);
             }; 
             r.readAsText(f); 
+        }
+
+        // DÉMARRAGE SÉCURISÉ
+        try {
+            normalizeLibrary();
+            safeRenderAll();
+        } catch(e) {
+            showError("Démarrage", e);
         }
 
         if ('serviceWorker' in navigator) {
