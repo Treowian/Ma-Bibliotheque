@@ -439,19 +439,38 @@
         let library = [];
         try { const stored = JSON.parse(localStorage.getItem('myLibrary')); if(Array.isArray(stored)) library = stored; } catch(e) { console.error("Cache local corrompu."); }
         
-        let needsSave = false;
-        library.forEach(item => {
-            if (!item.genres) item.genres = [];
-            if (!item.ambiances) item.ambiances = [];
-            if (item.tags) {
-                if(item.tags.length > 0) {
-                    item.genres = [...new Set([...item.genres, ...item.tags.map(t => t.trim()).filter(t => t !== '')])];
+        // --- 🩺 L'AUTO-NETTOYEUR V20 : RÉPARE LES ERREURS EXCEL ---
+        function normalizeLibrary() {
+            let needsSave = false;
+            library.forEach(i => {
+                // 1. Force le type en minuscules (Ex: "Book" -> "book")
+                if (i.type && i.type !== String(i.type).toLowerCase().trim()) {
+                    i.type = String(i.type).toLowerCase().trim();
+                    needsSave = true;
                 }
-                delete item.tags;
-                needsSave = true;
+                // 2. Répare le coup de coeur abîmé par Excel ("TRUE" au lieu du vrai booléen)
+                if (typeof i.coupDeCoeur === 'string') {
+                    i.coupDeCoeur = (i.coupDeCoeur.toLowerCase() === 'true' || i.coupDeCoeur === '1');
+                    needsSave = true;
+                }
+                // 3. Effectue la migration Tags -> Genres si elle n'a pas été faite
+                if (!i.genres) { i.genres = []; needsSave = true; }
+                if (!i.ambiances) { i.ambiances = []; needsSave = true; }
+                if (i.tags) {
+                    if (i.tags.length > 0) {
+                        i.genres = [...new Set([...i.genres, ...i.tags.map(t => String(t).trim()).filter(t => t !== '')])];
+                    }
+                    delete i.tags;
+                    needsSave = true;
+                }
+            });
+            if (needsSave) {
+                localStorage.setItem('myLibrary', JSON.stringify(library));
             }
-        });
-        if(needsSave) { localStorage.setItem('myLibrary', JSON.stringify(library)); }
+        }
+        
+        // On lance le nettoyage immédiatement au démarrage
+        normalizeLibrary();
 
         let cloudConfig = { token: '', gistId: '', geminiKey: '' };
         try { const c = JSON.parse(localStorage.getItem('cloudConfig')); if(c) cloudConfig = c; } catch(e) {}
@@ -497,7 +516,6 @@
             if(content) content.scrollTop = 0;
         }
 
-        // --- NOUVELLES FONCTIONS CLOUD (ROBUSTES) ---
         function saveCloudSettings() {
             cloudConfig.token = document.getElementById('gh-token').value.trim();
             cloudConfig.gistId = document.getElementById('gh-gist-id').value.trim();
@@ -559,6 +577,7 @@
                     if(fKey && d.files[fKey]) { 
                         const content = JSON.parse(d.files[fKey].content);
                         library = Array.isArray(content) ? content : Object.values(content);
+                        normalizeLibrary(); // On nettoie les erreurs Excel immédiatement
                         localStorage.setItem('myLibrary', JSON.stringify(library));
                         status.innerText = `✅ Données à jour (${library.length} items).`;
                         setTimeout(() => location.reload(), 1000);
@@ -574,7 +593,6 @@
         function saveLibrary() { 
             localStorage.setItem('myLibrary', JSON.stringify(library)); 
             renderAll(); 
-            // Sauvegarde automatique simplifiée (pas d'alerte en cas d'échec pour ne pas gêner l'UX)
             if(cloudConfig.token && cloudConfig.gistId) {
                 fetch(`https://api.github.com/gists/${cloudConfig.gistId.trim()}`, { 
                     method: 'PATCH', 
@@ -597,7 +615,6 @@
             }
         }
 
-        // --- JUKEBOX DES EMOTIONS ---
         function openJukeboxModal() {
             let allAmbiances = new Set();
             library.forEach(i => (i.ambiances||[]).forEach(a => allAmbiances.add(a)));
@@ -628,7 +645,7 @@
             
             if (dones.length > 0) {
                 let tickets = [];
-                dones.forEach(i => { tickets.push(i); if(i.coupDeCoeur) { tickets.push(i); tickets.push(i); } }); // Pondération x3
+                dones.forEach(i => { tickets.push(i); if(i.coupDeCoeur) { tickets.push(i); tickets.push(i); } }); 
                 safeBet = tickets[Math.floor(Math.random() * tickets.length)];
             }
 
@@ -713,16 +730,16 @@ Formate en HTML : <div style="background:rgba(255,255,255,0.7); padding:15px; bo
         });
 
         function getLastNameForSort(creatorString) {
-            if (!creatorString || creatorString.trim() === '') return "zzzzz";
-            let firstAuthor = creatorString.split(/&|,| et /i)[0].trim();
+            if (!creatorString || String(creatorString).trim() === '') return "zzzzz";
+            let firstAuthor = String(creatorString).split(/&|,| et /i)[0].trim();
             let words = firstAuthor.split(' ');
             return words[words.length - 1].toLowerCase();
         }
 
         function getSortString(i) {
-            const s = (i.serie || i.titre || '').trim().toLowerCase();
+            const s = String(i.serie || i.titre || '').trim().toLowerCase();
             const t = String(i.tome || '').padStart(4, '0');
-            const title = (i.titre || '').trim().toLowerCase();
+            const title = String(i.titre || '').trim().toLowerCase();
             return `${s} ${t} ${title}`;
         }
 
@@ -824,7 +841,7 @@ Formate en HTML : <div style="background:rgba(255,255,255,0.7); padding:15px; bo
             const wishlist = library.filter(i => i.statut === 'aacheter');
             renderGrid(wishlist, 'list-wishlist', 'title-wishlist');
 
-            const recents = [...library].sort((a,b) => b.dateAjout - a.dateAjout).slice(0, 4);
+            const recents = [...library].sort((a,b) => (b.dateAjout || 0) - (a.dateAjout || 0)).slice(0, 4);
             renderGrid(recents, 'list-recent', 'title-recent');
         }
 
@@ -923,7 +940,7 @@ Formate en HTML : <div style="background:rgba(255,255,255,0.7); padding:15px; bo
             const term = e.target.value.toLowerCase().trim(); 
             if (term === '') { switchView(document.querySelector('.nav-btn.active').dataset.target); return; } 
             switchView('view-search'); 
-            renderGrid(processData(library.filter(i => (i.titre||'').toLowerCase().includes(term) || (i.createur||'').toLowerCase().includes(term) || (i.genres||[]).some(t=>t.toLowerCase().includes(term)) || (i.ambiances||[]).some(t=>t.toLowerCase().includes(term)))), 'list-search', 'title-search'); 
+            renderGrid(processData(library.filter(i => String(i.titre||'').toLowerCase().includes(term) || String(i.createur||'').toLowerCase().includes(term) || (i.genres||[]).some(t=>t.toLowerCase().includes(term)) || (i.ambiances||[]).some(t=>t.toLowerCase().includes(term)))), 'list-search', 'title-search'); 
         };
         
         function processData(data) { 
@@ -936,7 +953,7 @@ Formate en HTML : <div style="background:rgba(255,255,255,0.7); padding:15px; bo
                 return true; 
             }); 
             res.sort((a,b) => { 
-                if(activeFilters.sort === 'date_desc') return b.dateAjout - a.dateAjout; 
+                if(activeFilters.sort === 'date_desc') return (b.dateAjout || 0) - (a.dateAjout || 0); 
                 const sortA = getSortString(a); const sortB = getSortString(b);
                 if(activeFilters.sort === 'alpha_asc') return sortA.localeCompare(sortB, 'fr', {numeric: true, sensitivity: 'base'}); 
                 if(activeFilters.sort === 'createur_asc') {
@@ -958,7 +975,8 @@ Formate en HTML : <div style="background:rgba(255,255,255,0.7); padding:15px; bo
         function createCard(i) {
             const card = document.createElement('div'); card.className = `card ${isOracleMode ? 'mode-selection' : ''} ${selectedForOracle.includes(i.id) ? 'selected' : ''}`;
             let serieHtml = i.serie ? `<div style="font-size:0.75rem; color:var(--accent-wood); font-weight:700; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">${i.serie} ${i.tome ? '<span style="opacity:0.7">• T.'+i.tome+'</span>' : ''}</div>` : '';
-            card.innerHTML = `<div class="card-header"><div class="card-title-group" style="flex:1; min-width:0;">${serieHtml}<div class="card-title">${{book:'📖',bd:'💬',music:'🎵',game:'🎲'}[i.type]} ${i.titre} ${i.coupDeCoeur?'❤️':''}</div><div class="card-creator" style="margin-top:4px;">${i.createur || ''}</div></div><div class="card-status-group"><span class="badge badge-status" style="background:var(--bg-parchment-dark)">${(statusConfig[i.statut]||{icon:'?'}).icon}</span></div></div><div style="flex:1; pointer-events:none;"></div>${i.note > 0 ? `<div style="color:var(--color-star);font-size:1.1rem;margin:4px 0;">${'★'.repeat(i.note)}</div>`:''}<div class="card-meta"><span class="badge" style="background:#ddd">${i.format}</span>${(i.genres || []).slice(0, 2).map(t => `<span class="badge">${t}</span>`).join('')}${(i.ambiances || []).slice(0, 1).map(t => `<span class="badge badge-ambiance">${t}</span>`).join('')}</div>`;
+            const iconeType = {'book':'📖','bd':'💬','music':'🎵','game':'🎲'}[i.type] || '❓';
+            card.innerHTML = `<div class="card-header"><div class="card-title-group" style="flex:1; min-width:0;">${serieHtml}<div class="card-title">${iconeType} ${i.titre} ${i.coupDeCoeur?'❤️':''}</div><div class="card-creator" style="margin-top:4px;">${i.createur || ''}</div></div><div class="card-status-group"><span class="badge badge-status" style="background:var(--bg-parchment-dark)">${(statusConfig[i.statut]||{icon:'?'}).icon}</span></div></div><div style="flex:1; pointer-events:none;"></div>${i.note > 0 ? `<div style="color:var(--color-star);font-size:1.1rem;margin:4px 0;">${'★'.repeat(i.note)}</div>`:''}<div class="card-meta"><span class="badge" style="background:#ddd">${i.format}</span>${(i.genres || []).slice(0, 2).map(t => `<span class="badge">${t}</span>`).join('')}${(i.ambiances || []).slice(0, 1).map(t => `<span class="badge badge-ambiance">${t}</span>`).join('')}</div>`;
             card.onclick = () => isOracleMode ? toggleCardSelection(i.id, card) : viewItem(i.id); return card;
         }
         
@@ -978,7 +996,7 @@ Formate en HTML : <div style="background:rgba(255,255,255,0.7); padding:15px; bo
         
         function renderData() {
             const maps = { book:'list-books', bd:'list-bd', music:'list-music', game:'list-games' }; 
-            Object.keys(maps).forEach(k => renderGrid(processData(library.filter(i=>i.type===k)), maps[k])); 
+            Object.keys(maps).forEach(k => renderGrid(processData(library.filter(i=>(i.type||'').toLowerCase()===k)), maps[k])); 
         }
 
         function renderAll() { renderDashboard(); renderSettingsTags(); initFilters(); renderData(); }
@@ -1098,15 +1116,14 @@ Formate en HTML : <div style="background:rgba(255,255,255,0.7); padding:15px; bo
                     } else {
                         itemGenres = c[8]?c[8].split(',').map(t=>t.trim()).filter(Boolean):[];
                         itemAmbiances = c[9]?c[9].split(',').map(t=>t.trim()).filter(Boolean):[];
-                        added.push({id:Date.now().toString()+i, type:c[0]||'book', titre:c[1], serie:c[2], tome:c[3], createur:c[4], format:c[5], annee:c[6], statut:c[7], genres:itemGenres, ambiances:itemAmbiances, note:parseInt(c[10])||0, coupDeCoeur:c[11]==='true', commentaire:c[12], dateAjout:Date.now()}); 
+                        let isCDC = (String(c[11]).toLowerCase() === 'true' || c[11] === '1');
+                        added.push({id:Date.now().toString()+i, type:c[0]||'book', titre:c[1], serie:c[2], tome:c[3], createur:c[4], format:c[5], annee:c[6], statut:c[7], genres:itemGenres, ambiances:itemAmbiances, note:parseInt(c[10])||0, coupDeCoeur:isCDC, commentaire:c[12], dateAjout:Date.now()}); 
                     }
                 } 
-                customConfirm(`Importer ${added.length} œuvres depuis ce fichier ?`, () => { library=[...library,...added]; saveLibrary(); }, false);
+                customConfirm(`Importer ${added.length} œuvres depuis ce fichier ?`, () => { library=[...library,...added]; normalizeLibrary(); saveLibrary(); }, false);
             }; 
             r.readAsText(f); 
         }
-
-        renderAll();
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
