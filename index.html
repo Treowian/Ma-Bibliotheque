@@ -153,6 +153,7 @@
         .btn-primary:active { transform: scale(0.98); }
         .btn-danger { background: var(--color-danger); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; }
         
+        /* JUKEBOX BOUTON SANS EMOJI */
         .btn-jukebox { width: 100%; padding: 15px; border-radius: 30px; border: none; font-size: 1.1rem; font-family: var(--font-title); font-weight: bold; color: white; cursor: pointer; background: linear-gradient(135deg, var(--accent-wood), var(--color-ambiance-dark)); box-shadow: 0 6px 15px rgba(171, 71, 188, 0.3); transition: 0.2s; margin-bottom: 25px; }
         .btn-jukebox:active { transform: scale(0.98); }
 
@@ -244,8 +245,7 @@
             </section>
 
             <section id="view-dashboard" class="view-section active">
-                
-                <button class="btn-jukebox" onclick="openJukeboxModal()">🎵 Que veux-tu vivre aujourd'hui ?</button>
+                <button class="btn-jukebox" onclick="openJukeboxModal()">Que veux-tu vivre aujourd'hui ?</button>
 
                 <h3 class="section-title" id="title-wishlist" style="display:none; color: #4A7C59;">🛒 Ma Liste d'Achats</h3>
                 <div id="list-wishlist" class="horizontal-scroll" style="display:none;"></div>
@@ -277,6 +277,9 @@
                     <summary style="font-weight: bold; color: var(--accent-wood);">🏷️ Nettoyage des Genres & Ambiances</summary>
                     <p style="font-size: 0.85rem; color: var(--text-ink-light); margin-top: 15px; margin-bottom: 10px;">Clique sur une pilule pour la supprimer <b>définitivement</b>.</p>
                     <div id="settings-tags-list"></div>
+                    
+                    <button class="btn-secondary" style="width:100%; margin-top:15px; border-color: var(--color-ambiance-dark); color: var(--color-ambiance-dark);" onclick="autoTagAmbiances()">🪄 Auto-générer les ambiances manquantes</button>
+                    <p style="font-size: 0.75rem; color: var(--text-ink-light); text-align: center; margin-top: 5px;">L'application va analyser les œuvres sans ambiance et leur en attribuer une selon leur genre.</p>
                 </details>
 
                 <div class="settings-card">
@@ -352,7 +355,7 @@
     <dialog id="modal-jukebox">
         <div class="modal-content" style="background: var(--bg-parchment);">
             <button class="btn-close-absolute" onclick="document.getElementById('modal-jukebox').close()">❌</button>
-            <h2 style="font-family: var(--font-title); color: var(--color-ambiance-dark); margin-bottom: 5px;">🎵 Le Jukebox</h2>
+            <h2 style="font-family: var(--font-title); color: var(--color-ambiance-dark); margin-bottom: 5px;">Le Jukebox</h2>
             <p style="font-size: 0.9rem; color: var(--text-ink-light); margin-bottom: 15px;">Sélectionne ton humeur du moment :</p>
             <div class="filter-chips-container scrollable-chips" id="jukebox-ambiances" style="max-height: 120px; margin-bottom: 20px;"></div>
             <div id="jukebox-results"></div>
@@ -451,51 +454,76 @@
             console.error("Cache local corrompu."); 
         }
         
-        // --- AUTO-NETTOYEUR V21 BLINDÉ ---
         function normalizeLibrary() {
             let needsSave = false;
             library.forEach(i => {
-                // Forcer le type en minuscules (corrige le syndrome Excel "Book" au lieu de "book")
                 if (i.type && typeof i.type === 'string') {
                     let t = i.type.toLowerCase().trim();
                     if (t !== i.type) { i.type = t; needsSave = true; }
-                } else if (!i.type) {
-                    i.type = 'book'; needsSave = true;
-                }
-
-                // Forcer le Coup de Coeur en Vrai/Faux
+                } else if (!i.type) { i.type = 'book'; needsSave = true; }
                 if (typeof i.coupDeCoeur === 'string') {
                     i.coupDeCoeur = (i.coupDeCoeur.toLowerCase() === 'true' || i.coupDeCoeur === '1');
                     needsSave = true;
-                } else if (typeof i.coupDeCoeur !== 'boolean') {
-                    i.coupDeCoeur = false; needsSave = true;
-                }
-
-                // Forcer la note en chiffre
-                if (typeof i.note !== 'number') {
-                    i.note = parseInt(i.note) || 0;
-                    needsSave = true;
-                }
-
-                // Initialiser les tableaux si manquants
+                } else if (typeof i.coupDeCoeur !== 'boolean') { i.coupDeCoeur = false; needsSave = true; }
+                if (typeof i.note !== 'number') { i.note = parseInt(i.note) || 0; needsSave = true; }
                 if (!Array.isArray(i.genres)) { i.genres = []; needsSave = true; }
                 if (!Array.isArray(i.ambiances)) { i.ambiances = []; needsSave = true; }
-
-                // Migration ultra-sécurisée des anciens Tags
                 if (i.tags) {
-                    if (Array.isArray(i.tags)) {
-                        i.genres = [...new Set([...i.genres, ...i.tags.map(t => String(t).trim()).filter(t => t !== '')])];
-                    } else if (typeof i.tags === 'string') {
-                        i.genres = [...new Set([...i.genres, ...i.tags.split(',').map(t => String(t).trim()).filter(t => t !== '')])];
-                    }
-                    delete i.tags;
-                    needsSave = true;
+                    if (Array.isArray(i.tags)) { i.genres = [...new Set([...i.genres, ...i.tags.map(t => String(t).trim()).filter(t => t !== '')])]; } 
+                    else if (typeof i.tags === 'string') { i.genres = [...new Set([...i.genres, ...i.tags.split(',').map(t => String(t).trim()).filter(t => t !== '')])]; }
+                    delete i.tags; needsSave = true;
                 }
             });
-            if (needsSave) {
-                localStorage.setItem('myLibrary', JSON.stringify(library));
+            if (needsSave) localStorage.setItem('myLibrary', JSON.stringify(library));
+        }
+        
+        // --- NOUVELLE FONCTION D'AUTO-TAGGING ---
+        function autoTagAmbiances() {
+            let modifCount = 0;
+            library.forEach(i => {
+                if (!i.ambiances) i.ambiances = [];
+                // On n'ajoute que si l'œuvre n'a AUCUNE ambiance
+                if (i.ambiances.length === 0) {
+                    let newAmb = new Set();
+                    let g = (i.genres || []).map(x => String(x).toLowerCase());
+                    let t = i.type;
+
+                    if (t === 'book' || t === 'bd') {
+                        if (g.some(x => ['sf', 'fantasy', 'aventure', 'alpinisme'].includes(x))) newAmb.add('Épique');
+                        if (g.some(x => ['thriller', 'policier', 'horreur', 'drame', 'historique'].includes(x))) newAmb.add('Sombre');
+                        if (g.some(x => ['humour', 'jeunesse', 'contes'].includes(x))) newAmb.add('Feel-Good');
+                        if (g.some(x => ['philosophie', 'essai', 'psychologie', 'société', 'féminisme', 'classique'].includes(x))) newAmb.add('Réflexion');
+                        if (g.some(x => ['poésie', 'art', 'roman graphique'].includes(x))) newAmb.add('Poétique');
+                    }
+                    if (t === 'music') {
+                        if (g.some(x => ['rock', 'metal', 'electro'].includes(x))) newAmb.add('Énergique');
+                        if (g.some(x => ['classique', 'jazz', 'ost'].includes(x))) { newAmb.add('Chill'); newAmb.add('Travailler'); }
+                    }
+                    if (t === 'game') {
+                        if (g.some(x => ['familial', 'coopératif'].includes(x))) newAmb.add('Détente');
+                        if (g.some(x => ['expert', 'gestion'].includes(x))) newAmb.add('Prise de tête');
+                        if (g.some(x => ['affrontement', 'bluff'].includes(x))) newAmb.add('Trahison');
+                    }
+
+                    // Si vraiment aucun genre ne correspond, on met une ambiance générique
+                    if (newAmb.size === 0) {
+                        newAmb.add(t === 'game' ? 'Immersif' : 'Évasion');
+                    }
+
+                    i.ambiances = Array.from(newAmb);
+                    modifCount++;
+                }
+            });
+
+            if (modifCount > 0) {
+                saveLibrary();
+                customConfirm(`✅ Magie terminée ! ${modifCount} œuvres ont reçu des ambiances automatiques. Pense à cliquer sur "Envoyer au Cloud" pour sauvegarder !`, null, false);
+            } else {
+                customConfirm(`🪄 Tes œuvres ont déjà toutes au moins une ambiance. L'algorithme se repose.`, null, false);
             }
         }
+
+        normalizeLibrary();
 
         let cloudConfig = { token: '', gistId: '', geminiKey: '' };
         try { const c = JSON.parse(localStorage.getItem('cloudConfig')); if(c) cloudConfig = c; } catch(e) {}
@@ -550,39 +578,23 @@
         }
 
         async function pushToCloud() {
-            if(!cloudConfig.token || !cloudConfig.gistId) {
-                customConfirm("❌ Paramètres incomplets. Veuillez remplir le Token et l'ID du Gist.", null, true);
-                return;
-            }
-            const status = document.getElementById('cloud-status'); 
-            status.innerText = "⏳ Envoi...";
+            if(!cloudConfig.token || !cloudConfig.gistId) { customConfirm("❌ Paramètres incomplets.", null, true); return; }
+            const status = document.getElementById('cloud-status'); status.innerText = "⏳ Envoi...";
             try { 
-                const r = await fetch(`https://api.github.com/gists/${cloudConfig.gistId.trim()}`, { 
-                    method: 'PATCH', 
-                    headers: { 'Authorization': `Bearer ${cloudConfig.token.trim()}`, 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify({ files: { 'library.json': { content: JSON.stringify(library) } } }) 
-                });
-                
-                if(r.ok) { status.innerText = "✅ Sauvegardé avec succès !"; } 
-                else { const err = await r.json(); status.innerText = `❌ Erreur GitHub (${r.status}): ${err.message}`; }
+                const r = await fetch(`https://api.github.com/gists/${cloudConfig.gistId.trim()}`, { method: 'PATCH', headers: { 'Authorization': `Bearer ${cloudConfig.token.trim()}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ files: { 'library.json': { content: JSON.stringify(library) } } }) });
+                if(r.ok) { status.innerText = "✅ Sauvegardé avec succès !"; } else { const err = await r.json(); status.innerText = `❌ Erreur GitHub (${r.status}): ${err.message}`; }
             } catch(e) { status.innerText = `❌ Échec connexion : ${e.message}`; }
         }
 
         function pullFromCloud() {
-            if(!cloudConfig.token || !cloudConfig.gistId) {
-                customConfirm("❌ Paramètres incomplets. Veuillez remplir le Token et l'ID du Gist.", null, true);
-                return;
-            }
-            customConfirm("⚠️ Écraser les données de cet appareil par celles du Cloud ?", async () => {
-                const status = document.getElementById('cloud-status'); 
-                status.innerText = "⏳ Récupération...";
+            if(!cloudConfig.token || !cloudConfig.gistId) { customConfirm("❌ Paramètres incomplets.", null, true); return; }
+            customConfirm("⚠️ Écraser les données locales par le Cloud ?", async () => {
+                const status = document.getElementById('cloud-status'); status.innerText = "⏳ Récupération...";
                 try { 
                     const r = await fetch(`https://api.github.com/gists/${cloudConfig.gistId.trim()}?t=${Date.now()}`, { headers: { 'Authorization': `Bearer ${cloudConfig.token.trim()}` } });
                     if(!r.ok) { const err = await r.json(); status.innerText = `❌ Erreur GitHub (${r.status}): ${err.message}`; return; }
-                    
                     const d = await r.json();
                     const fKey = d.files['library.json'] ? 'library.json' : Object.keys(d.files).find(k => k.endsWith('.json'));
-                    
                     if(fKey && d.files[fKey]) { 
                         const content = JSON.parse(d.files[fKey].content);
                         library = Array.isArray(content) ? content : Object.values(content);
@@ -590,7 +602,7 @@
                         localStorage.setItem('myLibrary', JSON.stringify(library));
                         status.innerText = `✅ Données à jour (${library.length} items).`;
                         setTimeout(() => location.reload(), 1000);
-                    } else { status.innerText = "❌ Fichier library.json introuvable dans ce Gist."; }
+                    } else { status.innerText = "❌ Fichier introuvable."; }
                 } catch(e) { status.innerText = `❌ Erreur lecture Cloud : ${e.message}`; }
             }, true);
         }
@@ -599,11 +611,7 @@
             localStorage.setItem('myLibrary', JSON.stringify(library)); 
             safeRenderAll(); 
             if(cloudConfig.token && cloudConfig.gistId) {
-                fetch(`https://api.github.com/gists/${cloudConfig.gistId.trim()}`, { 
-                    method: 'PATCH', 
-                    headers: { 'Authorization': `Bearer ${cloudConfig.token.trim()}`, 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify({ files: { 'library.json': { content: JSON.stringify(library) } } }) 
-                }).catch(() => {});
+                fetch(`https://api.github.com/gists/${cloudConfig.gistId.trim()}`, { method: 'PATCH', headers: { 'Authorization': `Bearer ${cloudConfig.token.trim()}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ files: { 'library.json': { content: JSON.stringify(library) } } }) }).catch(() => {});
             }
         }
 
@@ -615,9 +623,7 @@
                 const validModels = data.models.filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent') && m.name.includes('gemini'));
                 const best = validModels.find(m => m.name.includes('1.5-flash')) || validModels.find(m => m.name.includes('flash')) || validModels.find(m => m.name.includes('pro')) || validModels[0];
                 return best ? best.name.replace('models/', '') : 'gemini-1.5-flash';
-            } catch (e) {
-                return 'gemini-1.5-flash'; 
-            }
+            } catch (e) { return 'gemini-1.5-flash'; }
         }
 
         function openJukeboxModal() {
@@ -971,7 +977,6 @@ Formate en HTML : <div style="background:rgba(255,255,255,0.7); padding:15px; bo
             safeRenderData();
         }
 
-        // --- LES ACTIONS DU FORMULAIRE ---
         const modalAdd = document.getElementById('modal-add'); const form = document.getElementById('form-add'); 
         let selectedGenres = []; let selectedAmbiances = [];
         const stars = document.querySelectorAll('#star-rating span'); function setStars(val) { document.getElementById('note').value = val; stars.forEach(s => s.style.color = parseInt(s.dataset.val) <= val ? 'var(--color-star)' : '#ccc'); } stars.forEach(s => s.onclick = () => setStars(parseInt(s.dataset.val)));
@@ -1095,7 +1100,6 @@ Formate en HTML : <div style="background:rgba(255,255,255,0.7); padding:15px; bo
             r.readAsText(f); 
         }
 
-        // DÉMARRAGE SÉCURISÉ
         try {
             normalizeLibrary();
             safeRenderAll();
