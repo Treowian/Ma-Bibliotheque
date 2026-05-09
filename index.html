@@ -15,23 +15,30 @@
 
     <style>
         :root {
-            --bg-parchment: #F4EEDD; --bg-parchment-dark: #E8DCC4;
-            --text-ink: #2C251F; --text-ink-light: #5A4E45;
+            --bg-parchment: #F4EEDD; 
+            --bg-parchment-dark: #E8DCC4;
+            --text-ink: #2C251F; 
+            --text-ink-light: #5A4E45;
             --accent-wood: #6D432C; 
-            --color-success: #4A7C59; --color-danger: #C0392B; --color-star: #f39c12;
-            --color-ambiance: #f3e5f5; --color-ambiance-dark: #7B1FA2; 
+            --color-success: #4A7C59; 
+            --color-danger: #C0392B; 
+            --color-star: #f39c12;
+            --color-ambiance: #f3e5f5; 
+            --color-ambiance-dark: #7B1FA2; 
             --shadow-soft: 0 4px 12px rgba(44, 37, 31, 0.08);
-            --font-title: 'Merriweather', serif; --font-body: 'Inter', sans-serif;
+            --font-title: 'Merriweather', serif; 
+            --font-body: 'Inter', sans-serif;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         body { background-color: var(--bg-parchment); color: var(--text-ink); font-family: var(--font-body); line-height: 1.6; overflow-x: hidden; padding-bottom: 80px; }
         h1, h2, h3 { font-family: var(--font-title); color: var(--accent-wood); }
         h3.section-title { font-size: 1.2rem; margin: 25px 0 10px 0; display: flex; align-items: center; gap: 8px; border-bottom: 2px solid var(--bg-parchment-dark); padding-bottom: 5px; }
+        
         #app-container { max-width: 900px; margin: 0 auto; padding: 20px; }
         header { text-align: center; margin-bottom: 15px; }
 
-        /* UI HEADER & RECHERCHE AVEC AVATAR COMPACT */
+        /* HEADER & RECHERCHE AVEC AVATAR COMPACT */
         .search-area { position: sticky; top: 0; z-index: 80; background: var(--bg-parchment); padding-bottom: 10px; margin-bottom: 20px; }
         .search-header { display: flex; gap: 8px; align-items: center; width: 100%; }
         
@@ -50,39 +57,48 @@
         .btn-icon-header { background: #fff; border: 2px solid var(--bg-parchment-dark); border-radius: 50%; width: 42px; height: 42px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; transition: 0.2s; color: var(--text-ink); }
         .btn-icon-header.active { border-color: var(--accent-wood); background: var(--bg-parchment-dark); }
 
-        /* PANNEAU DE FILTRES AVEC SCROLL INTERNE */
+        /* PANNEAU DE FILTRES */
         .filter-panel { background: rgba(255, 255, 255, 0.95); border: 1px solid var(--bg-parchment-dark); border-radius: 12px; padding: 15px; margin-top: 10px; display: none; flex-direction: column; gap: 15px; box-shadow: var(--shadow-soft); max-height: 65vh; overflow-y: auto; overscroll-behavior: contain; }
         .filter-panel.open { display: flex; }
         .filter-panel::-webkit-scrollbar { width: 6px; }
         .filter-panel::-webkit-scrollbar-track { background: transparent; }
         .filter-panel::-webkit-scrollbar-thumb { background: var(--bg-parchment-dark); border-radius: 4px; }
+        
         .filter-group { display: flex; flex-direction: column; gap: 8px; }
         .filter-group label { font-size: 0.75rem; font-weight: 700; color: var(--text-ink-light); text-transform: uppercase; letter-spacing: 0.5px;}
+        
         .filter-chips-container { display: flex; flex-wrap: wrap; gap: 8px; padding-bottom: 5px; }
         .filter-chip { padding: 6px 14px; border-radius: 20px; background: #fff; border: 1px solid var(--bg-parchment-dark); font-size: 0.85rem; white-space: nowrap; cursor: pointer; transition: 0.2s; color: var(--text-ink); user-select: none; }
         .filter-chip.active { background: var(--accent-wood); color: #fff; border-color: var(--accent-wood); font-weight: 600; }
         .filter-chip.ambiance-chip.active { background: var(--color-ambiance-dark); border-color: var(--color-ambiance-dark); color: white;}
+        
         .scrollable-chips { max-height: 180px; overflow-y: auto; padding-right: 5px; align-content: flex-start;}
         .scrollable-chips::-webkit-scrollbar { width: 6px; }
         .scrollable-chips::-webkit-scrollbar-track { background: var(--bg-parchment); border-radius: 4px; }
         .scrollable-chips::-webkit-scrollbar-thumb { background: var(--bg-parchment-dark); border-radius: 4px; }
 
-        /* NAVIGATION & AFFICHAGE GRILLES */
+        /* NAVIGATION */
         nav { position: fixed; bottom: 0; left: 0; width: 100%; background-color: var(--bg-parchment-dark); box-shadow: 0 -2px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-around; padding: 6px 0; z-index: 100; }
         .nav-btn { background: none; border: none; color: var(--text-ink-light); font-family: var(--font-body); font-size: 0.65rem; font-weight: 600; cursor: pointer; padding: 8px 2px; display: flex; flex-direction: column; align-items: center; gap: 2px; border-radius: 12px; transition: 0.2s; flex: 1; text-align: center;}
         .nav-btn span:first-child { font-size: 1.1rem; }
         .nav-btn.active { color: var(--accent-wood); background-color: rgba(109, 67, 44, 0.15); font-weight: 700; }
-        @media (min-width: 768px) { nav { position: static; background: none; box-shadow: none; max-width: 800px; margin: 0 auto 20px auto; border-bottom: 2px solid var(--bg-parchment-dark); border-radius: 0; padding: 10px 0;} .nav-btn { flex-direction: row; gap: 8px; padding: 12px 20px; font-size: 0.85rem;} .nav-btn.active { border-radius: 12px 12px 0 0; border-bottom: 3px solid var(--accent-wood); } }
-        
+        @media (min-width: 768px) {
+            nav { position: static; background: none; box-shadow: none; max-width: 800px; margin: 0 auto 20px auto; border-bottom: 2px solid var(--bg-parchment-dark); border-radius: 0; padding: 10px 0;}
+            .nav-btn { flex-direction: row; gap: 8px; padding: 12px 20px; font-size: 0.85rem;}
+            .nav-btn.active { border-radius: 12px 12px 0 0; border-bottom: 3px solid var(--accent-wood); }
+        }
+
+        /* GRILLES ET CARTES */
         .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-top: 10px; }
         .horizontal-scroll { display: flex; overflow-x: auto; gap: 15px; padding-bottom: 15px; margin-top: 10px; scroll-snap-type: x mandatory; scrollbar-width: none;}
         .horizontal-scroll::-webkit-scrollbar { display: none; }
         .horizontal-scroll .card { min-width: 260px; max-width: 300px; flex: 0 0 auto; scroll-snap-align: start; }
-        
+
         .card { background: #fff; border: 2px solid var(--bg-parchment-dark); border-radius: 12px; padding: 15px; box-shadow: var(--shadow-soft); display: flex; flex-direction: column; width: 100%; cursor: pointer; transition: 0.2s; position: relative;}
         .card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(44, 37, 31, 0.15); }
         .card.mode-selection:active { transform: scale(0.95); }
         .card.selected { border-color: #3f2b96; background: #f0f4ff; box-shadow: 0 0 0 2px #3f2b96; }
+        
         .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; gap: 10px; pointer-events: none;}
         .card-title { font-weight: 700; font-family: var(--font-title); font-size: 1.05rem; line-height: 1.3; flex: 1; word-wrap: break-word;}
         .card-creator { color: var(--text-ink-light); font-size: 0.9rem; }
@@ -91,16 +107,20 @@
         .badge-ambiance { background: var(--color-ambiance); color: var(--color-ambiance-dark); border: 1px solid var(--color-ambiance-dark); }
         .card-meta { display: flex; flex-wrap: wrap !important; gap: 6px; margin-top: 10px; width: 100%; align-items: center; pointer-events: none;}
 
-        /* STATS & BOUTONS DIVERS */
+        /* STATISTIQUES ET DETAILS */
         details.stats-collapse summary { cursor: pointer; user-select: none; list-style: none; outline: none; display: flex; justify-content: space-between; align-items: center; }
         details.stats-collapse summary::-webkit-details-marker { display: none; }
         details.stats-collapse summary::after { content: '▼'; font-size: 0.8rem; transition: transform 0.2s; color: var(--accent-wood); flex-shrink: 0; margin-left: 10px;}
         details.stats-collapse[open] summary::after { transform: rotate(180deg); }
+        
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; margin-top: 10px;}
         .stat-card { background: #fff; border: 1px solid var(--bg-parchment-dark); border-radius: 12px; padding: 15px; box-shadow: var(--shadow-soft); display: flex; flex-direction: column; justify-content: center;}
         .stat-main { display: flex; align-items: center; gap: 10px; font-size: 1.4rem; font-weight: 700; color: var(--accent-wood); font-family: var(--font-title); margin-bottom: 10px; border-bottom: 1px solid var(--bg-parchment); padding-bottom: 8px;}
         .stat-details { font-size: 0.85rem; color: var(--text-ink); line-height: 1.6; display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
-        
+        .top-list { font-size: 0.85rem; padding-left: 15px; margin-top: 5px; color: var(--text-ink-light); }
+        .top-list li { margin-bottom: 5px; }
+
+        /* BOUTONS ET ACTIONS */
         #selection-bar { position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%); background: #fff; border: 2px solid var(--accent-wood); padding: 10px 15px; border-radius: 30px; display: none; align-items: center; gap: 10px; z-index: 200; box-shadow: 0 8px 20px rgba(109, 67, 44, 0.4); white-space: nowrap;}
         @media (min-width: 768px) { #selection-bar { bottom: 30px; } }
         .selection-count { font-weight: bold; color: var(--accent-wood); padding-right: 10px; border-right: 1px solid var(--bg-parchment-dark); }
@@ -115,6 +135,7 @@
         
         .btn-jukebox { width: 100%; padding: 15px; border-radius: 30px; border: none; font-size: 1.1rem; font-family: var(--font-title); font-weight: bold; color: white; cursor: pointer; background: linear-gradient(135deg, #7B1FA2, #4A148C); box-shadow: 0 6px 15px rgba(123, 31, 162, 0.3); transition: 0.2s; margin-bottom: 25px; }
         .btn-jukebox:active { transform: scale(0.98); }
+
         #btn-fab-add { position: fixed; bottom: 85px; right: 20px; width: 60px; height: 60px; border-radius: 50%; background-color: var(--accent-wood); color: #fff; font-size: 1.8rem; border: none; box-shadow: 0 6px 16px rgba(109, 67, 44, 0.4); cursor: pointer; z-index: 110; display: flex; align-items: center; justify-content: center; transition: 0.3s opacity, 0.3s transform; }
         @media (min-width: 768px) { #btn-fab-add { bottom: 40px; right: 40px; } }
         #btn-fab-add.hidden-fab { opacity: 0; transform: scale(0) rotate(90deg); pointer-events: none; }
@@ -164,10 +185,6 @@
         .view-section.active { display: block; }
         .settings-card { background: #fff; padding: 25px; border-radius: 12px; border: 1px solid var(--bg-parchment-dark); margin-bottom: 20px; }
         .status-msg { font-size: 0.85rem; font-weight: bold; margin-top: 10px; text-align: center; }
-        
-        .jukebox-card { border: 2px solid var(--bg-parchment-dark); border-radius: 12px; padding: 12px; margin-bottom: 12px; background: #fff; cursor: pointer; transition: 0.2s;}
-        .jukebox-card:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .jukebox-card-title { font-size: 0.8rem; font-weight: bold; color: var(--color-ambiance-dark); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 1px;}
     </style>
 </head>
 <body>
@@ -249,8 +266,10 @@
                 <button class="btn-jukebox" onclick="openJukeboxModal()">Que veux-tu vivre aujourd'hui ?</button>
                 <h3 class="section-title" id="title-wishlist" style="display:none; color: #4A7C59;">🛒 Ma Liste d'Achats</h3>
                 <div id="list-wishlist" class="horizontal-scroll" style="display:none;"></div>
-                <h3 class="section-title" id="title-recent">✨ Récemment ajoutés (Mon Profil)</h3>
+                
+                <h3 class="section-title" id="title-recent">✨ Récemment ajoutés (Foyer)</h3>
                 <div id="list-recent" class="grid-container" style="margin-bottom: 30px;"></div>
+                
                 <h3 class="section-title" id="title-coups-coeur" style="display:none;">❤️ Mes Coups de Coeur</h3>
                 <div id="list-favs" class="grid-container" style="margin-bottom: 30px;"></div>
             </section>
@@ -275,7 +294,6 @@
                     <summary style="font-weight: bold; color: var(--accent-wood);">🏷️ Nettoyage des Genres & Ambiances</summary>
                     <div id="settings-tags-list"></div>
                     <button class="btn-primary" style="width:100%; margin-top:15px; background: var(--color-ambiance-dark); color: white; border: none; box-shadow: 0 4px 10px rgba(123, 31, 162, 0.3);" onclick="autoTagAmbiances()">🪄 Auto-générer les ambiances manquantes</button>
-                    <p style="font-size: 0.75rem; color: var(--text-ink-light); text-align: center; margin-top: 5px;">L'application va analyser les œuvres sans ambiance et leur en attribuer une selon leur genre.</p>
                 </details>
 
                 <div class="settings-card">
@@ -405,7 +423,6 @@
                     <div class="form-group"><label>N° Tome</label><input type="text" id="tome"></div>
                 </div>
                 <div class="form-group"><label id="label-createur">Auteur</label><input type="text" id="createur"></div>
-                
                 <div class="form-row">
                     <div class="form-group" style="flex: 2;">
                         <label>Format</label>
@@ -413,7 +430,6 @@
                     </div>
                     <div class="form-group" style="flex: 1; min-width: 80px;"><label>Année</label><input type="number" id="annee"></div>
                 </div>
-                
                 <div class="form-group">
                     <label>Genres</label>
                     <div id="genres-container" class="tags-container"></div>
@@ -422,7 +438,6 @@
                         <button type="button" id="btn-add-genre" class="btn-secondary" style="padding: 6px 16px; margin: 0; width: auto; font-size: 1.2rem;">＋</button>
                     </div>
                 </div>
-                
                 <div class="form-group">
                     <label style="color: var(--color-ambiance-dark);">Ambiances</label>
                     <div id="ambiances-container" class="tags-container"></div>
@@ -431,7 +446,6 @@
                         <button type="button" id="btn-add-ambiance" class="btn-secondary" style="padding: 6px 16px; margin: 0; width: auto; font-size: 1.2rem; border-color: var(--color-ambiance-dark); color: var(--color-ambiance-dark);">＋</button>
                     </div>
                 </div>
-
                 <div style="background: var(--bg-parchment-dark); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
                     <h4 style="margin-top:0; margin-bottom:10px; font-size:0.9rem; color:var(--text-ink);">👤 Mon Expérience (<span id="form-profile-name"></span>)</h4>
                     <div class="form-group"><label>Statut</label><div id="statut-container" class="type-selector" style="margin-bottom: 0; gap: 6px;"></div></div>
@@ -443,7 +457,6 @@
                         <div class="form-group"><label>Mon Commentaire</label><textarea id="commentaire" rows="3"></textarea></div>
                     </div>
                 </div>
-
                 <div id="group-resume" class="form-group" style="display: none;"><label style="display: flex; justify-content: space-between; align-items: center;">Résumé<button type="button" id="btn-ai-summary" class="btn-ai">✨ IA</button></label><textarea id="resume" rows="4"></textarea></div>
                 <button type="submit" class="btn-primary" id="btn-submit">💾 Sauvegarder</button>
             </form>
@@ -464,7 +477,6 @@
         let confirmAction = null;
         let profileToRename = '';
 
-        // Chargement sécurisé avec blocs Try/Catch séparés
         try { const stored = JSON.parse(localStorage.getItem('myLibrary')); if(Array.isArray(stored)) library = stored; } catch(e) {}
         try { const storedProfiles = JSON.parse(localStorage.getItem('profiles')); if(Array.isArray(storedProfiles) && storedProfiles.length > 0) profiles = storedProfiles; } catch(e) {}
         try { const storedCurrent = localStorage.getItem('currentProfile'); if(storedCurrent) currentProfile = storedCurrent; } catch(e) {}
@@ -557,13 +569,11 @@
         // ==========================================
         function normalizeLibrary() {
             let needsSave = false;
-            let foundProfiles = new Set(profiles); // Mémoriser les profils déjà connus
+            let foundProfiles = new Set(profiles); 
             
-            // Rejeter les objets corrompus
             library = library.filter(i => i && typeof i === 'object');
             
             library.forEach(i => {
-                // Typage strict
                 if (i.type && typeof i.type === 'string') {
                     let t = i.type.toLowerCase().trim();
                     if (t !== i.type) { i.type = t; needsSave = true; }
@@ -574,13 +584,18 @@
                 if (!Array.isArray(i.genres)) { i.genres = []; needsSave = true; }
                 if (!Array.isArray(i.ambiances)) { i.ambiances = []; needsSave = true; }
                 
+                // Maintien de la dateAjout globale pour le tri "Foyer"
+                if (!i.dateAjout) {
+                    i.dateAjout = parseInt(i.id.substring(0, 13)) || Date.now();
+                    needsSave = true;
+                }
+                
                 if (i.tags) {
                     if (Array.isArray(i.tags)) { i.genres = [...new Set([...i.genres, ...i.tags.map(t => String(t).trim()).filter(t => t !== '')])]; } 
                     else if (typeof i.tags === 'string') { i.genres = [...new Set([...i.genres, ...i.tags.split(',').map(t => String(t).trim()).filter(t => t !== '')])]; }
                     delete i.tags; needsSave = true;
                 }
 
-                // Migration vers structure Multi-profils
                 if (!i.userData) {
                     i.userData = {};
                     i.userData['Principal'] = {
@@ -594,11 +609,9 @@
                     needsSave = true;
                 }
 
-                // Scanne les données pour retrouver tous les profils existants
                 Object.keys(i.userData).forEach(p => foundProfiles.add(p));
             });
 
-            // Restauration automatique des profils si le fichier 'profiles.json' a disparu
             const newProfiles = Array.from(foundProfiles);
             if (newProfiles.length > profiles.length || !newProfiles.includes(currentProfile)) {
                 profiles = newProfiles;
@@ -614,7 +627,7 @@
         }
 
         // ==========================================
-        // 5. GESTION DU MULTI-PROFILS
+        // 5. GESTION DES PROFILS
         // ==========================================
         function updateProfileUI() {
             const btnProfile = document.getElementById('btn-profile');
@@ -663,17 +676,14 @@
                 return; 
             }
             
-            // 1. Mise à jour de la liste
             const index = profiles.indexOf(oldName);
             if (index !== -1) profiles[index] = newName;
             
-            // 2. Mise à jour du profil courant
             if (currentProfile === oldName) {
                 currentProfile = newName;
                 localStorage.setItem('currentProfile', currentProfile);
             }
             
-            // 3. Mise à jour de toutes les fiches d'œuvres !
             library.forEach(item => {
                 if (item.userData && item.userData[oldName]) {
                     item.userData[newName] = item.userData[oldName];
@@ -745,7 +755,6 @@
                     
                     const d = await r.json();
                     
-                    // Récupération des profils
                     if(d.files['profiles.json']) { 
                         let pContent = d.files['profiles.json'].content;
                         if(d.files['profiles.json'].truncated) {
@@ -759,20 +768,16 @@
                         }
                     }
 
-                    // Récupération de la bibliothèque (avec sécurité anti-coupure des fichiers de plus d'1Mo)
                     const fKey = d.files['library.json'] ? 'library.json' : Object.keys(d.files).find(k => k.endsWith('.json') && k !== 'profiles.json');
                     if(fKey && d.files[fKey]) { 
                         let contentStr = d.files[fKey].content;
-                        // Si le fichier est trop gros, GitHub le coupe en deux. Il faut télécharger le fichier brut.
                         if (d.files[fKey].truncated) {
                             status.innerText = "⏳ Fichier volumineux détecté, téléchargement intégral...";
                             const rawRes = await fetch(d.files[fKey].raw_url);
                             contentStr = await rawRes.text();
                         }
-                        
                         const content = JSON.parse(contentStr);
                         library = Array.isArray(content) ? content : Object.values(content);
-                        
                         normalizeLibrary(); 
                         localStorage.setItem('myLibrary', JSON.stringify(library));
                         status.innerText = `✅ Données à jour (${library.length} items).`;
@@ -785,7 +790,6 @@
         function saveLibrary() { 
             localStorage.setItem('myLibrary', JSON.stringify(library)); 
             safeRenderAll(); 
-            // Sauvegarde automatique en arrière-plan
             if(cloudConfig.token && cloudConfig.gistId) {
                 fetch(`https://api.github.com/gists/${cloudConfig.gistId.trim()}`, { 
                     method: 'PATCH', 
@@ -851,7 +855,10 @@
 
         function renderJukeboxTypes() {
             const container = document.getElementById('jukebox-types');
-            const types = [{val: 'all', label: 'Tout'}, {val: 'book', label: '📖 Livres'}, {val: 'bd', label: '💬 BD'}, {val: 'music', label: '🎵 Musique'}, {val: 'game', label: '🎲 Jeux'}];
+            const types = [
+                {val: 'all', label: 'Tout'}, {val: 'book', label: '📖 Livres'},
+                {val: 'bd', label: '💬 BD'}, {val: 'music', label: '🎵 Musique'}, {val: 'game', label: '🎲 Jeux'}
+            ];
             container.innerHTML = types.map(t => `<div class="filter-chip ${currentJukeboxType === t.val ? 'active' : ''}" style="border-color:var(--accent-wood);" onclick="setJukeboxType('${t.val}')">${t.label}</div>`).join('');
         }
 
@@ -867,7 +874,6 @@
             library.forEach(i => {
                 if (currentJukeboxType === 'all' || i.type === currentJukeboxType) {
                     let ud = getUserData(i);
-                    // Le Jukebox ne propose que les ambiances des œuvres que le profil a ajoutées à ses listes
                     if (ud.statut !== 'neutre' && ud.statut !== 'abandonne') {
                         (i.ambiances||[]).forEach(a => allAmbiances.add(a));
                     }
@@ -875,7 +881,7 @@
             });
             
             const container = document.getElementById('jukebox-ambiances');
-            if (allAmbiances.size === 0) { container.innerHTML = `<p style="font-size:0.85rem; color:var(--text-ink-light);">Aucune ambiance trouvée pour tes œuvres actuelles.</p>`; } 
+            if (allAmbiances.size === 0) { container.innerHTML = `<p style="font-size:0.85rem; color:var(--text-ink-light);">Aucune ambiance trouvée dans tes listes.</p>`; } 
             else { container.innerHTML = sortTagsArray(allAmbiances).map(a => `<div class="filter-chip ambiance-chip" style="background:var(--bg-parchment); color:var(--text-ink);" onclick="spinJukebox('${String(a).replace(/'/g, "\\'")}')">${a}</div>`).join(''); }
         }
 
@@ -1019,7 +1025,6 @@
             let serieHtml = i.serie ? `<div style="font-size:0.75rem; color:var(--accent-wood); font-weight:700; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">${i.serie} ${i.tome ? '<span style="opacity:0.7">• T.'+i.tome+'</span>' : ''}</div>` : '';
             const iconeType = {'book':'📖','bd':'💬','music':'🎵','game':'🎲'}[i.type] || '❓';
             
-            // Un profil voit ses œuvres grisées si elles ne lui appartiennent pas
             if (ud.statut === 'neutre') { card.style.opacity = '0.6'; }
 
             card.innerHTML = `<div class="card-header"><div class="card-title-group" style="flex:1; min-width:0;">${serieHtml}<div class="card-title">${iconeType} ${i.titre} ${ud.coupDeCoeur?'❤️':''}</div><div class="card-creator" style="margin-top:4px;">${i.createur || ''}</div></div><div class="card-status-group"><span class="badge badge-status" style="background:var(--bg-parchment-dark)">${(statusConfig[ud.statut]||{icon:'?'}).icon}</span></div></div><div style="flex:1; pointer-events:none;"></div>${(ud.note > 0 && ud.note <= 5) ? `<div style="color:var(--color-star);font-size:1.1rem;margin:4px 0;">${'★'.repeat(ud.note)}</div>`:''}<div class="card-meta"><span class="badge" style="background:#ddd">${i.format}</span>${(i.genres || []).slice(0, 2).map(t => `<span class="badge">${t}</span>`).join('')}${(i.ambiances || []).slice(0, 1).map(t => `<span class="badge badge-ambiance">${t}</span>`).join('')}</div>`;
@@ -1040,33 +1045,34 @@
         function switchView(id) { document.querySelectorAll('.view-section').forEach(v => v.classList.toggle('active', v.id === id)); if(id !== 'view-search') { document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.target === id)); safeRenderAll(); } }
         document.querySelectorAll('.nav-btn').forEach(b => b.onclick = () => { document.getElementById('search-input').value=''; switchView(b.dataset.target); });
 
+        // --- 10. AFFICHAGE DES STATISTIQUES ---
         function renderDashboard() {
             const stats = { book: { t: 0, l: 0, a: 0, title: '📖 Livres', done: 'terminés', todo: 'à lire' }, bd: { t: 0, l: 0, a: 0, title: '💬 BD', done: 'terminées', todo: 'à lire' }, music: { t: 0, l: 0, a: 0, title: '🎵 Musique', done: 'écoutés', todo: 'à découvrir' }, game: { t: 0, l: 0, a: 0, title: '🎲 Jeux', done: 'joués', todo: 'à tester' } };
-            let auteurs = {}, tagsCount = {};
             
-            // Les stats ne calculent QUE les oeuvres du profil actif
-            const profileItems = library.filter(i => getUserData(i).statut !== 'neutre');
-            const ownedItems = profileItems.filter(i => getUserData(i).statut !== 'aacheter');
-            
-            const totalItems = ownedItems.length;
-            const notes = ownedItems.filter(i => getUserData(i).note > 0).map(i => parseInt(getUserData(i).note) || 0);
-            const avgNote = notes.length ? (notes.reduce((a,b)=>a+b,0)/notes.length).toFixed(1) : '-';
-            const phys = ownedItems.filter(i=>i.format==='Physique').length;
-            const demat = ownedItems.filter(i=>i.format && i.format !== 'Physique').length;
+            // STATS DU FOYER (GLOBALES)
+            const totalItems = library.length;
+            const phys = library.filter(i=>i.format==='Physique').length;
+            const demat = library.filter(i=>i.format && i.format !== 'Physique').length;
 
-            ownedItems.forEach(i => { 
+            library.forEach(i => {
+                if (stats[i.type]) stats[i.type].t++;
+            });
+
+            // STATS DU PROFIL (PERSONNELLES)
+            const profileItems = library.filter(i => getUserData(i).statut !== 'neutre');
+            const notes = profileItems.filter(i => getUserData(i).note > 0).map(i => parseInt(getUserData(i).note) || 0);
+            const avgNote = notes.length ? (notes.reduce((a,b)=>a+b,0)/notes.length).toFixed(1) : '-';
+
+            profileItems.forEach(i => { 
                 let ud = getUserData(i);
                 if (stats[i.type]) { 
-                    stats[i.type].t++; 
                     if (['lu','ecoute','joue'].includes(ud.statut)) stats[i.type].l++; 
                     else if(['alire','adecouvrir','atester'].includes(ud.statut)) stats[i.type].a++; 
                 }
-                if(i.createur) auteurs[i.createur] = (auteurs[i.createur] || 0) + 1;
-                (i.genres||[]).forEach(t => tagsCount[t] = (tagsCount[t] || 0) + 1);
             });
 
             const mainContainer = document.getElementById('dashboard-stats-main');
-            mainContainer.innerHTML = `<div class="stat-card" style="grid-column: 1 / -1; background: var(--bg-parchment-dark); border-color: var(--accent-wood);"><h4 style="color: var(--accent-wood); font-family: var(--font-title); margin-bottom: 8px;">🌍 Vue d'ensemble</h4><ul class="top-list" style="display: flex; flex-wrap: wrap; gap: 15px; padding-left: 0; list-style: none;"><li>📦 <b>${totalItems}</b> œuvres poss.</li><li>⭐ Note moy. : <b>${avgNote}</b>/5</li><li>📚 Physique : <b>${phys}</b> | ☁️ Démat. : <b>${demat}</b></li></ul></div>`;
+            mainContainer.innerHTML = `<div class="stat-card" style="grid-column: 1 / -1; background: var(--bg-parchment-dark); border-color: var(--accent-wood);"><h4 style="color: var(--accent-wood); font-family: var(--font-title); margin-bottom: 8px;">🌍 Vue d'ensemble (Foyer)</h4><ul class="top-list" style="display: flex; flex-wrap: wrap; gap: 15px; padding-left: 0; list-style: none;"><li>📦 <b>${totalItems}</b> œuvres poss.</li><li>⭐ Ma Note moy. : <b>${avgNote}</b>/5</li><li>📚 Physique : <b>${phys}</b> | ☁️ Démat. : <b>${demat}</b></li></ul></div>`;
             const typeContainer = document.getElementById('dashboard-stats-types'); typeContainer.innerHTML = '';
             Object.keys(stats).forEach(k => { 
                 const s = stats[k]; if(s.t === 0) return; 
@@ -1079,7 +1085,10 @@
             const wishlist = profileItems.filter(i => getUserData(i).statut === 'aacheter');
             renderGrid(wishlist, 'list-wishlist', 'title-wishlist');
 
-            const recents = [...profileItems].sort((a,b) => (getUserData(b).dateAjout || 0) - (getUserData(a).dateAjout || 0)).slice(0, 4);
+            // RÉCEMMENT AJOUTÉS : Le Flux d'actualité du Foyer 
+            // On trie sur la date de création globale
+            const getCreationDate = (item) => item.dateAjout || parseInt(item.id.substring(0, 13)) || 0;
+            const recents = [...library].sort((a,b) => getCreationDate(b) - getCreationDate(a)).slice(0, 4);
             renderGrid(recents, 'list-recent', 'title-recent');
         }
 
@@ -1128,9 +1137,7 @@
             safeRenderData();
         }
 
-        // ==========================================
-        // 9. FORMULAIRE ET FICHES DÉTAILLÉES
-        // ==========================================
+        // --- 11. GESTION DES FICHES ET FORMULAIRES ---
         const modalAdd = document.getElementById('modal-add'); const form = document.getElementById('form-add'); 
         let selectedGenres = []; let selectedAmbiances = [];
         const stars = document.querySelectorAll('#star-rating span'); 
@@ -1205,6 +1212,7 @@
                 annee: document.getElementById('annee').value, 
                 genres: [...selectedGenres], ambiances: [...selectedAmbiances], 
                 resume: document.getElementById('resume').value,
+                dateAjout: idx !== -1 ? (library[idx].dateAjout || Date.now()) : Date.now(),
                 userData: idx !== -1 ? library[idx].userData : {} 
             }; 
             
@@ -1327,17 +1335,6 @@
             }, true);
         });
 
-        async function findBestModel(apiKey) {
-            try {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
-                const data = await res.json();
-                if (!data.models) return 'gemini-1.5-flash'; 
-                const validModels = data.models.filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent') && m.name.includes('gemini'));
-                const best = validModels.find(m => m.name.includes('1.5-flash')) || validModels.find(m => m.name.includes('flash')) || validModels.find(m => m.name.includes('pro')) || validModels[0];
-                return best ? best.name.replace('models/', '') : 'gemini-1.5-flash';
-            } catch (e) { return 'gemini-1.5-flash'; }
-        }
-
         document.getElementById('btn-ask-oracle').addEventListener('click', async () => {
             if(selectedForOracle.length === 0) { customConfirm("🪄 Tu dois d'abord sélectionner au moins une œuvre !", null, false); return; }
             if(!cloudConfig.geminiKey || cloudConfig.geminiKey.trim() === '') { customConfirm("❌ Clé API Gemini manquante.", null, true); return; }
@@ -1364,7 +1361,7 @@ Formate en HTML : <div style="background:rgba(255,255,255,0.7); padding:15px; bo
         document.getElementById('btn-ai-summary').onclick = async () => {
             const titre = document.getElementById('titre').value.trim(); const createur = document.getElementById('createur').value.trim();
             if(!titre) return customConfirm("❌ Titre requis pour générer un résumé !", null, true); 
-            if(!cloudConfig.geminiKey) return customConfirm("❌ Clé API manquante.", null, true);
+            if(!cloudConfig.geminiKey) return customConfirm("❌ Clé API manquante dans les réglages.", null, true);
             
             const res = document.getElementById('resume'); const com = document.getElementById('commentaire');
             res.value = "📡 Recherche d'un modèle..."; res.disabled = true;
@@ -1413,10 +1410,14 @@ Formate en HTML : <div style="background:rgba(255,255,255,0.7); padding:15px; bo
                     let itemGenres = [], itemAmbiances = [];
                     let ud = { statut: c[7] || 'neutre', note: parseInt(c[hasOldTags?9:10])||0, coupDeCoeur: (String(c[hasOldTags?10:11]).toLowerCase() === 'true' || c[hasOldTags?10:11] === '1'), commentaire: c[hasOldTags?11:12] || '', dateAjout: Date.now() };
                     
-                    if(hasOldTags) { itemGenres = c[8]?c[8].split(',').map(t=>t.trim()).filter(Boolean):[]; } 
-                    else { itemGenres = c[8]?c[8].split(',').map(t=>t.trim()).filter(Boolean):[]; itemAmbiances = c[9]?c[9].split(',').map(t=>t.trim()).filter(Boolean):[]; }
+                    if(hasOldTags) {
+                        itemGenres = c[8]?c[8].split(',').map(t=>t.trim()).filter(Boolean):[];
+                    } else {
+                        itemGenres = c[8]?c[8].split(',').map(t=>t.trim()).filter(Boolean):[];
+                        itemAmbiances = c[9]?c[9].split(',').map(t=>t.trim()).filter(Boolean):[];
+                    }
                     
-                    let newItem = {id:Date.now().toString()+i, type:c[0]||'book', titre:c[1], serie:c[2], tome:c[3], createur:c[4], format:c[5], annee:c[6], genres:itemGenres, ambiances:itemAmbiances, resume:"", userData: {}};
+                    let newItem = {id:Date.now().toString()+i, type:c[0]||'book', titre:c[1], serie:c[2], tome:c[3], createur:c[4], format:c[5], annee:c[6], genres:itemGenres, ambiances:itemAmbiances, resume:"", dateAjout: Date.now(), userData: {}};
                     newItem.userData[currentProfile] = ud;
                     added.push(newItem);
                 } 
