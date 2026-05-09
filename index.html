@@ -38,6 +38,7 @@
         #app-container { max-width: 900px; margin: 0 auto; padding: 20px; }
         header { text-align: center; margin-bottom: 15px; }
 
+        /* HEADER & RECHERCHE AVEC AVATAR COMPACT */
         .search-area { position: sticky; top: 0; z-index: 80; background: var(--bg-parchment); padding-bottom: 10px; margin-bottom: 20px; }
         .search-header { display: flex; gap: 8px; align-items: center; width: 100%; }
         
@@ -56,6 +57,7 @@
         .btn-icon-header { background: #fff; border: 2px solid var(--bg-parchment-dark); border-radius: 50%; width: 42px; height: 42px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; transition: 0.2s; color: var(--text-ink); }
         .btn-icon-header.active { border-color: var(--accent-wood); background: var(--bg-parchment-dark); }
 
+        /* PANNEAU DE FILTRES */
         .filter-panel { background: rgba(255, 255, 255, 0.95); border: 1px solid var(--bg-parchment-dark); border-radius: 12px; padding: 15px; margin-top: 10px; display: none; flex-direction: column; gap: 15px; box-shadow: var(--shadow-soft); max-height: 65vh; overflow-y: auto; overscroll-behavior: contain; }
         .filter-panel.open { display: flex; }
         .filter-panel::-webkit-scrollbar { width: 6px; }
@@ -75,6 +77,7 @@
         .scrollable-chips::-webkit-scrollbar-track { background: var(--bg-parchment); border-radius: 4px; }
         .scrollable-chips::-webkit-scrollbar-thumb { background: var(--bg-parchment-dark); border-radius: 4px; }
 
+        /* NAVIGATION */
         nav { position: fixed; bottom: 0; left: 0; width: 100%; background-color: var(--bg-parchment-dark); box-shadow: 0 -2px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-around; padding: 6px 0; z-index: 100; }
         .nav-btn { background: none; border: none; color: var(--text-ink-light); font-family: var(--font-body); font-size: 0.65rem; font-weight: 600; cursor: pointer; padding: 8px 2px; display: flex; flex-direction: column; align-items: center; gap: 2px; border-radius: 12px; transition: 0.2s; flex: 1; text-align: center;}
         .nav-btn span:first-child { font-size: 1.1rem; }
@@ -85,6 +88,7 @@
             .nav-btn.active { border-radius: 12px 12px 0 0; border-bottom: 3px solid var(--accent-wood); }
         }
 
+        /* GRILLES ET CARTES */
         .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-top: 10px; }
         .horizontal-scroll { display: flex; overflow-x: auto; gap: 15px; padding-bottom: 15px; margin-top: 10px; scroll-snap-type: x mandatory; scrollbar-width: none;}
         .horizontal-scroll::-webkit-scrollbar { display: none; }
@@ -103,6 +107,7 @@
         .badge-ambiance { background: var(--color-ambiance); color: var(--color-ambiance-dark); border: 1px solid var(--color-ambiance-dark); }
         .card-meta { display: flex; flex-wrap: wrap !important; gap: 6px; margin-top: 10px; width: 100%; align-items: center; pointer-events: none;}
 
+        /* STATISTIQUES ET DETAILS */
         details.stats-collapse summary { cursor: pointer; user-select: none; list-style: none; outline: none; display: flex; justify-content: space-between; align-items: center; }
         details.stats-collapse summary::-webkit-details-marker { display: none; }
         details.stats-collapse summary::after { content: '▼'; font-size: 0.8rem; transition: transform 0.2s; color: var(--accent-wood); flex-shrink: 0; margin-left: 10px;}
@@ -115,6 +120,7 @@
         .top-list { font-size: 0.85rem; padding-left: 15px; margin-top: 5px; color: var(--text-ink-light); }
         .top-list li { margin-bottom: 5px; }
 
+        /* BOUTONS ET ACTIONS */
         #selection-bar { position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%); background: #fff; border: 2px solid var(--accent-wood); padding: 10px 15px; border-radius: 30px; display: none; align-items: center; gap: 10px; z-index: 200; box-shadow: 0 8px 20px rgba(109, 67, 44, 0.4); white-space: nowrap;}
         @media (min-width: 768px) { #selection-bar { bottom: 30px; } }
         .selection-count { font-weight: bold; color: var(--accent-wood); padding-right: 10px; border-right: 1px solid var(--bg-parchment-dark); }
@@ -258,14 +264,15 @@
 
             <section id="view-dashboard" class="view-section active">
                 <button class="btn-jukebox" onclick="openJukeboxModal()">Que veux-tu vivre aujourd'hui ?</button>
+                
                 <h3 class="section-title" id="title-wishlist" style="display:none; color: #4A7C59;">🛒 Ma Liste d'Achats</h3>
                 <div id="list-wishlist" class="horizontal-scroll" style="display:none;"></div>
                 
                 <h3 class="section-title" id="title-recent">✨ Récemment ajoutés (Foyer)</h3>
-                <div id="list-recent" class="grid-container" style="margin-bottom: 30px;"></div>
+                <div id="list-recent" class="horizontal-scroll" style="margin-bottom: 30px;"></div>
                 
                 <h3 class="section-title" id="title-coups-coeur" style="display:none;">❤️ Mes Coups de Coeur</h3>
-                <div id="list-favs" class="grid-container" style="margin-bottom: 30px;"></div>
+                <div id="list-favs" class="horizontal-scroll" style="margin-bottom: 30px;"></div>
             </section>
 
             <section id="view-books" class="view-section"><div id="list-books" class="grid-container"></div></section>
@@ -416,7 +423,8 @@
                     <div class="form-group"><label>Série</label><input type="text" id="serie"></div>
                     <div class="form-group"><label>N° Tome</label><input type="text" id="tome"></div>
                 </div>
-                <div class="form-group"><label id="label-createur">Auteur</label><input type="text" id="createur"></div>
+                <div class="form-group"><label id="createur-label">Auteur</label><input type="text" id="createur"></div>
+                
                 <div class="form-row">
                     <div class="form-group" style="flex: 2;">
                         <label>Format</label>
@@ -424,6 +432,7 @@
                     </div>
                     <div class="form-group" style="flex: 1; min-width: 80px;"><label>Année</label><input type="number" id="annee"></div>
                 </div>
+                
                 <div class="form-group">
                     <label>Genres</label>
                     <div id="genres-container" class="tags-container"></div>
@@ -432,6 +441,7 @@
                         <button type="button" id="btn-add-genre" class="btn-secondary" style="padding: 6px 16px; margin: 0; width: auto; font-size: 1.2rem;">＋</button>
                     </div>
                 </div>
+                
                 <div class="form-group">
                     <label style="color: var(--color-ambiance-dark);">Ambiances</label>
                     <div id="ambiances-container" class="tags-container"></div>
@@ -440,17 +450,30 @@
                         <button type="button" id="btn-add-ambiance" class="btn-secondary" style="padding: 6px 16px; margin: 0; width: auto; font-size: 1.2rem; border-color: var(--color-ambiance-dark); color: var(--color-ambiance-dark);">＋</button>
                     </div>
                 </div>
+
                 <div style="background: var(--bg-parchment-dark); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
                     <h4 style="margin-top:0; margin-bottom:10px; font-size:0.9rem; color:var(--text-ink);">👤 Mon Expérience (<span id="form-profile-name"></span>)</h4>
                     <div class="form-group"><label>Statut</label><div id="statut-container" class="type-selector" style="margin-bottom: 0; gap: 6px;"></div></div>
+                    
                     <div id="review-section">
-                        <div class="form-row" style="align-items: center; margin-bottom: 10px;">
-                            <div class="form-group" style="margin:0;"><label>Note</label><div class="star-rating" id="star-rating"><span data-val="1">★</span><span data-val="2">★</span><span data-val="3">★</span><span data-val="4">★</span><span data-val="5">★</span></div><input type="hidden" id="note" value="0"></div>
-                            <div class="form-group" style="flex-direction:row;align-items:center;gap:5px; margin:0; justify-content: flex-end;"><input type="checkbox" id="coup-de-coeur" style="transform: scale(1.2);"><label style="margin:0; cursor:pointer;" for="coup-de-coeur">Favori ❤️</label></div>
+                        <div class="form-row" style="align-items: flex-end; margin-bottom: 15px;">
+                            <div class="form-group" style="margin:0;">
+                                <label>Note</label>
+                                <div class="star-rating" id="star-rating" style="height: 30px; display: flex; align-items: center;">
+                                    <span data-val="1">★</span><span data-val="2">★</span><span data-val="3">★</span><span data-val="4">★</span><span data-val="5">★</span>
+                                </div>
+                                <input type="hidden" id="note" value="0">
+                            </div>
+                            <div class="form-group" style="flex-direction:row; align-items:center; gap:8px; margin:0; justify-content: flex-end; height: 30px; padding-bottom: 3px;">
+                                <input type="checkbox" id="coup-de-coeur" style="transform: scale(1.3); margin:0;">
+                                <label style="margin:0; cursor:pointer; font-size: 0.95rem; font-weight: bold; color: var(--color-danger);" for="coup-de-coeur">Favori ❤️</label>
+                            </div>
                         </div>
+
                         <div class="form-group"><label>Mon Commentaire</label><textarea id="commentaire" rows="3"></textarea></div>
                     </div>
                 </div>
+
                 <div id="group-resume" class="form-group" style="display: none;"><label style="display: flex; justify-content: space-between; align-items: center;">Résumé<button type="button" id="btn-ai-summary" class="btn-ai">✨ IA</button></label><textarea id="resume" rows="4"></textarea></div>
                 <button type="submit" class="btn-primary" id="btn-submit">💾 Sauvegarder</button>
             </form>
@@ -620,7 +643,7 @@
         }
 
         // ==========================================
-        // 5. GESTION DES PROFILS
+        // 5. GESTION DES PROFILS (AJOUT/RENOMMER/SUPPRIMER)
         // ==========================================
         function updateProfileUI() {
             const btnProfile = document.getElementById('btn-profile');
@@ -640,10 +663,37 @@
                     <div style="display:flex; align-items:center; gap:10px;">
                         ${p===currentProfile ? '<span style="font-size:1.1rem;">✅</span>' : ''}
                         <button style="background:none; border:none; font-size:1.2rem; cursor:pointer;" onclick="openRenameModal('${p.replace(/'/g, "\\'")}')" title="Renommer">✏️</button>
+                        ${profiles.length > 1 ? `<button style="background:none; border:none; font-size:1.2rem; cursor:pointer;" onclick="deleteProfile('${p.replace(/'/g, "\\'")}')" title="Supprimer">🗑️</button>` : ''}
                     </div>
                 </div>
             `).join('');
             openModal('modal-profile');
+        }
+
+        function deleteProfile(name) {
+            if (profiles.length <= 1) {
+                alert("Vous ne pouvez pas supprimer le dernier profil.");
+                return;
+            }
+            customConfirm(`⚠️ Supprimer DÉFINITIVEMENT le profil "${name}" et toutes ses données personnelles (notes, statuts, commentaires) ? <br><br>Les œuvres resteront en rayon.`, () => {
+                profiles = profiles.filter(p => p !== name);
+                
+                if (currentProfile === name) {
+                    currentProfile = profiles[0];
+                    localStorage.setItem('currentProfile', currentProfile);
+                }
+                
+                library.forEach(item => {
+                    if (item.userData && item.userData[name]) {
+                        delete item.userData[name];
+                    }
+                });
+                
+                localStorage.setItem('profiles', JSON.stringify(profiles));
+                saveLibrary(); 
+                document.getElementById('modal-profile').close();
+                openProfileManager(); 
+            }, true);
         }
 
         function openRenameModal(oldName) {
@@ -849,11 +899,8 @@
         function renderJukeboxTypes() {
             const container = document.getElementById('jukebox-types');
             const types = [
-                {val: 'all', label: 'Tout'},
-                {val: 'book', label: '📖 Livres'},
-                {val: 'bd', label: '💬 BD'},
-                {val: 'music', label: '🎵 Musique'},
-                {val: 'game', label: '🎲 Jeux'}
+                {val: 'all', label: 'Tout'}, {val: 'book', label: '📖 Livres'},
+                {val: 'bd', label: '💬 BD'}, {val: 'music', label: '🎵 Musique'}, {val: 'game', label: '🎲 Jeux'}
             ];
             container.innerHTML = types.map(t => `<div class="filter-chip ${currentJukeboxType === t.val ? 'active' : ''}" style="border-color:var(--accent-wood);" onclick="setJukeboxType('${t.val}')">${t.label}</div>`).join('');
         }
@@ -877,11 +924,8 @@
             });
             
             const container = document.getElementById('jukebox-ambiances');
-            if (allAmbiances.size === 0) { 
-                container.innerHTML = `<p style="font-size:0.85rem; color:var(--text-ink-light);">Aucune ambiance trouvée dans tes listes pour ce support.</p>`; 
-            } else { 
-                container.innerHTML = sortTagsArray(allAmbiances).map(a => `<div class="filter-chip ambiance-chip" style="background:var(--bg-parchment); color:var(--text-ink);" onclick="spinJukebox('${String(a).replace(/'/g, "\\'")}')">${a}</div>`).join(''); 
-            }
+            if (allAmbiances.size === 0) { container.innerHTML = `<p style="font-size:0.85rem; color:var(--text-ink-light);">Aucune ambiance trouvée dans tes listes.</p>`; } 
+            else { container.innerHTML = sortTagsArray(allAmbiances).map(a => `<div class="filter-chip ambiance-chip" style="background:var(--bg-parchment); color:var(--text-ink);" onclick="spinJukebox('${String(a).replace(/'/g, "\\'")}')">${a}</div>`).join(''); }
         }
 
         function spinJukebox(ambiance) {
@@ -1044,11 +1088,9 @@
         function switchView(id) { document.querySelectorAll('.view-section').forEach(v => v.classList.toggle('active', v.id === id)); if(id !== 'view-search') { document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.target === id)); safeRenderAll(); } }
         document.querySelectorAll('.nav-btn').forEach(b => b.onclick = () => { document.getElementById('search-input').value=''; switchView(b.dataset.target); });
 
-        // --- 10. AFFICHAGE DES STATISTIQUES ---
         function renderDashboard() {
             const stats = { book: { t: 0, l: 0, a: 0, title: '📖 Livres', done: 'terminés', todo: 'à lire' }, bd: { t: 0, l: 0, a: 0, title: '💬 BD', done: 'terminées', todo: 'à lire' }, music: { t: 0, l: 0, a: 0, title: '🎵 Musique', done: 'écoutés', todo: 'à découvrir' }, game: { t: 0, l: 0, a: 0, title: '🎲 Jeux', done: 'joués', todo: 'à tester' } };
             
-            // STATS DU FOYER (GLOBALES)
             const totalItems = library.length;
             const phys = library.filter(i=>i.format==='Physique').length;
             const demat = library.filter(i=>i.format && i.format !== 'Physique').length;
@@ -1057,9 +1099,10 @@
                 if (stats[i.type]) stats[i.type].t++;
             });
 
-            // STATS DU PROFIL (PERSONNELLES)
             const profileItems = library.filter(i => getUserData(i).statut !== 'neutre');
-            const notes = profileItems.filter(i => getUserData(i).note > 0).map(i => parseInt(getUserData(i).note) || 0);
+            const ownedItems = profileItems.filter(i => getUserData(i).statut !== 'aacheter');
+            
+            const notes = ownedItems.filter(i => getUserData(i).note > 0).map(i => parseInt(getUserData(i).note) || 0);
             const avgNote = notes.length ? (notes.reduce((a,b)=>a+b,0)/notes.length).toFixed(1) : '-';
 
             profileItems.forEach(i => { 
@@ -1079,13 +1122,13 @@
             });
             
             const favs = profileItems.filter(i => getUserData(i).coupDeCoeur); 
-            renderGrid(favs.slice(0, 4), 'list-favs', 'title-coups-coeur'); 
+            renderGrid(favs, 'list-favs', 'title-coups-coeur'); 
             
             const wishlist = profileItems.filter(i => getUserData(i).statut === 'aacheter');
             renderGrid(wishlist, 'list-wishlist', 'title-wishlist');
 
             const getCreationDate = (item) => item.dateAjout || parseInt(item.id.substring(0, 13)) || 0;
-            const recents = [...library].sort((a,b) => getCreationDate(b) - getCreationDate(a)).slice(0, 4);
+            const recents = [...library].sort((a,b) => getCreationDate(b) - getCreationDate(a)).slice(0, 5);
             renderGrid(recents, 'list-recent', 'title-recent');
         }
 
