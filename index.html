@@ -17,9 +17,9 @@
         :root {
             --bg-parchment: #F4EEDD; --bg-parchment-dark: #E8DCC4;
             --text-ink: #2C251F; --text-ink-light: #5A4E45;
-            --accent-wood: #6D432C; /* Marron assombri pour la lisibilité */
+            --accent-wood: #6D432C; 
             --color-success: #4A7C59; --color-danger: #C0392B; --color-star: #f39c12;
-            --color-ambiance: #f3e5f5; --color-ambiance-dark: #7B1FA2; /* Violet assombri pour la lisibilité */
+            --color-ambiance: #f3e5f5; --color-ambiance-dark: #7B1FA2; 
             --shadow-soft: 0 4px 12px rgba(44, 37, 31, 0.08);
             --font-title: 'Merriweather', serif; --font-body: 'Inter', sans-serif;
         }
@@ -42,11 +42,13 @@
         .btn-icon-header { background: #fff; border: 2px solid var(--bg-parchment-dark); border-radius: 50%; width: 42px; height: 42px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; transition: 0.2s; color: var(--text-ink); }
         .btn-icon-header.active { border-color: var(--accent-wood); background: var(--bg-parchment-dark); }
 
+        /* Le Scroll pour les filtres */
         .filter-panel { background: rgba(255, 255, 255, 0.95); border: 1px solid var(--bg-parchment-dark); border-radius: 12px; padding: 15px; margin-top: 10px; display: none; flex-direction: column; gap: 15px; box-shadow: var(--shadow-soft); max-height: 65vh; overflow-y: auto; overscroll-behavior: contain; }
-.filter-panel::-webkit-scrollbar { width: 6px; }
-.filter-panel::-webkit-scrollbar-track { background: transparent; }
-.filter-panel::-webkit-scrollbar-thumb { background: var(--bg-parchment-dark); border-radius: 4px; }
+        .filter-panel::-webkit-scrollbar { width: 6px; }
+        .filter-panel::-webkit-scrollbar-track { background: transparent; }
+        .filter-panel::-webkit-scrollbar-thumb { background: var(--bg-parchment-dark); border-radius: 4px; }
         .filter-panel.open { display: flex; }
+        
         .filter-group { display: flex; flex-direction: column; gap: 8px; }
         .filter-group label { font-size: 0.75rem; font-weight: 700; color: var(--text-ink-light); text-transform: uppercase; letter-spacing: 0.5px;}
         
@@ -89,25 +91,9 @@
         .badge-ambiance { background: var(--color-ambiance); color: var(--color-ambiance-dark); border: 1px solid var(--color-ambiance-dark); }
         .card-meta { display: flex; flex-wrap: wrap !important; gap: 6px; margin-top: 10px; width: 100%; align-items: center; pointer-events: none;}
 
-        /* NOUVELLE GESTION DE LA FLÈCHE POUR MOBILE */
-        details.stats-collapse summary { 
-            cursor: pointer; 
-            user-select: none; 
-            list-style: none; 
-            outline: none; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-        }
+        details.stats-collapse summary { cursor: pointer; user-select: none; list-style: none; outline: none; display: flex; justify-content: space-between; align-items: center; }
         details.stats-collapse summary::-webkit-details-marker { display: none; }
-        details.stats-collapse summary::after { 
-            content: '▼'; 
-            font-size: 0.8rem; 
-            transition: transform 0.2s; 
-            color: var(--accent-wood); 
-            flex-shrink: 0; 
-            margin-left: 10px;
-        }
+        details.stats-collapse summary::after { content: '▼'; font-size: 0.8rem; transition: transform 0.2s; color: var(--accent-wood); flex-shrink: 0; margin-left: 10px;}
         details.stats-collapse[open] summary::after { transform: rotate(180deg); }
         
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; margin-top: 10px;}
@@ -154,7 +140,12 @@
         .type-btn { display: block; text-align: center; padding: 10px 5px; background: rgba(255,255,255,0.5); border-radius: 8px; border: 2px solid transparent; font-size: 0.8rem; transition: 0.2s;}
         .type-selector input:checked + .type-btn { background: var(--bg-parchment-dark); border-color: var(--accent-wood); font-weight: 700; }
         
-        .tags-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px; margin-bottom: 8px; }
+        /* SCROLL POUR LES TAGS DU FORMULAIRE */
+        .tags-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px; margin-bottom: 8px; max-height: 120px; overflow-y: auto; padding-right: 5px; align-content: flex-start;}
+        .tags-container::-webkit-scrollbar { width: 6px; }
+        .tags-container::-webkit-scrollbar-track { background: transparent; }
+        .tags-container::-webkit-scrollbar-thumb { background: var(--bg-parchment-dark); border-radius: 4px; }
+        
         .tag-pill { padding: 6px 12px; border-radius: 20px; background: #fff; border: 1px solid var(--bg-parchment-dark); font-size: 0.8rem; cursor: pointer; transition: 0.2s; user-select: none; display: flex; align-items: center;}
         .tag-pill.active { background: var(--accent-wood); color: #fff; border-color: var(--accent-wood); }
         .tag-pill.ambiance.active { background: var(--color-ambiance-dark); color: #fff; border-color: var(--color-ambiance-dark); }
@@ -513,14 +504,14 @@
 
                     if (t === 'book' || t === 'bd') {
                         if (g.some(x => ['sf', 'fantasy', 'aventure', 'alpinisme'].includes(x))) newAmb.add('Épique');
-                        if (g.some(x => ['thriller', 'policier', 'horreur', 'drame', 'historique'].includes(x))) newAmb.add('Sombre');
+                        if (g.some(x => ['thriller', 'policier', 'horreur', 'drame', 'historique', 'noir'].includes(x))) newAmb.add('Noir');
                         if (g.some(x => ['humour', 'jeunesse', 'contes'].includes(x))) newAmb.add('Feel-Good');
                         if (g.some(x => ['philosophie', 'essai', 'psychologie', 'société', 'féminisme', 'classique'].includes(x))) newAmb.add('Réflexion');
                         if (g.some(x => ['poésie', 'art', 'roman graphique'].includes(x))) newAmb.add('Poétique');
                     }
                     if (t === 'music') {
-                        if (g.some(x => ['rock', 'metal', 'electro'].includes(x))) newAmb.add('Énergique');
-                        if (g.some(x => ['classique', 'jazz', 'ost'].includes(x))) { newAmb.add('Chill'); newAmb.add('Travailler'); }
+                        if (g.some(x => ['rock', 'metal', 'electro', 'hip-hop'].includes(x))) newAmb.add('Énergique');
+                        if (g.some(x => ['classique', 'jazz', 'ost'].includes(x))) { newAmb.add('Chill'); newAmb.add('Focus'); }
                     }
                     if (t === 'game') {
                         if (g.some(x => ['familial', 'coopératif'].includes(x))) newAmb.add('Détente');
@@ -528,7 +519,7 @@
                         if (g.some(x => ['affrontement', 'bluff'].includes(x))) newAmb.add('Trahison');
                     }
 
-                    if (newAmb.size === 0) { newAmb.add(t === 'game' ? 'Immersif' : 'Évasion'); }
+                    if (newAmb.size === 0) { newAmb.add(t === 'game' ? 'Narratif' : 'Dépaysant'); }
                     i.ambiances = Array.from(newAmb); modifCount++;
                 }
             });
@@ -553,10 +544,30 @@
         };
 
         const uiConfig = {
-            book: { createur: "Auteur", formats: ["Physique", "Dématérialisé"], genres: ["SF", "Fantasy", "Thriller", "Historique", "Essai", "Classique", "Philosophie", "Poésie"], ambiances: ["Sombre", "Feel-Good", "Réflexion", "Rythmé", "Poétique", "Épique"], statuses: [{val:'lu', text:'✅ Lu'}, {val:'encours', text:'⏳ En cours'}, {val:'alire', text:'📚 À lire'}, {val:'aacheter', text:'🛒 À acheter'}, {val:'abandonne', text:'❌ Abandonné'}] },
-            bd: { createur: "Auteur / Dessinateur", formats: ["Physique", "Dématérialisé"], genres: ["Franco-Belge", "Comics", "Manga Shonen", "Manga Seinen", "Roman Graphique", "Aventure"], ambiances: ["Humour", "Sombre", "Action", "Poétique", "Épique", "Tranche de vie"], statuses: [{val:'lu', text:'✅ Lu'}, {val:'encours', text:'⏳ En cours'}, {val:'alire', text:'📚 À lire'}, {val:'aacheter', text:'🛒 À acheter'}, {val:'abandonne', text:'❌ Abandonné'}] },
-            music: { createur: "Artiste", formats: ["CD", "Vinyle", "Digital"], genres: ["Rock/Metal", "Electro", "Hip-Hop", "Jazz/Blues", "Classique", "OST", "Variété"], ambiances: ["Travailler", "Chill", "Énergique", "Triste", "Soirée"], statuses: [{val:'ecoute', text:'🎧 Écouté'}, {val:'adecouvrir', text:'💿 À découvrir'}, {val:'aacheter', text:'🛒 À acheter'}, {val:'abandonne', text:'❌ Déçu'}] },
-            game: { createur: "Auteur / Éditeur", formats: ["Plateau", "Cartes", "Dés", "Figurines", "Autre"], genres: ["Gestion", "Deckbuilding", "Affrontement", "Coopératif", "Familial", "Expert"], ambiances: ["Prise de tête", "Rigolade", "Trahison", "Immersif", "Détente"], statuses: [{val:'joue', text:'🎲 Joué'}, {val:'atester', text:'📦 À tester'}, {val:'aacheter', text:'🛒 À acheter'}, {val:'abandonne', text:'❌ Revendu'}] }
+            book: { 
+                createur: "Auteur", formats: ["Physique", "Dématérialisé"], 
+                genres: ["SF", "Fantasy", "Thriller", "Historique", "Essai", "Classique", "Philosophie", "Poésie"], 
+                ambiances: ["Feel-Good", "Glaçant", "Réflexion", "Épique", "Mélancolique", "Dépaysant", "Poétique"], 
+                statuses: [{val:'lu', text:'✅ Lu'}, {val:'encours', text:'⏳ En cours'}, {val:'alire', text:'📚 À lire'}, {val:'aacheter', text:'🛒 À acheter'}, {val:'abandonne', text:'❌ Abandonné'}] 
+            },
+            bd: { 
+                createur: "Auteur / Dessinateur", formats: ["Physique", "Dématérialisé"], 
+                genres: ["Franco-Belge", "Comics", "Manga Shonen", "Manga Seinen", "Roman Graphique", "Aventure"], 
+                ambiances: ["Tranche de vie", "Humour absurde", "Noir", "Action", "Onirique"], 
+                statuses: [{val:'lu', text:'✅ Lu'}, {val:'encours', text:'⏳ En cours'}, {val:'alire', text:'📚 À lire'}, {val:'aacheter', text:'🛒 À acheter'}, {val:'abandonne', text:'❌ Abandonné'}] 
+            },
+            music: { 
+                createur: "Artiste", formats: ["CD", "Vinyle", "Digital"], 
+                genres: ["Rock/Metal", "Electro", "Hip-Hop", "Jazz/Blues", "Classique", "OST", "Variété"], 
+                ambiances: ["Focus", "Chill", "Énergique", "Défouloir", "Festif", "Planant"], 
+                statuses: [{val:'ecoute', text:'🎧 Écouté'}, {val:'adecouvrir', text:'💿 À découvrir'}, {val:'aacheter', text:'🛒 À acheter'}, {val:'abandonne', text:'❌ Déçu'}] 
+            },
+            game: { 
+                createur: "Auteur / Éditeur", formats: ["Plateau", "Cartes", "Dés", "Figurines", "Autre"], 
+                genres: ["Gestion", "Deckbuilding", "Affrontement", "Coopératif", "Familial", "Expert"], 
+                ambiances: ["Prise de tête", "Rigolade", "Trahison", "Coopératif", "Narratif", "Familial", "Frustrant"], 
+                statuses: [{val:'joue', text:'🎲 Joué'}, {val:'atester', text:'📦 À tester'}, {val:'aacheter', text:'🛒 À acheter'}, {val:'abandonne', text:'❌ Revendu'}] 
+            }
         };
 
         function sortTagsArray(tags) {
