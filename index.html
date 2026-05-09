@@ -49,7 +49,7 @@
         .filter-chips-container { display: flex; flex-wrap: wrap; gap: 8px; padding-bottom: 5px; }
         .filter-chip { padding: 6px 14px; border-radius: 20px; background: #fff; border: 1px solid var(--bg-parchment-dark); font-size: 0.85rem; white-space: nowrap; cursor: pointer; transition: 0.2s; color: var(--text-ink); user-select: none; }
         .filter-chip.active { background: var(--accent-wood); color: #fff; border-color: var(--accent-wood); font-weight: 600; }
-        .filter-chip.ambiance-chip.active { background: var(--color-ambiance-dark); border-color: var(--color-ambiance-dark); }
+        .filter-chip.ambiance-chip.active { background: var(--color-ambiance-dark); border-color: var(--color-ambiance-dark); color: white;}
         
         .scrollable-chips { max-height: 180px; overflow-y: auto; padding-right: 5px; align-content: flex-start;}
         .scrollable-chips::-webkit-scrollbar { width: 6px; }
@@ -153,7 +153,6 @@
         .btn-primary:active { transform: scale(0.98); }
         .btn-danger { background: var(--color-danger); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; }
         
-        /* JUKEBOX BOUTON SANS EMOJI */
         .btn-jukebox { width: 100%; padding: 15px; border-radius: 30px; border: none; font-size: 1.1rem; font-family: var(--font-title); font-weight: bold; color: white; cursor: pointer; background: linear-gradient(135deg, var(--accent-wood), var(--color-ambiance-dark)); box-shadow: 0 6px 15px rgba(171, 71, 188, 0.3); transition: 0.2s; margin-bottom: 25px; }
         .btn-jukebox:active { transform: scale(0.98); }
 
@@ -245,6 +244,7 @@
             </section>
 
             <section id="view-dashboard" class="view-section active">
+                
                 <button class="btn-jukebox" onclick="openJukeboxModal()">Que veux-tu vivre aujourd'hui ?</button>
 
                 <h3 class="section-title" id="title-wishlist" style="display:none; color: #4A7C59;">🛒 Ma Liste d'Achats</h3>
@@ -355,9 +355,14 @@
     <dialog id="modal-jukebox">
         <div class="modal-content" style="background: var(--bg-parchment);">
             <button class="btn-close-absolute" onclick="document.getElementById('modal-jukebox').close()">❌</button>
-            <h2 style="font-family: var(--font-title); color: var(--color-ambiance-dark); margin-bottom: 5px;">Le Jukebox</h2>
-            <p style="font-size: 0.9rem; color: var(--text-ink-light); margin-bottom: 15px;">Sélectionne ton humeur du moment :</p>
+            <h2 style="font-family: var(--font-title); color: var(--color-ambiance-dark); margin-bottom: 15px;">Le Jukebox</h2>
+            
+            <p style="font-size: 0.85rem; font-weight: 700; color: var(--text-ink); margin-bottom: 8px; text-transform: uppercase;">1. Choisis le support</p>
+            <div class="filter-chips-container" id="jukebox-types" style="margin-bottom: 20px;"></div>
+
+            <p style="font-size: 0.85rem; font-weight: 700; color: var(--text-ink); margin-bottom: 8px; text-transform: uppercase;">2. Sélectionne ton humeur</p>
             <div class="filter-chips-container scrollable-chips" id="jukebox-ambiances" style="max-height: 120px; margin-bottom: 20px;"></div>
+            
             <div id="jukebox-results"></div>
         </div>
     </dialog>
@@ -477,12 +482,10 @@
             if (needsSave) localStorage.setItem('myLibrary', JSON.stringify(library));
         }
         
-        // --- NOUVELLE FONCTION D'AUTO-TAGGING ---
         function autoTagAmbiances() {
             let modifCount = 0;
             library.forEach(i => {
                 if (!i.ambiances) i.ambiances = [];
-                // On n'ajoute que si l'œuvre n'a AUCUNE ambiance
                 if (i.ambiances.length === 0) {
                     let newAmb = new Set();
                     let g = (i.genres || []).map(x => String(x).toLowerCase());
@@ -505,22 +508,13 @@
                         if (g.some(x => ['affrontement', 'bluff'].includes(x))) newAmb.add('Trahison');
                     }
 
-                    // Si vraiment aucun genre ne correspond, on met une ambiance générique
-                    if (newAmb.size === 0) {
-                        newAmb.add(t === 'game' ? 'Immersif' : 'Évasion');
-                    }
-
-                    i.ambiances = Array.from(newAmb);
-                    modifCount++;
+                    if (newAmb.size === 0) { newAmb.add(t === 'game' ? 'Immersif' : 'Évasion'); }
+                    i.ambiances = Array.from(newAmb); modifCount++;
                 }
             });
 
-            if (modifCount > 0) {
-                saveLibrary();
-                customConfirm(`✅ Magie terminée ! ${modifCount} œuvres ont reçu des ambiances automatiques. Pense à cliquer sur "Envoyer au Cloud" pour sauvegarder !`, null, false);
-            } else {
-                customConfirm(`🪄 Tes œuvres ont déjà toutes au moins une ambiance. L'algorithme se repose.`, null, false);
-            }
+            if (modifCount > 0) { saveLibrary(); customConfirm(`✅ Magie terminée ! ${modifCount} œuvres ont reçu des ambiances automatiques. Pense à cliquer sur "Envoyer au Cloud" pour sauvegarder !`, null, false); } 
+            else { customConfirm(`🪄 Tes œuvres ont déjà toutes au moins une ambiance. L'algorithme se repose.`, null, false); }
         }
 
         normalizeLibrary();
@@ -610,6 +604,7 @@
         function saveLibrary() { 
             localStorage.setItem('myLibrary', JSON.stringify(library)); 
             safeRenderAll(); 
+            // Sauvegarde automatique et silencieuse sur GitHub
             if(cloudConfig.token && cloudConfig.gistId) {
                 fetch(`https://api.github.com/gists/${cloudConfig.gistId.trim()}`, { method: 'PATCH', headers: { 'Authorization': `Bearer ${cloudConfig.token.trim()}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ files: { 'library.json': { content: JSON.stringify(library) } } }) }).catch(() => {});
             }
@@ -626,14 +621,50 @@
             } catch (e) { return 'gemini-1.5-flash'; }
         }
 
+        // --- JUKEBOX INTELLIGENT AVEC FILTRE DE SUPPORT ---
+        let currentJukeboxType = 'all';
+
         function openJukeboxModal() {
-            let allAmbiances = new Set();
-            library.forEach(i => (i.ambiances||[]).forEach(a => allAmbiances.add(a)));
-            const container = document.getElementById('jukebox-ambiances');
-            if (allAmbiances.size === 0) { container.innerHTML = `<p style="font-size:0.85rem; color:var(--text-ink-light);">Il faut d'abord ajouter des "Ambiances" à tes œuvres !</p>`; } 
-            else { container.innerHTML = sortTagsArray(allAmbiances).map(a => `<div class="filter-chip ambiance-chip" style="background:var(--bg-parchment); color:var(--text-ink);" onclick="spinJukebox('${String(a).replace(/'/g, "\\'")}')">${a}</div>`).join(''); }
+            currentJukeboxType = 'all';
+            renderJukeboxTypes();
+            renderJukeboxAmbiances();
             document.getElementById('jukebox-results').innerHTML = '';
             openModal('modal-jukebox');
+        }
+
+        function renderJukeboxTypes() {
+            const container = document.getElementById('jukebox-types');
+            const types = [
+                {val: 'all', label: 'Tout'},
+                {val: 'book', label: '📖 Livres'},
+                {val: 'bd', label: '💬 BD'},
+                {val: 'music', label: '🎵 Musique'},
+                {val: 'game', label: '🎲 Jeux'}
+            ];
+            container.innerHTML = types.map(t => `<div class="filter-chip ${currentJukeboxType === t.val ? 'active' : ''}" style="border-color:var(--accent-wood);" onclick="setJukeboxType('${t.val}')">${t.label}</div>`).join('');
+        }
+
+        function setJukeboxType(type) {
+            currentJukeboxType = type;
+            renderJukeboxTypes();
+            renderJukeboxAmbiances();
+            document.getElementById('jukebox-results').innerHTML = '';
+        }
+
+        function renderJukeboxAmbiances() {
+            let allAmbiances = new Set();
+            library.forEach(i => {
+                if (currentJukeboxType === 'all' || i.type === currentJukeboxType) {
+                    (i.ambiances||[]).forEach(a => allAmbiances.add(a));
+                }
+            });
+            
+            const container = document.getElementById('jukebox-ambiances');
+            if (allAmbiances.size === 0) { 
+                container.innerHTML = `<p style="font-size:0.85rem; color:var(--text-ink-light);">Aucune ambiance trouvée pour ce support.</p>`; 
+            } else { 
+                container.innerHTML = sortTagsArray(allAmbiances).map(a => `<div class="filter-chip ambiance-chip" style="background:var(--bg-parchment); color:var(--text-ink);" onclick="spinJukebox('${String(a).replace(/'/g, "\\'")}')">${a}</div>`).join(''); 
+            }
         }
 
         function spinJukebox(ambiance) {
@@ -641,7 +672,13 @@
                 c.style.background = c.innerText === ambiance ? 'var(--color-ambiance-dark)' : 'var(--bg-parchment)';
                 c.style.color = c.innerText === ambiance ? '#fff' : 'var(--text-ink)';
             });
-            const matching = library.filter(i => (i.ambiances||[]).includes(ambiance));
+
+            const matching = library.filter(i => {
+                const matchType = (currentJukeboxType === 'all' || i.type === currentJukeboxType);
+                const matchAmbiance = (i.ambiances||[]).includes(ambiance);
+                return matchType && matchAmbiance;
+            });
+
             const todos = matching.filter(i => ['alire','adecouvrir','atester'].includes(i.statut));
             const dones = matching.filter(i => ['lu','ecoute','joue'].includes(i.statut));
             let discovery = null, safeBet = null, alternative = null;
@@ -658,9 +695,9 @@
             let html = '';
             if(!discovery && !safeBet && !alternative) { html = `<p style="color:var(--text-ink-light);">Rien trouvé pour cette ambiance...</p>`; } 
             else {
-                if (discovery) html += `<div class="jukebox-card" onclick="document.getElementById('modal-jukebox').close(); viewItem('${discovery.id}')"><div class="jukebox-card-title">✨ La Découverte (À Faire)</div><b>${discovery.titre}</b><br><small style="color:var(--text-ink-light)">de ${discovery.createur}</small></div>`;
-                if (safeBet) html += `<div class="jukebox-card" onclick="document.getElementById('modal-jukebox').close(); viewItem('${safeBet.id}')"><div class="jukebox-card-title">🧸 La Valeur Sûre (Terminé)</div><b>${safeBet.titre}</b> ${safeBet.coupDeCoeur?'❤️':''}<br><small style="color:var(--text-ink-light)">de ${safeBet.createur}</small></div>`;
-                if (alternative) html += `<div class="jukebox-card" onclick="document.getElementById('modal-jukebox').close(); viewItem('${alternative.id}')"><div class="jukebox-card-title">🎲 L'Alternative</div><b>${alternative.titre}</b><br><small style="color:var(--text-ink-light)">de ${alternative.createur}</small></div>`;
+                if (discovery) html += `<div class="jukebox-card" onclick="document.getElementById('modal-jukebox').close(); viewItem('${discovery.id}')"><div class="jukebox-card-title">✨ La Découverte (${statusConfig[discovery.statut].text})</div><b>${discovery.titre}</b><br><small style="color:var(--text-ink-light)">de ${discovery.createur}</small></div>`;
+                if (safeBet) html += `<div class="jukebox-card" onclick="document.getElementById('modal-jukebox').close(); viewItem('${safeBet.id}')"><div class="jukebox-card-title">🧸 La Valeur Sûre (${statusConfig[safeBet.statut].text})</div><b>${safeBet.titre}</b> ${safeBet.coupDeCoeur?'❤️':''}<br><small style="color:var(--text-ink-light)">de ${safeBet.createur}</small></div>`;
+                if (alternative) html += `<div class="jukebox-card" onclick="document.getElementById('modal-jukebox').close(); viewItem('${alternative.id}')"><div class="jukebox-card-title">🎲 L'Alternative (${statusConfig[alternative.statut].text})</div><b>${alternative.titre}</b><br><small style="color:var(--text-ink-light)">de ${alternative.createur}</small></div>`;
             }
             document.getElementById('jukebox-results').innerHTML = html;
         }
