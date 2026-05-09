@@ -537,7 +537,7 @@
 
         document.getElementById('btn-ask-oracle').addEventListener('click', async () => {
             if(selectedForOracle.length === 0) {
-                customConfirm("🪄 Tu dois d'abord sélectionner au moins une œuvre (en cliquant dessus) pour inspirer l'Oracle !", null, false);
+                customConfirm("🪄 Tu dois d'abord sélectionner au moins une œuvre pour inspirer l'Oracle !", null, false);
                 return;
             }
             if(!cloudConfig.geminiKey || cloudConfig.geminiKey.trim() === '') {
@@ -792,6 +792,7 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
             if(!hasTags) container.innerHTML = '<p style="font-size:0.85rem; color:var(--text-ink-light);">Aucun tag à nettoyer.</p>';
         }
 
+        // --- NOUVEAUX FILTRES AVEC COMPTEURS STATIQUES ---
         const activeFilters = { sort: 'date_desc', status: 'all', format: 'all', tag: 'all', favOnly: false };
         
         function updateFilterUI() {
@@ -814,26 +815,38 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
         }
 
         function initFilters() {
+            // 1. On compte tout dans la bibliothèque globale
+            let statusCount = { 'lu':0, 'encours':0, 'alire':0, 'aacheter':0 };
+            let formatCount = {};
+            let tagCount = {};
+            
+            library.forEach(i => {
+                if(statusCount[i.statut] !== undefined) statusCount[i.statut]++;
+                if(i.format) formatCount[i.format] = (formatCount[i.format] || 0) + 1;
+                (i.tags || []).forEach(t => tagCount[t] = (tagCount[t] || 0) + 1);
+            });
+
+            // 2. On génère le HTML avec les compteurs
             const statusCont = document.getElementById('filter-status');
             const allStatuses = [
                 {val:'all', label:'Tous'},
                 {val:'lu', label:'✅ Terminé'}, {val:'encours', label:'⏳ En cours'}, 
                 {val:'alire', label:'📚 À faire'}, {val:'aacheter', label:'🛒 À acheter'}
             ];
-            statusCont.innerHTML = allStatuses.map(s => `<div class="filter-chip" data-type="status" data-val="${s.val}">${s.label}</div>`).join('');
+            statusCont.innerHTML = allStatuses.map(s => {
+                let cnt = s.val === 'all' ? library.length : (statusCount[s.val] || 0);
+                return `<div class="filter-chip" data-type="status" data-val="${s.val}">${s.label} <small style="opacity:0.7">(${cnt})</small></div>`;
+            }).join('');
 
             const formatCont = document.getElementById('filter-format');
-            let allFormats = new Set();
-            library.forEach(i => { if(i.format) allFormats.add(i.format); });
-            formatCont.innerHTML = `<div class="filter-chip" data-type="format" data-val="all">Tous</div>` + 
-                sortTagsArray(allFormats).map(f => `<div class="filter-chip" data-type="format" data-val="${f}">${f}</div>`).join('');
+            formatCont.innerHTML = `<div class="filter-chip" data-type="format" data-val="all">Tous <small style="opacity:0.7">(${library.length})</small></div>` + 
+                sortTagsArray(Object.keys(formatCount)).map(f => `<div class="filter-chip" data-type="format" data-val="${f}">${f} <small style="opacity:0.7">(${formatCount[f]})</small></div>`).join('');
 
             const tagCont = document.getElementById('filter-tag');
-            let allTags = new Set();
-            library.forEach(i => (i.tags||[]).forEach(t => allTags.add(t)));
-            tagCont.innerHTML = `<div class="filter-chip" data-type="tag" data-val="all">Tous</div>` + 
-                sortTagsArray(allTags).map(t => `<div class="filter-chip" data-type="tag" data-val="${t}">${t}</div>`).join('');
+            tagCont.innerHTML = `<div class="filter-chip" data-type="tag" data-val="all">Tous <small style="opacity:0.7">(${library.length})</small></div>` + 
+                sortTagsArray(Object.keys(tagCount)).map(t => `<div class="filter-chip" data-type="tag" data-val="${t}">${t} <small style="opacity:0.7">(${tagCount[t]})</small></div>`).join('');
 
+            // 3. On ré-attache les clics
             document.querySelectorAll('.filter-chip').forEach(chip => {
                 chip.onclick = () => setFilter(chip.dataset.type, chip.dataset.val);
             });
@@ -949,7 +962,6 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
             }); 
         }
         
-        // --- NOUVELLE FONCTION D'AJOUT DE TAG ---
         function addCustomTag() {
             const input = document.getElementById('custom-tag-input');
             const v = input.value.trim(); 
@@ -964,7 +976,7 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
         
         document.getElementById('custom-tag-input').addEventListener('keydown', function(e) { 
             if(e.key === 'Enter') { 
-                e.preventDefault(); // Bloque la soumission du formulaire par le clavier mobile
+                e.preventDefault(); 
                 addCustomTag();
             }
         });
