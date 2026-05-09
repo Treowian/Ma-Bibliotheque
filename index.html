@@ -194,7 +194,6 @@
         <div class="search-area">
             <div class="search-header">
                 <button id="btn-profile" class="btn-profile-avatar" onclick="openProfileManager()" title="Gérer les profils">P</button>
-                
                 <div class="search-container">
                     <span class="search-icon">🔍</span>
                     <input type="text" id="search-input" placeholder="Titre, Auteur, Genre, Ambiance...">
@@ -420,7 +419,8 @@
                     <div class="form-group"><label>Série</label><input type="text" id="serie"></div>
                     <div class="form-group"><label>N° Tome</label><input type="text" id="tome"></div>
                 </div>
-                <div class="form-group"><label id="createur-label">Auteur</label><input type="text" id="createur"></div>
+                
+                <div class="form-group"><label id="label-createur">Auteur</label><input type="text" id="createur"></div>
                 
                 <div class="form-row">
                     <div class="form-group" style="flex: 2;">
@@ -767,7 +767,7 @@
         }
 
         async function pushToCloud() {
-            if(!cloudConfig.token || !cloudConfig.gistId) { customConfirm("❌ Paramètres incomplets. Veuillez remplir le Token et l'ID du Gist.", null, true); return; }
+            if(!cloudConfig.token || !cloudConfig.gistId) { customConfirm("❌ Paramètres incomplets.", null, true); return; }
             const status = document.getElementById('cloud-status'); status.innerText = "⏳ Envoi...";
             try { 
                 const r = await fetch(`https://api.github.com/gists/${cloudConfig.gistId.trim()}`, { 
@@ -786,7 +786,7 @@
         }
 
         function pullFromCloud() {
-            if(!cloudConfig.token || !cloudConfig.gistId) { customConfirm("❌ Paramètres incomplets. Veuillez remplir le Token et l'ID du Gist.", null, true); return; }
+            if(!cloudConfig.token || !cloudConfig.gistId) { customConfirm("❌ Paramètres incomplets.", null, true); return; }
             customConfirm("⚠️ Écraser les données locales par le Cloud ?", async () => {
                 const status = document.getElementById('cloud-status'); status.innerText = "⏳ Récupération...";
                 try { 
