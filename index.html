@@ -42,7 +42,10 @@
         .btn-icon-header { background: #fff; border: 2px solid var(--bg-parchment-dark); border-radius: 50%; width: 42px; height: 42px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; transition: 0.2s; color: var(--text-ink); }
         .btn-icon-header.active { border-color: var(--accent-wood); background: var(--bg-parchment-dark); }
 
-        .filter-panel { background: rgba(255, 255, 255, 0.95); border: 1px solid var(--bg-parchment-dark); border-radius: 12px; padding: 15px; margin-top: 10px; display: none; flex-direction: column; gap: 15px; box-shadow: var(--shadow-soft); }
+        .filter-panel { background: rgba(255, 255, 255, 0.95); border: 1px solid var(--bg-parchment-dark); border-radius: 12px; padding: 15px; margin-top: 10px; display: none; flex-direction: column; gap: 15px; box-shadow: var(--shadow-soft); max-height: 65vh; overflow-y: auto; overscroll-behavior: contain; }
+.filter-panel::-webkit-scrollbar { width: 6px; }
+.filter-panel::-webkit-scrollbar-track { background: transparent; }
+.filter-panel::-webkit-scrollbar-thumb { background: var(--bg-parchment-dark); border-radius: 4px; }
         .filter-panel.open { display: flex; }
         .filter-group { display: flex; flex-direction: column; gap: 8px; }
         .filter-group label { font-size: 0.75rem; font-weight: 700; color: var(--text-ink-light); text-transform: uppercase; letter-spacing: 0.5px;}
