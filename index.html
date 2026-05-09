@@ -17,8 +17,9 @@
         :root {
             --bg-parchment: #F4EEDD; --bg-parchment-dark: #E8DCC4;
             --text-ink: #2C251F; --text-ink-light: #5A4E45;
-            --accent-wood: #8C5A40; --color-success: #4A7C59; --color-danger: #C0392B; --color-star: #f39c12;
-            --color-ambiance: #f3e5f5; --color-ambiance-dark: #ab47bc;
+            --accent-wood: #6D432C; /* Marron assombri pour la lisibilité */
+            --color-success: #4A7C59; --color-danger: #C0392B; --color-star: #f39c12;
+            --color-ambiance: #f3e5f5; --color-ambiance-dark: #7B1FA2; /* Violet assombri pour la lisibilité */
             --shadow-soft: 0 4px 12px rgba(44, 37, 31, 0.08);
             --font-title: 'Merriweather', serif; --font-body: 'Inter', sans-serif;
         }
@@ -85,9 +86,25 @@
         .badge-ambiance { background: var(--color-ambiance); color: var(--color-ambiance-dark); border: 1px solid var(--color-ambiance-dark); }
         .card-meta { display: flex; flex-wrap: wrap !important; gap: 6px; margin-top: 10px; width: 100%; align-items: center; pointer-events: none;}
 
-        details.stats-collapse summary { cursor: pointer; user-select: none; list-style: none; outline: none; }
+        /* NOUVELLE GESTION DE LA FLÈCHE POUR MOBILE */
+        details.stats-collapse summary { 
+            cursor: pointer; 
+            user-select: none; 
+            list-style: none; 
+            outline: none; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
         details.stats-collapse summary::-webkit-details-marker { display: none; }
-        details.stats-collapse summary::after { content: ' ▼'; font-size: 0.8rem; float: right; margin-top: 5px; transition: transform 0.2s; color: var(--accent-wood);}
+        details.stats-collapse summary::after { 
+            content: '▼'; 
+            font-size: 0.8rem; 
+            transition: transform 0.2s; 
+            color: var(--accent-wood); 
+            flex-shrink: 0; 
+            margin-left: 10px;
+        }
         details.stats-collapse[open] summary::after { transform: rotate(180deg); }
         
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; margin-top: 10px;}
@@ -604,7 +621,6 @@
         function saveLibrary() { 
             localStorage.setItem('myLibrary', JSON.stringify(library)); 
             safeRenderAll(); 
-            // Sauvegarde automatique et silencieuse sur GitHub
             if(cloudConfig.token && cloudConfig.gistId) {
                 fetch(`https://api.github.com/gists/${cloudConfig.gistId.trim()}`, { method: 'PATCH', headers: { 'Authorization': `Bearer ${cloudConfig.token.trim()}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ files: { 'library.json': { content: JSON.stringify(library) } } }) }).catch(() => {});
             }
@@ -621,7 +637,6 @@
             } catch (e) { return 'gemini-1.5-flash'; }
         }
 
-        // --- JUKEBOX INTELLIGENT AVEC FILTRE DE SUPPORT ---
         let currentJukeboxType = 'all';
 
         function openJukeboxModal() {
