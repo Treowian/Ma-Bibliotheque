@@ -18,6 +18,7 @@
             --bg-parchment: #F4EEDD; --bg-parchment-dark: #E8DCC4;
             --text-ink: #2C251F; --text-ink-light: #5A4E45;
             --accent-wood: #8C5A40; --color-success: #4A7C59; --color-danger: #C0392B; --color-star: #f39c12;
+            --color-ambiance: #f3e5f5; --color-ambiance-dark: #ab47bc;
             --shadow-soft: 0 4px 12px rgba(44, 37, 31, 0.08);
             --font-title: 'Merriweather', serif; --font-body: 'Inter', sans-serif;
         }
@@ -48,11 +49,12 @@
         .filter-chips-container { display: flex; flex-wrap: wrap; gap: 8px; padding-bottom: 5px; }
         .filter-chip { padding: 6px 14px; border-radius: 20px; background: #fff; border: 1px solid var(--bg-parchment-dark); font-size: 0.85rem; white-space: nowrap; cursor: pointer; transition: 0.2s; color: var(--text-ink); user-select: none; }
         .filter-chip.active { background: var(--accent-wood); color: #fff; border-color: var(--accent-wood); font-weight: 600; }
+        .filter-chip.ambiance-chip.active { background: var(--color-ambiance-dark); border-color: var(--color-ambiance-dark); }
         
-        #filter-tag { max-height: 180px; overflow-y: auto; padding-right: 5px; align-content: flex-start;}
-        #filter-tag::-webkit-scrollbar { width: 6px; }
-        #filter-tag::-webkit-scrollbar-track { background: var(--bg-parchment); border-radius: 4px; }
-        #filter-tag::-webkit-scrollbar-thumb { background: var(--bg-parchment-dark); border-radius: 4px; }
+        .scrollable-chips { max-height: 180px; overflow-y: auto; padding-right: 5px; align-content: flex-start;}
+        .scrollable-chips::-webkit-scrollbar { width: 6px; }
+        .scrollable-chips::-webkit-scrollbar-track { background: var(--bg-parchment); border-radius: 4px; }
+        .scrollable-chips::-webkit-scrollbar-thumb { background: var(--bg-parchment-dark); border-radius: 4px; }
 
         nav { position: fixed; bottom: 0; left: 0; width: 100%; background-color: var(--bg-parchment-dark); box-shadow: 0 -2px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-around; padding: 6px 0; z-index: 100; }
         .nav-btn { background: none; border: none; color: var(--text-ink-light); font-family: var(--font-body); font-size: 0.65rem; font-weight: 600; cursor: pointer; padding: 8px 2px; display: flex; flex-direction: column; align-items: center; gap: 2px; border-radius: 12px; transition: 0.2s; flex: 1; text-align: center;}
@@ -80,8 +82,8 @@
         .card-creator { color: var(--text-ink-light); font-size: 0.9rem; }
         .card-status-group { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
         .badge { display: inline-block; background: var(--bg-parchment); padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; white-space: nowrap; }
-        .badge-status.consumed { background: var(--color-success); color: white; }
-        .card-meta { display: flex; flex-wrap: wrap !important; gap: 8px; margin-top: 10px; width: 100%; align-items: center; pointer-events: none;}
+        .badge-ambiance { background: var(--color-ambiance); color: var(--color-ambiance-dark); border: 1px solid var(--color-ambiance-dark); }
+        .card-meta { display: flex; flex-wrap: wrap !important; gap: 6px; margin-top: 10px; width: 100%; align-items: center; pointer-events: none;}
 
         details.stats-collapse summary { cursor: pointer; user-select: none; list-style: none; outline: none; }
         details.stats-collapse summary::-webkit-details-marker { display: none; }
@@ -116,7 +118,7 @@
         .view-header { margin-bottom: 20px; padding-right: 30px;}
         .view-title { font-size: 1.5rem; line-height: 1.2; margin-bottom: 5px; }
         .view-creator { font-size: 1.1rem; color: var(--text-ink-light); margin-bottom: 15px;}
-        .view-meta-bar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; align-items: center;}
+        .view-meta-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; align-items: center;}
         .view-resume { background: #fff; padding: 15px; border-radius: 8px; border-left: 4px solid var(--accent-wood); font-style: italic; margin-bottom: 20px; white-space: pre-wrap;}
         .view-comment { background: rgba(255,255,255,0.5); padding: 15px; border-radius: 8px; margin-bottom: 20px; white-space: pre-wrap; font-size: 0.95rem;}
         
@@ -135,6 +137,7 @@
         .tags-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px; margin-bottom: 8px; }
         .tag-pill { padding: 6px 12px; border-radius: 20px; background: #fff; border: 1px solid var(--bg-parchment-dark); font-size: 0.8rem; cursor: pointer; transition: 0.2s; user-select: none; display: flex; align-items: center;}
         .tag-pill.active { background: var(--accent-wood); color: #fff; border-color: var(--accent-wood); }
+        .tag-pill.ambiance.active { background: var(--color-ambiance-dark); color: #fff; border-color: var(--color-ambiance-dark); }
         
         .custom-tag-input { border: 1px dashed var(--accent-wood); background: transparent; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; outline: none; color: var(--text-ink); flex: 1;}
         .custom-tag-input:focus { border: 1px solid var(--accent-wood); background: #fff; }
@@ -150,6 +153,9 @@
         .btn-primary:active { transform: scale(0.98); }
         .btn-danger { background: var(--color-danger); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; }
         
+        .btn-jukebox { width: 100%; padding: 15px; border-radius: 30px; border: none; font-size: 1.1rem; font-family: var(--font-title); font-weight: bold; color: white; cursor: pointer; background: linear-gradient(135deg, var(--accent-wood), var(--color-ambiance-dark)); box-shadow: 0 6px 15px rgba(171, 71, 188, 0.3); transition: 0.2s; margin-bottom: 25px; }
+        .btn-jukebox:active { transform: scale(0.98); }
+
         .view-section { display: none; }
         .view-section.active { display: block; }
         
@@ -158,6 +164,9 @@
         .btn-secondary { padding: 10px 15px; border: 2px solid var(--accent-wood); color: var(--accent-wood); background: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-family: var(--font-body); flex: 1; text-align: center;}
         .btn-secondary:hover { background: var(--accent-wood); color: #fff; }
         .status-msg { font-size: 0.85rem; font-weight: bold; margin-top: 10px; text-align: center; }
+        
+        .jukebox-card { border: 2px solid var(--bg-parchment-dark); border-radius: 12px; padding: 12px; margin-bottom: 12px; background: #fff; }
+        .jukebox-card-title { font-size: 0.8rem; font-weight: bold; color: var(--color-ambiance-dark); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 1px;}
     </style>
 </head>
 <body>
@@ -169,7 +178,7 @@
             <div class="search-header">
                 <div class="search-container">
                     <span class="search-icon">🔍</span>
-                    <input type="text" id="search-input" placeholder="Titre, Auteur, Tag...">
+                    <input type="text" id="search-input" placeholder="Titre, Auteur, Genre, Ambiance...">
                 </div>
                 <button id="btn-toggle-filters" class="btn-icon-header">🎛️</button>
                 <button id="btn-toggle-oracle" class="btn-icon-header" title="Sélection multiple">☑️</button>
@@ -191,11 +200,15 @@
                 </div>
                 <div class="filter-group">
                     <label>Format</label>
-                    <div class="filter-chips-container" id="filter-format"></div>
+                    <div class="filter-chips-container scrollable-chips" id="filter-format" style="max-height:80px;"></div>
                 </div>
                 <div class="filter-group">
-                    <label>Tag</label>
-                    <div class="filter-chips-container" id="filter-tag"></div>
+                    <label>Genre</label>
+                    <div class="filter-chips-container scrollable-chips" id="filter-genre"></div>
+                </div>
+                <div class="filter-group">
+                    <label>Ambiance</label>
+                    <div class="filter-chips-container scrollable-chips" id="filter-ambiance"></div>
                 </div>
                 <div class="filter-group" style="align-items:center; padding-top: 5px;">
                     <label style="display:flex; align-items:center; gap:8px; cursor:pointer; text-transform:none; font-size:0.9rem;">
@@ -228,6 +241,9 @@
             </section>
 
             <section id="view-dashboard" class="view-section active">
+                
+                <button class="btn-jukebox" onclick="openJukeboxModal()">🎵 Que veux-tu vivre aujourd'hui ?</button>
+
                 <h3 class="section-title" id="title-wishlist" style="display:none; color: #4A7C59;">🛒 Ma Liste d'Achats</h3>
                 <div id="list-wishlist" class="horizontal-scroll" style="display:none;"></div>
 
@@ -249,31 +265,21 @@
                     <div style="padding-top: 10px;">
                         <div class="stats-grid" id="dashboard-stats-main"></div>
                         <div class="stats-grid" id="dashboard-stats-types" style="margin-top: 15px;"></div>
-                        <div class="stats-grid" style="margin-top: 15px;">
-                            <div class="stat-card">
-                                <h4 style="color: var(--accent-wood); font-family: var(--font-title); margin-bottom: 5px;">🏆 Top Créateurs</h4>
-                                <ul id="stat-top-auteurs" class="top-list"></ul>
-                            </div>
-                            <div class="stat-card">
-                                <h4 style="color: var(--accent-wood); font-family: var(--font-title); margin-bottom: 5px;">🏷️ Top Genres</h4>
-                                <ul id="stat-top-tags" class="top-list"></ul>
-                            </div>
-                        </div>
                     </div>
                 </details>
 
                 <h3 class="section-title" style="margin-top: 30px;">⚙️ Configuration</h3>
                 
                 <details class="stats-collapse" style="background: #fff; padding: 15px; border-radius: 12px; border: 1px solid var(--bg-parchment-dark); margin-bottom: 20px;">
-                    <summary style="font-weight: bold; color: var(--accent-wood);">🏷️ Nettoyage des Tags</summary>
-                    <p style="font-size: 0.85rem; color: var(--text-ink-light); margin-top: 15px; margin-bottom: 10px;">Clique sur un tag pour le supprimer <b>définitivement</b> de tes œuvres.</p>
+                    <summary style="font-weight: bold; color: var(--accent-wood);">🏷️ Nettoyage des Genres & Ambiances</summary>
+                    <p style="font-size: 0.85rem; color: var(--text-ink-light); margin-top: 15px; margin-bottom: 10px;">Clique sur une pilule pour la supprimer <b>définitivement</b>.</p>
                     <div id="settings-tags-list"></div>
                 </details>
 
                 <div class="settings-card">
                     <h3>✨ Intelligence Artificielle (Gemini)</h3>
-                    <p style="font-size: 0.9rem; color: var(--text-ink-light); margin-bottom: 10px;">Obtiens une clé gratuite sur <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a>.</p>
-                    <div class="form-group"><input type="password" id="gemini-api-key" placeholder="AIzaSy..."></div>
+                    <p style="font-size: 0.9rem; color: var(--text-ink-light); margin-bottom: 10px;">Pour l'Oracle et les Résumés Automatiques.</p>
+                    <div class="form-group"><input type="password" id="gemini-api-key" placeholder="Clé API (AIzaSy...)"></div>
                 </div>
 
                 <div class="settings-card">
@@ -339,6 +345,18 @@
             <div id="oracle-result" style="font-size: 0.95rem; line-height: 1.5;">⏳ L'IA analyse tes goûts...</div>
         </div>
     </dialog>
+    
+    <dialog id="modal-jukebox">
+        <div class="modal-content" style="background: var(--bg-parchment);">
+            <button class="btn-close-absolute" onclick="document.getElementById('modal-jukebox').close()">❌</button>
+            <h2 style="font-family: var(--font-title); color: var(--color-ambiance-dark); margin-bottom: 5px;">🎵 Le Jukebox</h2>
+            <p style="font-size: 0.9rem; color: var(--text-ink-light); margin-bottom: 15px;">Sélectionne ton humeur du moment :</p>
+            
+            <div class="filter-chips-container scrollable-chips" id="jukebox-ambiances" style="max-height: 120px; margin-bottom: 20px;"></div>
+            
+            <div id="jukebox-results"></div>
+        </div>
+    </dialog>
 
     <dialog id="modal-add">
         <div class="modal-content">
@@ -367,11 +385,20 @@
                 </div>
                 
                 <div class="form-group">
-                    <label>Tags</label>
-                    <div id="tags-container" class="tags-container"></div>
+                    <label>Genres (Ce que c'est)</label>
+                    <div id="genres-container" class="tags-container"></div>
                     <div style="display: flex; gap: 8px;">
-                        <input type="text" id="custom-tag-input" class="custom-tag-input" placeholder="Nouveau tag...">
-                        <button type="button" id="btn-add-tag" class="btn-secondary" style="padding: 6px 16px; margin: 0; width: auto; font-size: 1.2rem;">＋</button>
+                        <input type="text" id="custom-genre-input" class="custom-tag-input" placeholder="Nouveau genre...">
+                        <button type="button" id="btn-add-genre" class="btn-secondary" style="padding: 6px 16px; margin: 0; width: auto; font-size: 1.2rem;">＋</button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label style="color: var(--color-ambiance-dark);">Ambiances (Ce que ça fait ressentir)</label>
+                    <div id="ambiances-container" class="tags-container"></div>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="custom-ambiance-input" class="custom-tag-input" style="border-color: var(--color-ambiance-dark);" placeholder="Nouvelle ambiance...">
+                        <button type="button" id="btn-add-ambiance" class="btn-secondary" style="padding: 6px 16px; margin: 0; width: auto; font-size: 1.2rem; border-color: var(--color-ambiance-dark); color: var(--color-ambiance-dark);">＋</button>
                     </div>
                 </div>
 
@@ -411,14 +438,20 @@
         let library = [];
         try { const stored = JSON.parse(localStorage.getItem('myLibrary')); if(Array.isArray(stored)) library = stored; } catch(e) { console.error("Cache local corrompu."); }
         
+        // --- MIGRATION AUTOMATIQUE DES ANCIENS TAGS VERS GENRES ---
         let needsSave = false;
         library.forEach(item => {
-            if (item.tags && item.tags.length > 0) {
-                const cleanedTags = [...new Set(item.tags.map(t => t.trim()).filter(t => t !== ''))];
-                if (JSON.stringify(item.tags) !== JSON.stringify(cleanedTags)) {
-                    item.tags = cleanedTags;
-                    needsSave = true;
+            // Nettoyage des tableaux
+            if (!item.genres) item.genres = [];
+            if (!item.ambiances) item.ambiances = [];
+            
+            // Si l'ancienne case "tags" existe, on bascule tout dans genres et on supprime tags
+            if (item.tags) {
+                if(item.tags.length > 0) {
+                    item.genres = [...new Set([...item.genres, ...item.tags.map(t => t.trim()).filter(t => t !== '')])];
                 }
+                delete item.tags;
+                needsSave = true;
             }
         });
         if(needsSave) { localStorage.setItem('myLibrary', JSON.stringify(library)); }
@@ -437,10 +470,10 @@
         };
 
         const uiConfig = {
-            book: { createur: "Auteur", formats: ["Physique", "Dématérialisé"], tags: ["SF", "Fantasy", "Thriller", "Historique", "Essai", "Classique", "Philosophie", "Poésie"], statuses: [{val:'lu', text:'✅ Lu'}, {val:'encours', text:'⏳ En cours'}, {val:'alire', text:'📚 À lire'}, {val:'aacheter', text:'🛒 À acheter'}, {val:'abandonne', text:'❌ Abandonné'}] },
-            bd: { createur: "Auteur / Dessinateur", formats: ["Physique", "Dématérialisé"], tags: ["Franco-Belge", "Comics", "Manga Shonen", "Manga Seinen", "Roman Graphique", "Humour", "Aventure", "SF/Fantasy"], statuses: [{val:'lu', text:'✅ Lu'}, {val:'encours', text:'⏳ En cours'}, {val:'alire', text:'📚 À lire'}, {val:'aacheter', text:'🛒 À acheter'}, {val:'abandonne', text:'❌ Abandonné'}] },
-            music: { createur: "Artiste", formats: ["CD", "Vinyle", "Digital"], tags: ["Rock/Metal", "Electro", "Hip-Hop", "Jazz/Blues", "Classique", "OST", "Variété"], statuses: [{val:'ecoute', text:'🎧 Écouté'}, {val:'adecouvrir', text:'💿 À découvrir'}, {val:'aacheter', text:'🛒 À acheter'}, {val:'abandonne', text:'❌ Déçu'}] },
-            game: { createur: "Auteur / Éditeur", formats: ["Plateau", "Cartes", "Dés", "Figurines", "Autre"], tags: ["Coopératif", "Compétitif", "Gestion", "Deckbuilding", "Bluff", "Narratif", "2 Joueurs", "Familial", "Expert"], statuses: [{val:'joue', text:'🎲 Joué'}, {val:'atester', text:'📦 À tester'}, {val:'aacheter', text:'🛒 À acheter'}, {val:'abandonne', text:'❌ Revendu/Abandonné'}] }
+            book: { createur: "Auteur", formats: ["Physique", "Dématérialisé"], genres: ["SF", "Fantasy", "Thriller", "Historique", "Essai", "Classique", "Philosophie", "Poésie"], ambiances: ["Sombre", "Feel-Good", "Réflexion", "Rythmé", "Poétique", "Épique"], statuses: [{val:'lu', text:'✅ Lu'}, {val:'encours', text:'⏳ En cours'}, {val:'alire', text:'📚 À lire'}, {val:'aacheter', text:'🛒 À acheter'}, {val:'abandonne', text:'❌ Abandonné'}] },
+            bd: { createur: "Auteur / Dessinateur", formats: ["Physique", "Dématérialisé"], genres: ["Franco-Belge", "Comics", "Manga Shonen", "Manga Seinen", "Roman Graphique", "Aventure"], ambiances: ["Humour", "Sombre", "Action", "Poétique", "Épique", "Tranche de vie"], statuses: [{val:'lu', text:'✅ Lu'}, {val:'encours', text:'⏳ En cours'}, {val:'alire', text:'📚 À lire'}, {val:'aacheter', text:'🛒 À acheter'}, {val:'abandonne', text:'❌ Abandonné'}] },
+            music: { createur: "Artiste", formats: ["CD", "Vinyle", "Digital"], genres: ["Rock/Metal", "Electro", "Hip-Hop", "Jazz/Blues", "Classique", "OST", "Variété"], ambiances: ["Travailler", "Chill", "Énergique", "Triste", "Soirée"], statuses: [{val:'ecoute', text:'🎧 Écouté'}, {val:'adecouvrir', text:'💿 À découvrir'}, {val:'aacheter', text:'🛒 À acheter'}, {val:'abandonne', text:'❌ Déçu'}] },
+            game: { createur: "Auteur / Éditeur", formats: ["Plateau", "Cartes", "Dés", "Figurines", "Autre"], genres: ["Gestion", "Deckbuilding", "Affrontement", "Coopératif", "Familial", "Expert"], ambiances: ["Prise de tête", "Rigolade", "Trahison", "Immersif", "Détente"], statuses: [{val:'joue', text:'🎲 Joué'}, {val:'atester', text:'📦 À tester'}, {val:'aacheter', text:'🛒 À acheter'}, {val:'abandonne', text:'❌ Revendu'}] }
         };
 
         function sortTagsArray(tags) {
@@ -495,6 +528,56 @@
             }
         }
 
+        // --- JUKEBOX DES EMOTIONS ---
+        function openJukeboxModal() {
+            let allAmbiances = new Set();
+            library.forEach(i => (i.ambiances||[]).forEach(a => allAmbiances.add(a)));
+            
+            const container = document.getElementById('jukebox-ambiances');
+            if (allAmbiances.size === 0) {
+                container.innerHTML = `<p style="font-size:0.85rem; color:var(--text-ink-light);">Il faut d'abord ajouter des "Ambiances" à tes œuvres !</p>`;
+            } else {
+                container.innerHTML = sortTagsArray(allAmbiances).map(a => `<div class="filter-chip ambiance-chip" style="background:var(--bg-parchment); color:var(--text-ink);" onclick="spinJukebox('${a}')">${a}</div>`).join('');
+            }
+            document.getElementById('jukebox-results').innerHTML = '';
+            openModal('modal-jukebox');
+        }
+
+        function spinJukebox(ambiance) {
+            // Styliser le bouton cliqué
+            document.querySelectorAll('#jukebox-ambiances .filter-chip').forEach(c => {
+                c.style.background = c.innerText === ambiance ? 'var(--color-ambiance-dark)' : 'var(--bg-parchment)';
+                c.style.color = c.innerText === ambiance ? '#fff' : 'var(--text-ink)';
+            });
+
+            const matching = library.filter(i => (i.ambiances||[]).includes(ambiance));
+            const todos = matching.filter(i => ['alire','adecouvrir','atester'].includes(i.statut));
+            const dones = matching.filter(i => ['lu','ecoute','joue'].includes(i.statut));
+
+            let discovery = null, safeBet = null, alternative = null;
+
+            if (todos.length > 0) discovery = todos[Math.floor(Math.random() * todos.length)];
+            
+            if (dones.length > 0) {
+                let tickets = [];
+                dones.forEach(i => { tickets.push(i); if(i.coupDeCoeur) { tickets.push(i); tickets.push(i); } }); // Pondération x3
+                safeBet = tickets[Math.floor(Math.random() * tickets.length)];
+            }
+
+            const remaining = matching.filter(i => i.id !== (discovery?.id) && i.id !== (safeBet?.id));
+            if (remaining.length > 0) alternative = remaining[Math.floor(Math.random() * remaining.length)];
+
+            let html = '';
+            if(!discovery && !safeBet && !alternative) {
+                html = `<p style="color:var(--text-ink-light);">Rien trouvé pour cette ambiance...</p>`;
+            } else {
+                if (discovery) html += `<div class="jukebox-card" onclick="document.getElementById('modal-jukebox').close(); viewItem('${discovery.id}')"><div class="jukebox-card-title">✨ La Découverte (À Faire)</div><b>${discovery.titre}</b><br><small style="color:var(--text-ink-light)">de ${discovery.createur}</small></div>`;
+                if (safeBet) html += `<div class="jukebox-card" onclick="document.getElementById('modal-jukebox').close(); viewItem('${safeBet.id}')"><div class="jukebox-card-title">🧸 La Valeur Sûre (Terminé)</div><b>${safeBet.titre}</b> ${safeBet.coupDeCoeur?'❤️':''}<br><small style="color:var(--text-ink-light)">de ${safeBet.createur}</small></div>`;
+                if (alternative) html += `<div class="jukebox-card" onclick="document.getElementById('modal-jukebox').close(); viewItem('${alternative.id}')"><div class="jukebox-card-title">🎲 L'Alternative</div><b>${alternative.titre}</b><br><small style="color:var(--text-ink-light)">de ${alternative.createur}</small></div>`;
+            }
+            document.getElementById('jukebox-results').innerHTML = html;
+        }
+
         document.getElementById('btn-toggle-oracle').onclick = function() {
             isOracleMode = !isOracleMode; this.classList.toggle('active'); selectedForOracle = [];
             document.getElementById('selection-bar').style.display = isOracleMode ? 'flex' : 'none';
@@ -536,67 +619,29 @@
         });
 
         document.getElementById('btn-ask-oracle').addEventListener('click', async () => {
-            if(selectedForOracle.length === 0) {
-                customConfirm("🪄 Tu dois d'abord sélectionner au moins une œuvre pour inspirer l'Oracle !", null, false);
-                return;
-            }
-            if(!cloudConfig.geminiKey || cloudConfig.geminiKey.trim() === '') {
-                customConfirm("❌ Clé API Gemini manquante ! Va dans l'onglet ⚙️ Réglages pour l'ajouter.", null, true);
-                return;
-            }
+            if(selectedForOracle.length === 0) { customConfirm("🪄 Tu dois d'abord sélectionner au moins une œuvre !", null, false); return; }
+            if(!cloudConfig.geminiKey || cloudConfig.geminiKey.trim() === '') { customConfirm("❌ Clé API Gemini manquante dans les réglages.", null, true); return; }
             
             const resultBox = document.getElementById('oracle-result');
             openModal('modal-oracle');
-            resultBox.innerHTML = "📡 Le Radar cherche le meilleur modèle IA...<br><br><small><i>Vérification de ta clé API en cours...</i></small>";
+            resultBox.innerHTML = "📡 Le Radar cherche le meilleur modèle IA...";
             
             try {
-                const inspirateurs = selectedForOracle.map(id => { 
-                    const i = library.find(x=>x.id===id); 
-                    return i ? `"${i.titre}" de ${i.createur}` : null; 
-                }).filter(Boolean).join(" | ");
-                
+                const inspirateurs = selectedForOracle.map(id => { const i = library.find(x=>x.id===id); return i ? `"${i.titre}" de ${i.createur}` : null; }).filter(Boolean).join(" | ");
                 const palList = library.filter(i => ['alire', 'adecouvrir', 'atester'].includes(i.statut)).map(i => `"${i.titre}" de ${i.createur}`).join(" | ");
-                
-                const prompt = `Tu es l'Oracle d'une bibliothèque.
-L'utilisateur aime ces œuvres : [ ${inspirateurs} ]. 
-Voici sa Pile à Lire EXACTE : [ ${palList || "VIDE"} ].
-
-Fais EXACTEMENT 2 recommandations en respectant ces RÈGLES ABSOLUES :
-1. PIOCHE : Tu DOIS sélectionner une œuvre en faisant un COPIER-COLLER EXACT depuis sa Pile à Lire. N'INVENTE AUCUN TITRE. Ne modifie aucun mot. Si la liste est "VIDE" ou que rien ne correspond, dis "Ta pile à lire ne contient pas de correspondance parfaite."
-2. DÉCOUVERTE : Recommande une vraie œuvre EXISTANTE ET CONNUE (Livre, BD ou Jeu) qu'il ne possède pas.
-
-Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises markdown \`\`\`html) :
-
-<div style="background: rgba(255,255,255,0.7); padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #3f2b96;">
-  <h3 style="color: #3f2b96; margin-top:0; margin-bottom:5px; font-size:1.1rem;">📚 Dans ta Pile à Lire</h3>
-  <b>[Titre Exact Copié]</b> de [Auteur]<br><i style="font-size:0.9rem;">[1 seule phrase d'explication courte]</i>
-</div>
-<div style="background: rgba(255,255,255,0.7); padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #a8c0ff;">
-  <h3 style="color: #3f2b96; margin-top:0; margin-bottom:5px; font-size:1.1rem;">✨ Nouveauté à découvrir</h3>
-  <b>[Titre Vrai]</b> de [Auteur Vrai]<br><i style="font-size:0.9rem;">[1 seule phrase d'explication courte]</i>
-</div>`;
+                const prompt = `Tu es l'Oracle d'une bibliothèque. L'utilisateur aime : [ ${inspirateurs} ]. Sa Pile à Lire : [ ${palList || "VIDE"} ].
+Fais 2 recommandations : 1. PIOCHE (copie-colle exact d'un titre de sa pile). 2. DÉCOUVERTE (œuvre existante qu'il n'a pas).
+Formate en HTML : <div style="background:rgba(255,255,255,0.7); padding:15px; border-radius:8px; margin-bottom:15px; border-left:4px solid #3f2b96;"><h3 style="color:#3f2b96; margin-top:0; margin-bottom:5px; font-size:1.1rem;">📚 Dans ta Pile à Lire</h3><b>[Titre]</b> de [Auteur]<br><i style="font-size:0.9rem;">[Raison]</i></div><div style="background:rgba(255,255,255,0.7); padding:15px; border-radius:8px; margin-bottom:15px; border-left:4px solid #a8c0ff;"><h3 style="color:#3f2b96; margin-top:0; margin-bottom:5px; font-size:1.1rem;">✨ Nouveauté</h3><b>[Titre]</b> de [Auteur]<br><i style="font-size:0.9rem;">[Raison]</i></div>`;
             
                 const modelToUse = await findBestModel(cloudConfig.geminiKey);
-                resultBox.innerHTML = `⏳ Connexion établie avec <b>${modelToUse}</b>...<br><br><small><i>Analyse de tes goûts en cours...</i></small>`;
+                resultBox.innerHTML = `⏳ Connexion établie avec <b>${modelToUse}</b>...`;
 
-                const req = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${cloudConfig.geminiKey}`, { 
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) 
-                });
-                
+                const req = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${cloudConfig.geminiKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
                 const data = await req.json();
                 
-                if(data.candidates) {
-                    let rawHtml = data.candidates[0].content.parts[0].text.replace(/```html/gi, '').replace(/```/g, '').trim();
-                    resultBox.innerHTML = rawHtml;
-                }
-                else {
-                    resultBox.innerHTML = `❌ <b>Erreur de l'API Google :</b><br><br>${data.error ? data.error.message : 'Clé API invalide ou quota dépassé.'}`;
-                }
-            } catch(e) { 
-                resultBox.innerHTML = `❌ <b>Échec de la connexion.</b><br><br>Impossible de joindre l'API Google. Vérifie ta connexion internet.`; 
-            }
+                if(data.candidates) resultBox.innerHTML = data.candidates[0].content.parts[0].text.replace(/```html/gi, '').replace(/```/g, '').trim();
+                else resultBox.innerHTML = `❌ Erreur : ${data.error ? data.error.message : 'inconnue'}`;
+            } catch(e) { resultBox.innerHTML = `❌ Échec de la connexion.`; }
         });
 
         function getLastNameForSort(creatorString) {
@@ -617,27 +662,25 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
             const i = library.find(x => x.id === id); const s = statusConfig[i.statut] || {icon:'?', text:'-'};
             
             let titleHtml = '';
-            if (i.serie) {
-                titleHtml += `<div style="font-size:0.9rem; color:var(--accent-wood); text-transform:uppercase; font-weight:bold; margin-bottom:5px; letter-spacing: 1px;">${i.serie} ${i.tome ? '• T.'+i.tome : ''}</div>`;
-            }
+            if (i.serie) titleHtml += `<div style="font-size:0.9rem; color:var(--accent-wood); text-transform:uppercase; font-weight:bold; margin-bottom:5px; letter-spacing: 1px;">${i.serie} ${i.tome ? '• T.'+i.tome : ''}</div>`;
             titleHtml += i.titre;
             
             document.getElementById('view-titre').innerHTML = titleHtml;
             document.getElementById('view-createur').textContent = i.createur || 'Inconnu';
+            
             let metaHtml = `<span class="badge" style="background:#eee">${i.format}</span> <span class="badge" style="background:var(--bg-parchment-dark)">${s.icon} ${s.text}</span>`;
             if(i.annee) metaHtml += `<span class="badge" style="background:#eee">${i.annee}</span>`;
             if(i.coupDeCoeur) metaHtml += `<span class="badge" style="background:var(--color-danger); color:white;">❤️ Coup de coeur</span>`;
-            (i.tags || []).forEach(t => metaHtml += `<span class="badge" style="background:#fff; border:1px solid #ddd;">${t}</span>`);
+            
+            (i.genres || []).forEach(t => metaHtml += `<span class="badge" style="background:#fff; border:1px solid #ddd;">${t}</span>`);
+            (i.ambiances || []).forEach(t => metaHtml += `<span class="badge badge-ambiance">${t}</span>`);
+            
             document.getElementById('view-meta').innerHTML = metaHtml;
             document.getElementById('view-stars').innerHTML = i.note > 0 ? '★'.repeat(i.note) + '☆'.repeat(5-i.note) : '';
             document.getElementById('view-resume').style.display = i.resume ? 'block' : 'none'; document.getElementById('view-resume').textContent = i.resume || '';
             document.getElementById('view-comment').style.display = i.commentaire ? 'block' : 'none'; document.getElementById('view-comment').textContent = i.commentaire || '';
             document.getElementById('btn-edit-from-view').onclick = () => { document.getElementById('modal-view').close(); editItem(id); };
-            document.getElementById('btn-delete-from-view').onclick = () => { 
-                customConfirm('Supprimer cette œuvre ?', () => {
-                    library = library.filter(x=>x.id!==id); saveLibrary(); document.getElementById('modal-view').close(); 
-                }, true);
-            };
+            document.getElementById('btn-delete-from-view').onclick = () => { customConfirm('Supprimer cette œuvre ?', () => { library = library.filter(x=>x.id!==id); saveLibrary(); document.getElementById('modal-view').close(); }, true); };
             openModal('modal-view');
         }
 
@@ -652,7 +695,6 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
             try {
                 const modelToUse = await findBestModel(cloudConfig.geminiKey);
                 res.value = `⏳ Génération via ${modelToUse}...`;
-
                 const req = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${cloudConfig.geminiKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
                 const data = await req.json();
                 if(data.candidates) {
@@ -716,7 +758,7 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
                     else if(['alire','adecouvrir','atester'].includes(i.statut)) stats[i.type].a++; 
                 }
                 if(i.createur) auteurs[i.createur] = (auteurs[i.createur] || 0) + 1;
-                if(i.tags) i.tags.forEach(t => tagsCount[t] = (tagsCount[t] || 0) + 1);
+                (i.genres||[]).forEach(t => tagsCount[t] = (tagsCount[t] || 0) + 1);
             });
 
             const mainContainer = document.getElementById('dashboard-stats-main');
@@ -754,154 +796,118 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
             container.innerHTML = '';
             
             const types = [
-                {id: 'book', icon: '📖', name: 'Livres'},
-                {id: 'bd', icon: '💬', name: 'BD'},
-                {id: 'music', icon: '🎵', name: 'Musique'},
-                {id: 'game', icon: '🎲', name: 'Jeux'}
+                {id: 'book', icon: '📖', name: 'Livres'}, {id: 'bd', icon: '💬', name: 'BD'},
+                {id: 'music', icon: '🎵', name: 'Musique'}, {id: 'game', icon: '🎲', name: 'Jeux'}
             ];
 
             let hasTags = false;
-
             types.forEach(t => {
-                let tagsForType = new Set();
-                library.filter(i => i.type === t.id).forEach(i => (i.tags||[]).forEach(tag => tagsForType.add(tag)));
+                let genresSet = new Set(), ambiancesSet = new Set();
+                library.filter(i => i.type === t.id).forEach(i => {
+                    (i.genres||[]).forEach(g => genresSet.add(g));
+                    (i.ambiances||[]).forEach(a => ambiancesSet.add(a));
+                });
                 
-                if(tagsForType.size > 0) {
+                if(genresSet.size > 0 || ambiancesSet.size > 0) {
                     hasTags = true;
                     let section = document.createElement('div');
                     section.style.marginBottom = '15px';
-                    section.innerHTML = `<h4 style="margin-bottom:8px; color:var(--text-ink-light); font-family: var(--font-body); font-size: 0.95rem;">${t.icon} ${t.name}</h4><div class="tags-container" id="tags-group-${t.id}"></div>`;
-                    container.appendChild(section);
+                    let html = `<h4 style="margin-bottom:8px; color:var(--text-ink-light); font-family: var(--font-body); font-size: 0.95rem;">${t.icon} ${t.name}</h4><div class="tags-container" id="settings-group-${t.id}">`;
                     
-                    let tagsContainer = section.querySelector(`#tags-group-${t.id}`);
-                    sortTagsArray(tagsForType).forEach(tag => {
-                        const p = document.createElement('span');
-                        p.className = 'tag-pill';
-                        p.innerHTML = `${tag} <span style="color:var(--color-danger); margin-left:4px;">✖</span>`;
-                        p.style.background = '#ffebee'; p.style.borderColor = '#ffcdd2';
-                        p.onclick = () => {
-                            customConfirm(`⚠️ Supprimer le tag <b>"${tag}"</b> de tous tes ${t.name.toLowerCase()} ?`, () => {
-                                library.forEach(i => { if(i.type === t.id && i.tags) i.tags = i.tags.filter(x => x !== tag); });
-                                saveLibrary();
-                            });
-                        };
-                        tagsContainer.appendChild(p);
+                    sortTagsArray(genresSet).forEach(tag => {
+                        html += `<span class="tag-pill" style="background:#ffebee; border-color:#ffcdd2;" onclick="customConfirm('⚠️ Supprimer le genre <b>${tag}</b> ?', () => { library.forEach(i => { if(i.type === '${t.id}' && i.genres) i.genres = i.genres.filter(x => x !== '${tag}'); }); saveLibrary(); })">${tag} <span style="color:var(--color-danger); margin-left:4px;">✖</span></span>`;
                     });
+                    sortTagsArray(ambiancesSet).forEach(tag => {
+                        html += `<span class="tag-pill ambiance-chip" style="background:var(--color-ambiance); border-color:var(--color-ambiance-dark); color:var(--color-ambiance-dark);" onclick="customConfirm('⚠️ Supprimer l\\'ambiance <b>${tag}</b> ?', () => { library.forEach(i => { if(i.type === '${t.id}' && i.ambiances) i.ambiances = i.ambiances.filter(x => x !== '${tag}'); }); saveLibrary(); })">${tag} <span style="color:var(--color-ambiance-dark); margin-left:4px;">✖</span></span>`;
+                    });
+                    html += `</div>`;
+                    section.innerHTML = html;
+                    container.appendChild(section);
                 }
             });
             if(!hasTags) container.innerHTML = '<p style="font-size:0.85rem; color:var(--text-ink-light);">Aucun tag à nettoyer.</p>';
         }
 
-        // --- NOUVEAUX FILTRES AVEC COMPTEURS STATIQUES ---
-        const activeFilters = { sort: 'date_desc', status: 'all', format: 'all', tag: 'all', favOnly: false };
+        const activeFilters = { sort: 'date_desc', status: 'all', format: 'all', genre: 'all', ambiance: 'all', favOnly: false };
         
         function updateFilterUI() {
             document.querySelectorAll('.filter-chip').forEach(chip => {
                 const type = chip.dataset.type;
                 if (!type) return;
-                if (activeFilters[type] === chip.dataset.val) {
-                    chip.classList.add('active');
-                } else {
-                    chip.classList.remove('active');
-                }
+                if (activeFilters[type] === chip.dataset.val) chip.classList.add('active');
+                else chip.classList.remove('active');
             });
             document.getElementById('filter-fav').checked = activeFilters.favOnly;
         }
 
         function setFilter(type, val) {
-            activeFilters[type] = val;
-            updateFilterUI();
-            triggerUpdate();
+            activeFilters[type] = val; updateFilterUI(); triggerUpdate();
         }
 
         function initFilters() {
-            // 1. On compte tout dans la bibliothèque globale
             let statusCount = { 'lu':0, 'encours':0, 'alire':0, 'aacheter':0 };
-            let formatCount = {};
-            let tagCount = {};
+            let formatCount = {}, genreCount = {}, ambianceCount = {};
             
             library.forEach(i => {
                 if(statusCount[i.statut] !== undefined) statusCount[i.statut]++;
                 if(i.format) formatCount[i.format] = (formatCount[i.format] || 0) + 1;
-                (i.tags || []).forEach(t => tagCount[t] = (tagCount[t] || 0) + 1);
+                (i.genres || []).forEach(t => genreCount[t] = (genreCount[t] || 0) + 1);
+                (i.ambiances || []).forEach(t => ambianceCount[t] = (ambianceCount[t] || 0) + 1);
             });
 
-            // 2. On génère le HTML avec les compteurs
-            const statusCont = document.getElementById('filter-status');
-            const allStatuses = [
-                {val:'all', label:'Tous'},
-                {val:'lu', label:'✅ Terminé'}, {val:'encours', label:'⏳ En cours'}, 
+            document.getElementById('filter-status').innerHTML = [
+                {val:'all', label:'Tous'}, {val:'lu', label:'✅ Terminé'}, {val:'encours', label:'⏳ En cours'}, 
                 {val:'alire', label:'📚 À faire'}, {val:'aacheter', label:'🛒 À acheter'}
-            ];
-            statusCont.innerHTML = allStatuses.map(s => {
-                let cnt = s.val === 'all' ? library.length : (statusCount[s.val] || 0);
-                return `<div class="filter-chip" data-type="status" data-val="${s.val}">${s.label} <small style="opacity:0.7">(${cnt})</small></div>`;
-            }).join('');
+            ].map(s => `<div class="filter-chip" data-type="status" data-val="${s.val}">${s.label} <small style="opacity:0.7">(${s.val==='all'?library.length:statusCount[s.val]||0})</small></div>`).join('');
 
-            const formatCont = document.getElementById('filter-format');
-            formatCont.innerHTML = `<div class="filter-chip" data-type="format" data-val="all">Tous <small style="opacity:0.7">(${library.length})</small></div>` + 
+            document.getElementById('filter-format').innerHTML = `<div class="filter-chip" data-type="format" data-val="all">Tous <small style="opacity:0.7">(${library.length})</small></div>` + 
                 sortTagsArray(Object.keys(formatCount)).map(f => `<div class="filter-chip" data-type="format" data-val="${f}">${f} <small style="opacity:0.7">(${formatCount[f]})</small></div>`).join('');
 
-            const tagCont = document.getElementById('filter-tag');
-            tagCont.innerHTML = `<div class="filter-chip" data-type="tag" data-val="all">Tous <small style="opacity:0.7">(${library.length})</small></div>` + 
-                sortTagsArray(Object.keys(tagCount)).map(t => `<div class="filter-chip" data-type="tag" data-val="${t}">${t} <small style="opacity:0.7">(${tagCount[t]})</small></div>`).join('');
+            document.getElementById('filter-genre').innerHTML = `<div class="filter-chip" data-type="genre" data-val="all">Tous <small style="opacity:0.7">(${library.length})</small></div>` + 
+                sortTagsArray(Object.keys(genreCount)).map(t => `<div class="filter-chip" data-type="genre" data-val="${t}">${t} <small style="opacity:0.7">(${genreCount[t]})</small></div>`).join('');
+                
+            document.getElementById('filter-ambiance').innerHTML = `<div class="filter-chip ambiance-chip" data-type="ambiance" data-val="all">Toutes <small style="opacity:0.7">(${library.length})</small></div>` + 
+                sortTagsArray(Object.keys(ambianceCount)).map(t => `<div class="filter-chip ambiance-chip" data-type="ambiance" data-val="${t}">${t} <small style="opacity:0.7">(${ambianceCount[t]})</small></div>`).join('');
 
-            // 3. On ré-attache les clics
-            document.querySelectorAll('.filter-chip').forEach(chip => {
-                chip.onclick = () => setFilter(chip.dataset.type, chip.dataset.val);
-            });
-            
+            document.querySelectorAll('.filter-chip').forEach(chip => { chip.onclick = () => setFilter(chip.dataset.type, chip.dataset.val); });
             document.getElementById('filter-fav').onchange = e => setFilter('favOnly', e.target.checked);
             updateFilterUI();
         }
 
         function triggerUpdate() { 
-            if(document.getElementById('search-input').value.trim() !== '') {
-                document.getElementById('search-input').dispatchEvent(new Event('input')); 
-            } else {
-                renderData(); 
-            }
+            if(document.getElementById('search-input').value.trim() !== '') document.getElementById('search-input').dispatchEvent(new Event('input')); 
+            else renderData(); 
         }
         
         document.getElementById('btn-toggle-filters').onclick = function() { document.getElementById('filter-panel').classList.toggle('open'); this.classList.toggle('active'); };
         
         document.getElementById('search-input').oninput = function(e) { 
             const term = e.target.value.toLowerCase().trim(); 
-            if (term === '') { 
-                switchView(document.querySelector('.nav-btn.active').dataset.target); 
-                return; 
-            } 
+            if (term === '') { switchView(document.querySelector('.nav-btn.active').dataset.target); return; } 
             switchView('view-search'); 
-            renderGrid(processData(library.filter(i => (i.titre||'').toLowerCase().includes(term) || (i.createur||'').toLowerCase().includes(term) || (i.tags||[]).some(t=>t.toLowerCase().includes(term)))), 'list-search', 'title-search'); 
+            renderGrid(processData(library.filter(i => (i.titre||'').toLowerCase().includes(term) || (i.createur||'').toLowerCase().includes(term) || (i.genres||[]).some(t=>t.toLowerCase().includes(term)) || (i.ambiances||[]).some(t=>t.toLowerCase().includes(term)))), 'list-search', 'title-search'); 
         };
         
         function processData(data) { 
             let res = data.filter(i => { 
                 if(activeFilters.status !== 'all' && i.statut !== activeFilters.status) return false; 
                 if(activeFilters.format !== 'all' && i.format !== activeFilters.format) return false; 
-                if(activeFilters.tag !== 'all' && !(i.tags && i.tags.includes(activeFilters.tag))) return false; 
+                if(activeFilters.genre !== 'all' && !(i.genres && i.genres.includes(activeFilters.genre))) return false; 
+                if(activeFilters.ambiance !== 'all' && !(i.ambiances && i.ambiances.includes(activeFilters.ambiance))) return false; 
                 if(activeFilters.favOnly && !i.coupDeCoeur) return false; 
                 return true; 
             }); 
             res.sort((a,b) => { 
                 if(activeFilters.sort === 'date_desc') return b.dateAjout - a.dateAjout; 
-                
-                const sortA = getSortString(a);
-                const sortB = getSortString(b);
-
+                const sortA = getSortString(a); const sortB = getSortString(b);
                 if(activeFilters.sort === 'alpha_asc') return sortA.localeCompare(sortB, 'fr', {numeric: true, sensitivity: 'base'}); 
-                
                 if(activeFilters.sort === 'createur_asc') {
-                    let nomA = getLastNameForSort(a.createur);
-                    let nomB = getLastNameForSort(b.createur);
-                    
+                    let nomA = getLastNameForSort(a.createur); let nomB = getLastNameForSort(b.createur);
                     if (nomA === "zzzzz" && nomB !== "zzzzz") return 1;  
                     if (nomA !== "zzzzz" && nomB === "zzzzz") return -1; 
-                    
                     let cr = nomA.localeCompare(nomB, 'fr', {sensitivity: 'base'});
                     return cr === 0 ? sortA.localeCompare(sortB, 'fr', {numeric: true, sensitivity: 'base'}) : cr;
                 }
-                
                 if(activeFilters.sort === 'note_desc') {
                     let nr = (b.note||0) - (a.note||0);
                     return nr === 0 ? sortA.localeCompare(sortB, 'fr', {numeric: true, sensitivity: 'base'}) : nr;
@@ -913,13 +919,8 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
         
         function createCard(i) {
             const card = document.createElement('div'); card.className = `card ${isOracleMode ? 'mode-selection' : ''} ${selectedForOracle.includes(i.id) ? 'selected' : ''}`;
-            
-            let serieHtml = '';
-            if (i.serie) {
-                serieHtml = `<div style="font-size:0.75rem; color:var(--accent-wood); font-weight:700; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">${i.serie} ${i.tome ? '<span style="opacity:0.7">• T.'+i.tome+'</span>' : ''}</div>`;
-            }
-
-            card.innerHTML = `<div class="card-header"><div class="card-title-group" style="flex:1; min-width:0;">${serieHtml}<div class="card-title">${{book:'📖',bd:'💬',music:'🎵',game:'🎲'}[i.type]} ${i.titre} ${i.coupDeCoeur?'❤️':''}</div><div class="card-creator" style="margin-top:4px;">${i.createur || ''}</div></div><div class="card-status-group"><span class="badge badge-status" style="background:var(--bg-parchment-dark)">${(statusConfig[i.statut]||{icon:'?'}).icon}</span></div></div><div style="flex:1; pointer-events:none;"></div>${i.note > 0 ? `<div style="color:var(--color-star);font-size:1.1rem;margin:4px 0;">${'★'.repeat(i.note)}</div>`:''}<div class="card-meta"><span class="badge" style="background:#ddd">${i.format}</span>${(i.tags || []).slice(0, 3).map(t => `<span class="badge">${t}</span>`).join('')}</div>`;
+            let serieHtml = i.serie ? `<div style="font-size:0.75rem; color:var(--accent-wood); font-weight:700; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">${i.serie} ${i.tome ? '<span style="opacity:0.7">• T.'+i.tome+'</span>' : ''}</div>` : '';
+            card.innerHTML = `<div class="card-header"><div class="card-title-group" style="flex:1; min-width:0;">${serieHtml}<div class="card-title">${{book:'📖',bd:'💬',music:'🎵',game:'🎲'}[i.type]} ${i.titre} ${i.coupDeCoeur?'❤️':''}</div><div class="card-creator" style="margin-top:4px;">${i.createur || ''}</div></div><div class="card-status-group"><span class="badge badge-status" style="background:var(--bg-parchment-dark)">${(statusConfig[i.statut]||{icon:'?'}).icon}</span></div></div><div style="flex:1; pointer-events:none;"></div>${i.note > 0 ? `<div style="color:var(--color-star);font-size:1.1rem;margin:4px 0;">${'★'.repeat(i.note)}</div>`:''}<div class="card-meta"><span class="badge" style="background:#ddd">${i.format}</span>${(i.genres || []).slice(0, 2).map(t => `<span class="badge">${t}</span>`).join('')}${(i.ambiances || []).slice(0, 1).map(t => `<span class="badge badge-ambiance">${t}</span>`).join('')}</div>`;
             card.onclick = () => isOracleMode ? toggleCardSelection(i.id, card) : viewItem(i.id); return card;
         }
         
@@ -942,44 +943,47 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
             Object.keys(maps).forEach(k => renderGrid(processData(library.filter(i=>i.type===k)), maps[k])); 
         }
 
-        function renderAll() { 
-            renderDashboard(); 
-            renderSettingsTags(); 
-            initFilters();
-            renderData();
-        }
+        function renderAll() { renderDashboard(); renderSettingsTags(); initFilters(); renderData(); }
 
-        const modalAdd = document.getElementById('modal-add'); const form = document.getElementById('form-add'); let selectedTags = [];
+        const modalAdd = document.getElementById('modal-add'); const form = document.getElementById('form-add'); 
+        let selectedGenres = []; let selectedAmbiances = [];
         const stars = document.querySelectorAll('#star-rating span'); function setStars(val) { document.getElementById('note').value = val; stars.forEach(s => s.style.color = parseInt(s.dataset.val) <= val ? 'var(--color-star)' : '#ccc'); } stars.forEach(s => s.onclick = () => setStars(parseInt(s.dataset.val)));
         
         function renderTagsUI(type) { 
-            const container = document.getElementById('tags-container'); container.innerHTML = ''; 
-            let all = new Set(uiConfig[type].tags); library.filter(i=>i.type===type && i.tags).forEach(i=>i.tags.forEach(t=>all.add(t))); selectedTags.forEach(t=>all.add(t)); 
-            sortTagsArray(all).forEach(t => { 
-                const p = document.createElement('span'); p.className = 'tag-pill' + (selectedTags.includes(t)?' active':''); p.textContent = t; 
-                p.onclick = () => { p.classList.toggle('active'); selectedTags = selectedTags.includes(t) ? selectedTags.filter(x=>x!==t) : [...selectedTags, t]; }; 
-                container.appendChild(p); 
+            const genCont = document.getElementById('genres-container'); genCont.innerHTML = ''; 
+            const ambCont = document.getElementById('ambiances-container'); ambCont.innerHTML = ''; 
+            
+            let allG = new Set(uiConfig[type].genres); library.filter(i=>i.type===type && i.genres).forEach(i=>i.genres.forEach(t=>allG.add(t))); selectedGenres.forEach(t=>allG.add(t)); 
+            let allA = new Set(uiConfig[type].ambiances); library.filter(i=>i.type===type && i.ambiances).forEach(i=>i.ambiances.forEach(t=>allA.add(t))); selectedAmbiances.forEach(t=>allA.add(t)); 
+
+            sortTagsArray(allG).forEach(t => { 
+                const p = document.createElement('span'); p.className = 'tag-pill' + (selectedGenres.includes(t)?' active':''); p.textContent = t; 
+                p.onclick = () => { p.classList.toggle('active'); selectedGenres = selectedGenres.includes(t) ? selectedGenres.filter(x=>x!==t) : [...selectedGenres, t]; }; 
+                genCont.appendChild(p); 
+            }); 
+            sortTagsArray(allA).forEach(t => { 
+                const p = document.createElement('span'); p.className = 'tag-pill ambiance-chip' + (selectedAmbiances.includes(t)?' active':''); p.textContent = t; 
+                p.onclick = () => { p.classList.toggle('active'); selectedAmbiances = selectedAmbiances.includes(t) ? selectedAmbiances.filter(x=>x!==t) : [...selectedAmbiances, t]; }; 
+                ambCont.appendChild(p); 
             }); 
         }
         
-        function addCustomTag() {
-            const input = document.getElementById('custom-tag-input');
-            const v = input.value.trim(); 
-            if(v && !selectedTags.includes(v)) { 
-                selectedTags.push(v); 
-                renderTagsUI(document.querySelector('input[name="type"]:checked').value); 
-            } 
+        function addCustomGenre() {
+            const input = document.getElementById('custom-genre-input'); const v = input.value.trim(); 
+            if(v && !selectedGenres.includes(v)) { selectedGenres.push(v); renderTagsUI(document.querySelector('input[name="type"]:checked').value); } 
+            input.value = '';
+        }
+        function addCustomAmbiance() {
+            const input = document.getElementById('custom-ambiance-input'); const v = input.value.trim(); 
+            if(v && !selectedAmbiances.includes(v)) { selectedAmbiances.push(v); renderTagsUI(document.querySelector('input[name="type"]:checked').value); } 
             input.value = '';
         }
 
-        document.getElementById('btn-add-tag').addEventListener('click', addCustomTag);
+        document.getElementById('btn-add-genre').addEventListener('click', addCustomGenre);
+        document.getElementById('btn-add-ambiance').addEventListener('click', addCustomAmbiance);
         
-        document.getElementById('custom-tag-input').addEventListener('keydown', function(e) { 
-            if(e.key === 'Enter') { 
-                e.preventDefault(); 
-                addCustomTag();
-            }
-        });
+        document.getElementById('custom-genre-input').addEventListener('keydown', function(e) { if(e.key === 'Enter') { e.preventDefault(); addCustomGenre(); }});
+        document.getElementById('custom-ambiance-input').addEventListener('keydown', function(e) { if(e.key === 'Enter') { e.preventDefault(); addCustomAmbiance(); }});
         
         function toggleReviewSection() {
             const stat = document.querySelector('input[name="statut_radio"]:checked')?.value || 'alire';
@@ -988,42 +992,30 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
 
         function updateFormUI(type) { 
             document.getElementById('label-createur').textContent = uiConfig[type].createur; 
-            
             const fCont = document.getElementById('format-container'); fCont.innerHTML = '';
             uiConfig[type].formats.forEach((x, i) => fCont.innerHTML += `<label><input type="radio" name="format_radio" value="${x}" ${i===0?'checked':''}><span class="type-btn">${x}</span></label>`);
-            
             const sCont = document.getElementById('statut-container'); sCont.innerHTML = '';
             uiConfig[type].statuses.forEach((x, i) => sCont.innerHTML += `<label style="flex: 1 1 45%;"><input type="radio" name="statut_radio" value="${x.val}" ${i===0?'checked':''} onchange="toggleReviewSection()"><span class="type-btn">${x.text}</span></label>`);
-            
-            const groupTome = document.getElementById('group-tome');
-            groupTome.style.display = (type === 'book' || type === 'bd') ? 'flex' : 'none';
+            const groupTome = document.getElementById('group-tome'); groupTome.style.display = (type === 'book' || type === 'bd') ? 'flex' : 'none';
             document.getElementById('group-resume').style.display = (type === 'book' || type === 'bd') ? 'flex' : 'none'; 
-            
-            renderTagsUI(type); 
-            toggleReviewSection();
+            renderTagsUI(type); toggleReviewSection();
         }
         
-        document.getElementById('btn-fab-add').onclick = () => { editingId=null; form.reset(); selectedTags=[]; setStars(0); document.querySelector('input[name="type"][value="book"]').checked=true; updateFormUI('book'); openModal('modal-add'); };
-        
-        document.querySelectorAll('input[name="type"]').forEach(r => r.onchange = e => { selectedTags=[]; updateFormUI(e.target.value); });
+        document.getElementById('btn-fab-add').onclick = () => { editingId=null; form.reset(); selectedGenres=[]; selectedAmbiances=[]; setStars(0); document.querySelector('input[name="type"][value="book"]').checked=true; updateFormUI('book'); openModal('modal-add'); };
+        document.querySelectorAll('input[name="type"]').forEach(r => r.onchange = e => { selectedGenres=[]; selectedAmbiances=[]; updateFormUI(e.target.value); });
         
         form.onsubmit = e => { 
             e.preventDefault(); 
             const item = { 
                 id: editingId || Date.now().toString(), 
                 type: document.querySelector('input[name="type"]:checked').value, 
-                titre: document.getElementById('titre').value, 
-                createur: document.getElementById('createur').value, 
-                serie: document.getElementById('serie').value, 
-                tome: document.getElementById('tome').value, 
+                titre: document.getElementById('titre').value, createur: document.getElementById('createur').value, 
+                serie: document.getElementById('serie').value, tome: document.getElementById('tome').value, 
                 format: document.querySelector('input[name="format_radio"]:checked')?.value || '', 
-                annee: document.getElementById('annee').value, 
-                statut: document.querySelector('input[name="statut_radio"]:checked')?.value || 'alire', 
-                tags: [...selectedTags], 
-                resume: document.getElementById('resume').value, 
-                note: parseInt(document.getElementById('note').value) || 0, 
-                coupDeCoeur: document.getElementById('coup-de-coeur').checked, 
-                commentaire: document.getElementById('commentaire').value, 
+                annee: document.getElementById('annee').value, statut: document.querySelector('input[name="statut_radio"]:checked')?.value || 'alire', 
+                genres: [...selectedGenres], ambiances: [...selectedAmbiances], 
+                resume: document.getElementById('resume').value, note: parseInt(document.getElementById('note').value) || 0, 
+                coupDeCoeur: document.getElementById('coup-de-coeur').checked, commentaire: document.getElementById('commentaire').value, 
                 dateAjout: editingId ? library.find(i=>i.id===editingId).dateAjout : Date.now() 
             }; 
             const idx = library.findIndex(i=>i.id===editingId); 
@@ -1034,41 +1026,46 @@ Formate ta réponse STRICTEMENT avec ce code HTML exact (ne mets pas de balises 
         window.editItem = id => { 
             const i = library.find(x=>x.id===id); editingId = id; 
             document.querySelector(`input[name="type"][value="${i.type}"]`).checked = true; 
-            selectedTags = [...(i.tags||[])]; 
+            selectedGenres = [...(i.genres||[])]; selectedAmbiances = [...(i.ambiances||[])]; 
             updateFormUI(i.type); 
-            ['titre','createur','serie','tome','annee','resume','commentaire'].forEach(k => {
-                const el = document.getElementById(k);
-                if(el) el.value = i[k]||'';
-            }); 
-            
-            const fRad = document.querySelector(`input[name="format_radio"][value="${i.format}"]`);
-            if(fRad) fRad.checked = true;
-            
-            const sRad = document.querySelector(`input[name="statut_radio"][value="${i.statut}"]`);
-            if(sRad) sRad.checked = true;
-
+            ['titre','createur','serie','tome','annee','resume','commentaire'].forEach(k => { const el = document.getElementById(k); if(el) el.value = i[k]||''; }); 
+            const fRad = document.querySelector(`input[name="format_radio"][value="${i.format}"]`); if(fRad) fRad.checked = true;
+            const sRad = document.querySelector(`input[name="statut_radio"][value="${i.statut}"]`); if(sRad) sRad.checked = true;
             setStars(i.note||0); document.getElementById('coup-de-coeur').checked = i.coupDeCoeur||false; 
-            toggleReviewSection();
-            openModal('modal-add'); 
+            toggleReviewSection(); openModal('modal-add'); 
         };
         
-        function exportToExcel() { let csv = "\ufeffType;Titre;Série;Tome;Créateur;Format;Année;Statut;Tags;Note;Coup de coeur;Commentaire\n"; library.forEach(i => { const q=s=>`"${(s||"").toString().replace(/"/g, '""')}"`; csv += `${i.type};${q(i.titre)};${q(i.serie)};${q(i.tome)};${q(i.createur)};${q(i.format)};${i.annee||''};${i.statut};${q((i.tags||[]).join(','))};${i.note||0};${i.coupDeCoeur};${q(i.commentaire)}\n`; }); const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})); a.download=`Biblio_${new Date().toISOString().split('T')[0]}.csv`; a.click(); }
+        // Export CSV MAJ pour Gérer Genres & Ambiances
+        function exportToExcel() { let csv = "\ufeffType;Titre;Série;Tome;Créateur;Format;Année;Statut;Genres;Ambiances;Note;Coup de coeur;Commentaire\n"; library.forEach(i => { const q=s=>`"${(s||"").toString().replace(/"/g, '""')}"`; csv += `${i.type};${q(i.titre)};${q(i.serie)};${q(i.tome)};${q(i.createur)};${q(i.format)};${i.annee||''};${i.statut};${q((i.genres||[]).join(','))};${q((i.ambiances||[]).join(','))};${i.note||0};${i.coupDeCoeur};${q(i.commentaire)}\n`; }); const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})); a.download=`Biblio_${new Date().toISOString().split('T')[0]}.csv`; a.click(); }
         
+        // Import Rétrocompatible (Gère "Tags" ou "Genres;Ambiances")
         function importFromCSV(input) { 
             const f = input.files[0]; if(!f) return; const r=new FileReader(); 
             r.onload = e => { 
                 const lines=e.target.result.split('\n'); const added=[]; 
+                if(lines.length < 2) return;
+                
+                let header = lines[0].split(';').map(h => h.trim().replace(/^"|"$/g,''));
+                let hasOldTags = header.includes('Tags');
+
                 for(let i=1;i<lines.length;i++){ 
                     if(!lines[i].trim())continue; 
                     let ret=[], keep=false, cur=''; 
                     for(let j=0;j<lines[i].length;j++){let c=lines[i][j]; if(c==='"')keep=!keep; else if(c===';'&&!keep){ret.push(cur);cur='';} else cur+=c;} 
                     ret.push(cur); const c=ret.map(s=>s.trim().replace(/^"|"$/g,'').replace(/""/g,'"')); 
                     if(c.length<2)continue; 
-                    added.push({id:Date.now().toString()+i, type:c[0]||'book', titre:c[1], serie:c[2], tome:c[3], createur:c[4], format:c[5], annee:c[6], statut:c[7], tags:c[8]?c[8].split(',').map(t=>t.trim()).filter(Boolean):[], note:parseInt(c[9])||0, coupDeCoeur:c[10]==='true', commentaire:c[11], dateAjout:Date.now()}); 
+                    
+                    let itemGenres = [], itemAmbiances = [];
+                    if(hasOldTags) {
+                        itemGenres = c[8]?c[8].split(',').map(t=>t.trim()).filter(Boolean):[];
+                        added.push({id:Date.now().toString()+i, type:c[0]||'book', titre:c[1], serie:c[2], tome:c[3], createur:c[4], format:c[5], annee:c[6], statut:c[7], genres:itemGenres, ambiances:[], note:parseInt(c[9])||0, coupDeCoeur:c[10]==='true', commentaire:c[11], dateAjout:Date.now()}); 
+                    } else {
+                        itemGenres = c[8]?c[8].split(',').map(t=>t.trim()).filter(Boolean):[];
+                        itemAmbiances = c[9]?c[9].split(',').map(t=>t.trim()).filter(Boolean):[];
+                        added.push({id:Date.now().toString()+i, type:c[0]||'book', titre:c[1], serie:c[2], tome:c[3], createur:c[4], format:c[5], annee:c[6], statut:c[7], genres:itemGenres, ambiances:itemAmbiances, note:parseInt(c[10])||0, coupDeCoeur:c[11]==='true', commentaire:c[12], dateAjout:Date.now()}); 
+                    }
                 } 
-                customConfirm(`Importer ${added.length} œuvres depuis ce fichier ?`, () => {
-                    library=[...library,...added]; saveLibrary();
-                }, false);
+                customConfirm(`Importer ${added.length} œuvres depuis ce fichier ?`, () => { library=[...library,...added]; saveLibrary(); }, false);
             }; 
             r.readAsText(f); 
         }
