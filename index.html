@@ -30,7 +30,14 @@
         h3.section-title { font-size: 1.2rem; margin: 25px 0 10px 0; display: flex; align-items: center; gap: 8px; border-bottom: 2px solid var(--bg-parchment-dark); padding-bottom: 5px; }
         
         #app-container { max-width: 900px; margin: 0 auto; padding: 20px; }
-        header { text-align: center; margin-bottom: 20px; }
+        
+        /* BARRE DE PROFIL */
+        .profile-bar { display: flex; justify-content: center; align-items: center; gap: 10px; background: #fff; padding: 8px 15px; border-radius: 20px; border: 2px solid var(--bg-parchment-dark); margin: 0 auto 20px auto; width: fit-content; cursor: pointer; box-shadow: var(--shadow-soft); transition: 0.2s;}
+        .profile-bar:hover { border-color: var(--accent-wood); }
+        .profile-avatar { background: var(--accent-wood); color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem;}
+        .profile-name { font-weight: 700; font-size: 0.95rem; color: var(--text-ink); }
+
+        header { text-align: center; margin-bottom: 15px; }
 
         .search-area { position: sticky; top: 0; z-index: 80; background: var(--bg-parchment); padding-bottom: 10px; margin-bottom: 20px; }
         .search-header { display: flex; gap: 8px; align-items: center; width: 100%; }
@@ -42,7 +49,6 @@
         .btn-icon-header { background: #fff; border: 2px solid var(--bg-parchment-dark); border-radius: 50%; width: 42px; height: 42px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; transition: 0.2s; color: var(--text-ink); }
         .btn-icon-header.active { border-color: var(--accent-wood); background: var(--bg-parchment-dark); }
 
-        /* Le Scroll pour les filtres */
         .filter-panel { background: rgba(255, 255, 255, 0.95); border: 1px solid var(--bg-parchment-dark); border-radius: 12px; padding: 15px; margin-top: 10px; display: none; flex-direction: column; gap: 15px; box-shadow: var(--shadow-soft); max-height: 65vh; overflow-y: auto; overscroll-behavior: contain; }
         .filter-panel::-webkit-scrollbar { width: 6px; }
         .filter-panel::-webkit-scrollbar-track { background: transparent; }
@@ -140,7 +146,6 @@
         .type-btn { display: block; text-align: center; padding: 10px 5px; background: rgba(255,255,255,0.5); border-radius: 8px; border: 2px solid transparent; font-size: 0.8rem; transition: 0.2s;}
         .type-selector input:checked + .type-btn { background: var(--bg-parchment-dark); border-color: var(--accent-wood); font-weight: 700; }
         
-        /* SCROLL POUR LES TAGS DU FORMULAIRE */
         .tags-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px; margin-bottom: 8px; max-height: 120px; overflow-y: auto; padding-right: 5px; align-content: flex-start;}
         .tags-container::-webkit-scrollbar { width: 6px; }
         .tags-container::-webkit-scrollbar-track { background: transparent; }
@@ -186,6 +191,12 @@
     <div id="app-container">
         <div id="error-banner" style="display:none; background: #e74c3c; color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-weight: bold;"></div>
 
+        <div class="profile-bar" onclick="openProfileManager()">
+            <div class="profile-avatar" id="header-avatar">P</div>
+            <div class="profile-name" id="header-profile-name">Principal</div>
+            <div style="color: var(--text-ink-light); font-size: 0.7rem;">▼</div>
+        </div>
+
         <header><h1>Ma Bibliothèque</h1></header>
 
         <div class="search-area">
@@ -226,7 +237,7 @@
                 </div>
                 <div class="filter-group" style="align-items:center; padding-top: 5px;">
                     <label style="display:flex; align-items:center; gap:8px; cursor:pointer; text-transform:none; font-size:0.9rem;">
-                        <input type="checkbox" id="filter-fav" style="transform: scale(1.2);"> Coups de ❤️ uniquement
+                        <input type="checkbox" id="filter-fav" style="transform: scale(1.2);"> Mes Coups de ❤️
                     </label>
                 </div>
             </div>
@@ -261,7 +272,7 @@
                 <h3 class="section-title" id="title-wishlist" style="display:none; color: #4A7C59;">🛒 Ma Liste d'Achats</h3>
                 <div id="list-wishlist" class="horizontal-scroll" style="display:none;"></div>
 
-                <h3 class="section-title" id="title-recent">✨ Récemment ajoutés</h3>
+                <h3 class="section-title" id="title-recent">✨ Récemment ajoutés (Mon Profil)</h3>
                 <div id="list-recent" class="grid-container" style="margin-bottom: 30px;"></div>
 
                 <h3 class="section-title" id="title-coups-coeur" style="display:none;">❤️ Mes Coups de Coeur</h3>
@@ -274,8 +285,9 @@
             <section id="view-games" class="view-section"><div id="list-games" class="grid-container"></div></section>
             
             <section id="view-settings" class="view-section">
+                
                 <details class="stats-collapse" open>
-                    <summary class="section-title">📊 Mes Statistiques</summary>
+                    <summary class="section-title">📊 Statistiques de <span id="stat-profile-name">Principal</span></summary>
                     <div style="padding-top: 10px;">
                         <div class="stats-grid" id="dashboard-stats-main"></div>
                         <div class="stats-grid" id="dashboard-stats-types" style="margin-top: 15px;"></div>
@@ -349,7 +361,7 @@
             <div class="view-resume" id="view-resume"></div>
             <div class="view-comment" id="view-comment"></div>
             <div style="display: flex; gap: 10px; margin-top: 20px;">
-                <button class="btn-primary" id="btn-edit-from-view" style="margin:0;">✏️ Modifier la fiche</button>
+                <button class="btn-primary" id="btn-edit-from-view" style="margin:0;">✏️ Mon Avis / Éditer</button>
                 <button class="btn-danger" id="btn-delete-from-view" style="margin:0;">🗑️</button>
             </div>
         </div>
@@ -375,6 +387,22 @@
             <div class="filter-chips-container scrollable-chips" id="jukebox-ambiances" style="max-height: 120px; margin-bottom: 20px;"></div>
             
             <div id="jukebox-results"></div>
+        </div>
+    </dialog>
+
+    <dialog id="modal-profile">
+        <div class="modal-content">
+            <button class="btn-close-absolute" onclick="document.getElementById('modal-profile').close()">❌</button>
+            <h2 style="font-family: var(--font-title); color: var(--accent-wood); margin-bottom: 15px;">Changer de Profil</h2>
+            <div id="profile-list" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;"></div>
+            
+            <div style="border-top: 1px solid var(--bg-parchment-dark); padding-top: 15px;">
+                <label>Créer un nouveau profil</label>
+                <div style="display: flex; gap: 10px; margin-top: 5px;">
+                    <input type="text" id="new-profile-name" placeholder="Nom du profil..." style="margin: 0; flex: 1;">
+                    <button class="btn-primary" style="margin: 0; width: auto; padding: 10px 20px;" onclick="createNewProfile()">Créer</button>
+                </div>
+            </div>
         </div>
     </dialog>
 
@@ -422,9 +450,28 @@
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label>Statut</label>
-                    <div id="statut-container" class="type-selector" style="margin-bottom: 0; gap: 6px;"></div>
+                <div style="background: var(--bg-parchment-dark); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <h4 style="margin-top:0; margin-bottom:10px; font-size:0.9rem; color:var(--text-ink);">👤 Mon Expérience (<span id="form-profile-name"></span>)</h4>
+                    <div class="form-group">
+                        <label>Statut</label>
+                        <div id="statut-container" class="type-selector" style="margin-bottom: 0; gap: 6px;"></div>
+                    </div>
+
+                    <div id="review-section">
+                        <div class="form-row" style="align-items: center; margin-bottom: 10px;">
+                            <div class="form-group" style="margin:0;">
+                                <label>Note</label>
+                                <div class="star-rating" id="star-rating">
+                                    <span data-val="1">★</span><span data-val="2">★</span><span data-val="3">★</span><span data-val="4">★</span><span data-val="5">★</span>
+                                </div>
+                                <input type="hidden" id="note" value="0">
+                            </div>
+                            <div class="form-group" style="flex-direction:row;align-items:center;gap:5px; margin:0; justify-content: flex-end;">
+                                <input type="checkbox" id="coup-de-coeur" style="transform: scale(1.2);"><label style="margin:0; cursor:pointer;" for="coup-de-coeur">Favori ❤️</label>
+                            </div>
+                        </div>
+                        <div class="form-group"><label>Mon Commentaire</label><textarea id="commentaire" rows="3"></textarea></div>
+                    </div>
                 </div>
 
                 <div id="group-resume" class="form-group" style="display: none;">
@@ -434,21 +481,7 @@
                     </label>
                     <textarea id="resume" rows="4"></textarea>
                 </div>
-                <div id="review-section">
-                    <div class="form-row" style="align-items: center; margin-bottom: 10px;">
-                        <div class="form-group" style="margin:0;">
-                            <label>Note</label>
-                            <div class="star-rating" id="star-rating">
-                                <span data-val="1">★</span><span data-val="2">★</span><span data-val="3">★</span><span data-val="4">★</span><span data-val="5">★</span>
-                            </div>
-                            <input type="hidden" id="note" value="0">
-                        </div>
-                        <div class="form-group" style="flex-direction:row;align-items:center;gap:5px; margin:0; justify-content: flex-end;">
-                            <input type="checkbox" id="coup-de-coeur" style="transform: scale(1.2);"><label style="margin:0; cursor:pointer;" for="coup-de-coeur">Favori ❤️</label>
-                        </div>
-                    </div>
-                    <div class="form-group"><label>Commentaire perso</label><textarea id="commentaire" rows="3"></textarea></div>
-                </div>
+                
                 <button type="submit" class="btn-primary" id="btn-submit">💾 Sauvegarder</button>
             </form>
         </div>
@@ -463,11 +496,26 @@
         }
 
         let library = [];
+        let profiles = ['Principal'];
+        let currentProfile = 'Principal';
+
         try { 
             const stored = JSON.parse(localStorage.getItem('myLibrary')); 
             if(Array.isArray(stored)) library = stored; 
+            
+            const storedProfiles = JSON.parse(localStorage.getItem('profiles'));
+            if(Array.isArray(storedProfiles) && storedProfiles.length > 0) profiles = storedProfiles;
+            
+            const storedCurrent = localStorage.getItem('currentProfile');
+            if(storedCurrent && profiles.includes(storedCurrent)) currentProfile = storedCurrent;
         } catch(e) { 
             console.error("Cache local corrompu."); 
+        }
+
+        // --- HELPER D'ACCÈS AUX DONNÉES DU PROFIL ---
+        function getUserData(item, profileName = currentProfile) {
+            if (!item.userData) return { statut: 'neutre', note: 0, coupDeCoeur: false, commentaire: '' };
+            return item.userData[profileName] || { statut: 'neutre', note: 0, coupDeCoeur: false, commentaire: '' };
         }
         
         function normalizeLibrary() {
@@ -477,22 +525,73 @@
                     let t = i.type.toLowerCase().trim();
                     if (t !== i.type) { i.type = t; needsSave = true; }
                 } else if (!i.type) { i.type = 'book'; needsSave = true; }
-                if (typeof i.coupDeCoeur === 'string') {
-                    i.coupDeCoeur = (i.coupDeCoeur.toLowerCase() === 'true' || i.coupDeCoeur === '1');
-                    needsSave = true;
-                } else if (typeof i.coupDeCoeur !== 'boolean') { i.coupDeCoeur = false; needsSave = true; }
-                if (typeof i.note !== 'number') { i.note = parseInt(i.note) || 0; needsSave = true; }
+                
                 if (!Array.isArray(i.genres)) { i.genres = []; needsSave = true; }
                 if (!Array.isArray(i.ambiances)) { i.ambiances = []; needsSave = true; }
+                
                 if (i.tags) {
                     if (Array.isArray(i.tags)) { i.genres = [...new Set([...i.genres, ...i.tags.map(t => String(t).trim()).filter(t => t !== '')])]; } 
                     else if (typeof i.tags === 'string') { i.genres = [...new Set([...i.genres, ...i.tags.split(',').map(t => String(t).trim()).filter(t => t !== '')])]; }
                     delete i.tags; needsSave = true;
                 }
+
+                // MIGRATION MULTI-PROFIL
+                if (!i.userData) {
+                    i.userData = {};
+                    i.userData['Principal'] = {
+                        statut: i.statut || 'neutre',
+                        note: parseInt(i.note) || 0,
+                        coupDeCoeur: (String(i.coupDeCoeur).toLowerCase() === 'true' || i.coupDeCoeur === '1' || i.coupDeCoeur === true),
+                        commentaire: i.commentaire || '',
+                        dateAjout: i.dateAjout || Date.now()
+                    };
+                    delete i.statut; delete i.note; delete i.coupDeCoeur; delete i.commentaire;
+                    needsSave = true;
+                }
             });
             if (needsSave) localStorage.setItem('myLibrary', JSON.stringify(library));
         }
         
+        // --- GESTION DES PROFILS ---
+        function updateProfileUI() {
+            document.getElementById('header-profile-name').innerText = currentProfile;
+            document.getElementById('header-avatar').innerText = currentProfile.charAt(0).toUpperCase();
+            document.getElementById('stat-profile-name').innerText = currentProfile;
+            document.getElementById('form-profile-name').innerText = currentProfile;
+        }
+
+        function openProfileManager() {
+            const list = document.getElementById('profile-list');
+            list.innerHTML = profiles.map(p => `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border:1px solid ${p===currentProfile?'var(--accent-wood)':'var(--bg-parchment-dark)'}; border-radius:8px; background:${p===currentProfile?'var(--bg-parchment-dark)':'#fff'}; cursor:pointer;" onclick="selectProfile('${p}')">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div class="profile-avatar" style="width:35px; height:35px;">${p.charAt(0).toUpperCase()}</div>
+                        <span style="font-weight:bold; color:var(--text-ink);">${p}</span>
+                    </div>
+                    ${p===currentProfile ? '<span>✅</span>' : ''}
+                </div>
+            `).join('');
+            openModal('modal-profile');
+        }
+
+        function selectProfile(name) {
+            currentProfile = name;
+            localStorage.setItem('currentProfile', currentProfile);
+            updateProfileUI();
+            safeRenderAll();
+            document.getElementById('modal-profile').close();
+        }
+
+        function createNewProfile() {
+            const name = document.getElementById('new-profile-name').value.trim();
+            if (!name) return;
+            if (profiles.includes(name)) { alert("Ce profil existe déjà."); return; }
+            profiles.push(name);
+            localStorage.setItem('profiles', JSON.stringify(profiles));
+            document.getElementById('new-profile-name').value = '';
+            selectProfile(name);
+        }
+
         function autoTagAmbiances() {
             let modifCount = 0;
             library.forEach(i => {
@@ -528,8 +627,6 @@
             else { customConfirm(`🪄 Tes œuvres ont déjà toutes au moins une ambiance. L'algorithme se repose.`, null, false); }
         }
 
-        normalizeLibrary();
-
         let cloudConfig = { token: '', gistId: '', geminiKey: '' };
         try { const c = JSON.parse(localStorage.getItem('cloudConfig')); if(c) cloudConfig = c; } catch(e) {}
         let editingId = null; let isOracleMode = false; let selectedForOracle = [];
@@ -540,7 +637,8 @@
 
         const statusConfig = {
             'lu': { icon: '✅', text: 'Terminé' }, 'encours': { icon: '⏳', text: 'En cours' }, 'alire': { icon: '📚', text: 'À lire' }, 'aacheter': { icon: '🛒', text: 'À acheter' }, 'abandonne': { icon: '❌', text: 'Abandonné' },
-            'ecoute': { icon: '🎧', text: 'Écouté' }, 'adecouvrir': { icon: '💿', text: 'À découvrir' }, 'joue': { icon: '🎲', text: 'Joué' }, 'atester': { icon: '📦', text: 'À tester' }
+            'ecoute': { icon: '🎧', text: 'Écouté' }, 'adecouvrir': { icon: '💿', text: 'À découvrir' }, 'joue': { icon: '🎲', text: 'Joué' }, 'atester': { icon: '📦', text: 'À tester' },
+            'neutre': { icon: '☁️', text: 'Foyer (Non ajouté)' }
         };
 
         const uiConfig = {
@@ -548,25 +646,25 @@
                 createur: "Auteur", formats: ["Physique", "Dématérialisé"], 
                 genres: ["SF", "Fantasy", "Thriller", "Historique", "Essai", "Classique", "Philosophie", "Poésie"], 
                 ambiances: ["Feel-Good", "Glaçant", "Réflexion", "Épique", "Mélancolique", "Dépaysant", "Poétique"], 
-                statuses: [{val:'lu', text:'✅ Lu'}, {val:'encours', text:'⏳ En cours'}, {val:'alire', text:'📚 À lire'}, {val:'aacheter', text:'🛒 À acheter'}, {val:'abandonne', text:'❌ Abandonné'}] 
+                statuses: [{val:'neutre', text:'☁️ Ignorer'}, {val:'lu', text:'✅ Lu'}, {val:'encours', text:'⏳ En cours'}, {val:'alire', text:'📚 À lire'}, {val:'aacheter', text:'🛒 À acheter'}, {val:'abandonne', text:'❌ Abandonné'}] 
             },
             bd: { 
                 createur: "Auteur / Dessinateur", formats: ["Physique", "Dématérialisé"], 
                 genres: ["Franco-Belge", "Comics", "Manga Shonen", "Manga Seinen", "Roman Graphique", "Aventure"], 
                 ambiances: ["Tranche de vie", "Humour absurde", "Noir", "Action", "Onirique"], 
-                statuses: [{val:'lu', text:'✅ Lu'}, {val:'encours', text:'⏳ En cours'}, {val:'alire', text:'📚 À lire'}, {val:'aacheter', text:'🛒 À acheter'}, {val:'abandonne', text:'❌ Abandonné'}] 
+                statuses: [{val:'neutre', text:'☁️ Ignorer'}, {val:'lu', text:'✅ Lu'}, {val:'encours', text:'⏳ En cours'}, {val:'alire', text:'📚 À lire'}, {val:'aacheter', text:'🛒 À acheter'}, {val:'abandonne', text:'❌ Abandonné'}] 
             },
             music: { 
                 createur: "Artiste", formats: ["CD", "Vinyle", "Digital"], 
                 genres: ["Rock/Metal", "Electro", "Hip-Hop", "Jazz/Blues", "Classique", "OST", "Variété"], 
                 ambiances: ["Focus", "Chill", "Énergique", "Défouloir", "Festif", "Planant"], 
-                statuses: [{val:'ecoute', text:'🎧 Écouté'}, {val:'adecouvrir', text:'💿 À découvrir'}, {val:'aacheter', text:'🛒 À acheter'}, {val:'abandonne', text:'❌ Déçu'}] 
+                statuses: [{val:'neutre', text:'☁️ Ignorer'}, {val:'ecoute', text:'🎧 Écouté'}, {val:'adecouvrir', text:'💿 À découvrir'}, {val:'aacheter', text:'🛒 À acheter'}, {val:'abandonne', text:'❌ Déçu'}] 
             },
             game: { 
                 createur: "Auteur / Éditeur", formats: ["Plateau", "Cartes", "Dés", "Figurines", "Autre"], 
                 genres: ["Gestion", "Deckbuilding", "Affrontement", "Coopératif", "Familial", "Expert"], 
                 ambiances: ["Prise de tête", "Rigolade", "Trahison", "Coopératif", "Narratif", "Familial", "Frustrant"], 
-                statuses: [{val:'joue', text:'🎲 Joué'}, {val:'atester', text:'📦 À tester'}, {val:'aacheter', text:'🛒 À acheter'}, {val:'abandonne', text:'❌ Revendu'}] 
+                statuses: [{val:'neutre', text:'☁️ Ignorer'}, {val:'joue', text:'🎲 Joué'}, {val:'atester', text:'📦 À tester'}, {val:'aacheter', text:'🛒 À acheter'}, {val:'abandonne', text:'❌ Revendu'}] 
             }
         };
 
@@ -684,13 +782,17 @@
             let allAmbiances = new Set();
             library.forEach(i => {
                 if (currentJukeboxType === 'all' || i.type === currentJukeboxType) {
-                    (i.ambiances||[]).forEach(a => allAmbiances.add(a));
+                    // On ne propose que les ambiances des œuvres que ce profil n'a pas abandonnées ou ignorées
+                    let ud = getUserData(i);
+                    if (ud.statut !== 'neutre' && ud.statut !== 'abandonne') {
+                        (i.ambiances||[]).forEach(a => allAmbiances.add(a));
+                    }
                 }
             });
             
             const container = document.getElementById('jukebox-ambiances');
             if (allAmbiances.size === 0) { 
-                container.innerHTML = `<p style="font-size:0.85rem; color:var(--text-ink-light);">Aucune ambiance trouvée pour ce support.</p>`; 
+                container.innerHTML = `<p style="font-size:0.85rem; color:var(--text-ink-light);">Aucune ambiance trouvée dans tes listes pour ce support.</p>`; 
             } else { 
                 container.innerHTML = sortTagsArray(allAmbiances).map(a => `<div class="filter-chip ambiance-chip" style="background:var(--bg-parchment); color:var(--text-ink);" onclick="spinJukebox('${String(a).replace(/'/g, "\\'")}')">${a}</div>`).join(''); 
             }
@@ -708,25 +810,25 @@
                 return matchType && matchAmbiance;
             });
 
-            const todos = matching.filter(i => ['alire','adecouvrir','atester'].includes(i.statut));
-            const dones = matching.filter(i => ['lu','ecoute','joue'].includes(i.statut));
+            const todos = matching.filter(i => ['alire','adecouvrir','atester'].includes(getUserData(i).statut));
+            const dones = matching.filter(i => ['lu','ecoute','joue'].includes(getUserData(i).statut));
             let discovery = null, safeBet = null, alternative = null;
 
             if (todos.length > 0) discovery = todos[Math.floor(Math.random() * todos.length)];
             if (dones.length > 0) {
                 let tickets = [];
-                dones.forEach(i => { tickets.push(i); if(i.coupDeCoeur) { tickets.push(i); tickets.push(i); } }); 
+                dones.forEach(i => { let ud = getUserData(i); tickets.push(i); if(ud.coupDeCoeur) { tickets.push(i); tickets.push(i); } }); 
                 safeBet = tickets[Math.floor(Math.random() * tickets.length)];
             }
-            const remaining = matching.filter(i => i.id !== (discovery?.id) && i.id !== (safeBet?.id));
+            const remaining = matching.filter(i => i.id !== (discovery?.id) && i.id !== (safeBet?.id) && getUserData(i).statut !== 'neutre');
             if (remaining.length > 0) alternative = remaining[Math.floor(Math.random() * remaining.length)];
 
             let html = '';
             if(!discovery && !safeBet && !alternative) { html = `<p style="color:var(--text-ink-light);">Rien trouvé pour cette ambiance...</p>`; } 
             else {
-                if (discovery) html += `<div class="jukebox-card" onclick="document.getElementById('modal-jukebox').close(); viewItem('${discovery.id}')"><div class="jukebox-card-title">✨ La Découverte (${statusConfig[discovery.statut].text})</div><b>${discovery.titre}</b><br><small style="color:var(--text-ink-light)">de ${discovery.createur}</small></div>`;
-                if (safeBet) html += `<div class="jukebox-card" onclick="document.getElementById('modal-jukebox').close(); viewItem('${safeBet.id}')"><div class="jukebox-card-title">🧸 La Valeur Sûre (${statusConfig[safeBet.statut].text})</div><b>${safeBet.titre}</b> ${safeBet.coupDeCoeur?'❤️':''}<br><small style="color:var(--text-ink-light)">de ${safeBet.createur}</small></div>`;
-                if (alternative) html += `<div class="jukebox-card" onclick="document.getElementById('modal-jukebox').close(); viewItem('${alternative.id}')"><div class="jukebox-card-title">🎲 L'Alternative (${statusConfig[alternative.statut].text})</div><b>${alternative.titre}</b><br><small style="color:var(--text-ink-light)">de ${alternative.createur}</small></div>`;
+                if (discovery) html += `<div class="jukebox-card" onclick="document.getElementById('modal-jukebox').close(); viewItem('${discovery.id}')"><div class="jukebox-card-title">✨ La Découverte (${statusConfig[getUserData(discovery).statut].text})</div><b>${discovery.titre}</b><br><small style="color:var(--text-ink-light)">de ${discovery.createur}</small></div>`;
+                if (safeBet) html += `<div class="jukebox-card" onclick="document.getElementById('modal-jukebox').close(); viewItem('${safeBet.id}')"><div class="jukebox-card-title">🧸 La Valeur Sûre (${statusConfig[getUserData(safeBet).statut].text})</div><b>${safeBet.titre}</b> ${getUserData(safeBet).coupDeCoeur?'❤️':''}<br><small style="color:var(--text-ink-light)">de ${safeBet.createur}</small></div>`;
+                if (alternative) html += `<div class="jukebox-card" onclick="document.getElementById('modal-jukebox').close(); viewItem('${alternative.id}')"><div class="jukebox-card-title">🎲 L'Alternative (${statusConfig[getUserData(alternative).statut].text})</div><b>${alternative.titre}</b><br><small style="color:var(--text-ink-light)">de ${alternative.createur}</small></div>`;
             }
             document.getElementById('jukebox-results').innerHTML = html;
         }
@@ -748,13 +850,15 @@
 
         document.getElementById('btn-mark-done').addEventListener('click', () => {
             if(selectedForOracle.length === 0) return;
-            customConfirm(`Marquer ces ${selectedForOracle.length} œuvres comme terminées ?`, () => {
+            customConfirm(`Marquer ces ${selectedForOracle.length} œuvres comme terminées pour ${currentProfile} ?`, () => {
                 selectedForOracle.forEach(id => {
                     let item = library.find(x => x.id === id);
                     if(item) {
-                        if(item.type === 'game') item.statut = 'joue';
-                        else if(item.type === 'music') item.statut = 'ecoute';
-                        else item.statut = 'lu';
+                        if (!item.userData) item.userData = {};
+                        if (!item.userData[currentProfile]) item.userData[currentProfile] = { note:0, coupDeCoeur:false, commentaire:'', dateAjout: Date.now() };
+                        if(item.type === 'game') item.userData[currentProfile].statut = 'joue';
+                        else if(item.type === 'music') item.userData[currentProfile].statut = 'ecoute';
+                        else item.userData[currentProfile].statut = 'lu';
                     }
                 });
                 document.getElementById('btn-toggle-oracle').click();
@@ -764,7 +868,7 @@
 
         document.getElementById('btn-delete-selected').addEventListener('click', () => {
             if(selectedForOracle.length === 0) return;
-            customConfirm(`🚨 Supprimer DÉFINITIVEMENT ces ${selectedForOracle.length} œuvres ?`, () => {
+            customConfirm(`🚨 Supprimer DÉFINITIVEMENT ces ${selectedForOracle.length} œuvres de la base Commune ?`, () => {
                 library = library.filter(x => !selectedForOracle.includes(x.id));
                 document.getElementById('btn-toggle-oracle').click();
                 saveLibrary();
@@ -780,7 +884,7 @@
             resultBox.innerHTML = "📡 Le Radar cherche le meilleur modèle IA...";
             try {
                 const inspirateurs = selectedForOracle.map(id => { const i = library.find(x=>x.id===id); return i ? `"${i.titre}" de ${i.createur}` : null; }).filter(Boolean).join(" | ");
-                const palList = library.filter(i => ['alire', 'adecouvrir', 'atester'].includes(i.statut)).map(i => `"${i.titre}" de ${i.createur}`).join(" | ");
+                const palList = library.filter(i => ['alire', 'adecouvrir', 'atester'].includes(getUserData(i).statut)).map(i => `"${i.titre}" de ${i.createur}`).join(" | ");
                 const prompt = `Tu es l'Oracle d'une bibliothèque. L'utilisateur aime : [ ${inspirateurs} ]. Sa Pile à Lire : [ ${palList || "VIDE"} ].
 Fais 2 recommandations : 1. PIOCHE (copie-colle exact d'un titre de sa pile). 2. DÉCOUVERTE (œuvre existante qu'il n'a pas).
 Formate en HTML : <div style="background:rgba(255,255,255,0.7); padding:15px; border-radius:8px; margin-bottom:15px; border-left:4px solid #3f2b96;"><h3 style="color:#3f2b96; margin-top:0; margin-bottom:5px; font-size:1.1rem;">📚 Dans ta Pile à Lire</h3><b>[Titre]</b> de [Auteur]<br><i style="font-size:0.9rem;">[Raison]</i></div><div style="background:rgba(255,255,255,0.7); padding:15px; border-radius:8px; margin-bottom:15px; border-left:4px solid #a8c0ff;"><h3 style="color:#3f2b96; margin-top:0; margin-bottom:5px; font-size:1.1rem;">✨ Nouveauté</h3><b>[Titre]</b> de [Auteur]<br><i style="font-size:0.9rem;">[Raison]</i></div>`;
@@ -809,7 +913,10 @@ Formate en HTML : <div style="background:rgba(255,255,255,0.7); padding:15px; bo
         }
 
         function viewItem(id) {
-            const i = library.find(x => x.id === id); const s = statusConfig[i.statut] || {icon:'?', text:'-'};
+            const i = library.find(x => x.id === id); 
+            const ud = getUserData(i);
+            const s = statusConfig[ud.statut] || {icon:'?', text:'-'};
+            
             let titleHtml = '';
             if (i.serie) titleHtml += `<div style="font-size:0.9rem; color:var(--accent-wood); text-transform:uppercase; font-weight:bold; margin-bottom:5px; letter-spacing: 1px;">${i.serie} ${i.tome ? '• T.'+i.tome : ''}</div>`;
             titleHtml += i.titre;
@@ -819,17 +926,34 @@ Formate en HTML : <div style="background:rgba(255,255,255,0.7); padding:15px; bo
             
             let metaHtml = `<span class="badge" style="background:#eee">${i.format}</span> <span class="badge" style="background:var(--bg-parchment-dark)">${s.icon} ${s.text}</span>`;
             if(i.annee) metaHtml += `<span class="badge" style="background:#eee">${i.annee}</span>`;
-            if(i.coupDeCoeur) metaHtml += `<span class="badge" style="background:var(--color-danger); color:white;">❤️ Coup de coeur</span>`;
+            if(ud.coupDeCoeur) metaHtml += `<span class="badge" style="background:var(--color-danger); color:white;">❤️ Coup de coeur</span>`;
             
             (i.genres || []).forEach(t => metaHtml += `<span class="badge" style="background:#fff; border:1px solid #ddd;">${t}</span>`);
             (i.ambiances || []).forEach(t => metaHtml += `<span class="badge badge-ambiance">${t}</span>`);
             
             document.getElementById('view-meta').innerHTML = metaHtml;
-            document.getElementById('view-stars').innerHTML = i.note > 0 ? '★'.repeat(i.note) + '☆'.repeat(5-i.note) : '';
+            document.getElementById('view-stars').innerHTML = ud.note > 0 ? '★'.repeat(ud.note) + '☆'.repeat(5-ud.note) : '';
             document.getElementById('view-resume').style.display = i.resume ? 'block' : 'none'; document.getElementById('view-resume').textContent = i.resume || '';
-            document.getElementById('view-comment').style.display = i.commentaire ? 'block' : 'none'; document.getElementById('view-comment').textContent = i.commentaire || '';
+            
+            // Affichage du commentaire : on montre le sien, et s'il y a d'autres avis, on les liste !
+            let commentHtml = '';
+            if (ud.commentaire) commentHtml += `<b>Mon avis :</b><br>${ud.commentaire}<br><br>`;
+            
+            let otherComments = '';
+            if (i.userData) {
+                Object.keys(i.userData).forEach(p => {
+                    if (p !== currentProfile && i.userData[p].commentaire) {
+                        otherComments += `<i>Avis de ${p} :</i><br>${i.userData[p].commentaire}<br><br>`;
+                    }
+                });
+            }
+            if (otherComments) commentHtml += `<div style="padding-top:10px; border-top:1px dashed var(--accent-wood); font-size:0.85rem; color:var(--text-ink-light);">${otherComments}</div>`;
+
+            document.getElementById('view-comment').style.display = commentHtml ? 'block' : 'none'; 
+            document.getElementById('view-comment').innerHTML = commentHtml;
+            
             document.getElementById('btn-edit-from-view').onclick = () => { document.getElementById('modal-view').close(); editItem(id); };
-            document.getElementById('btn-delete-from-view').onclick = () => { customConfirm('Supprimer cette œuvre ?', () => { library = library.filter(x=>x.id!==id); saveLibrary(); document.getElementById('modal-view').close(); }, true); };
+            document.getElementById('btn-delete-from-view').onclick = () => { customConfirm('Supprimer cette œuvre pour TOUT LE MONDE ?', () => { library = library.filter(x=>x.id!==id); saveLibrary(); document.getElementById('modal-view').close(); }, true); };
             openModal('modal-view');
         }
 
@@ -857,18 +981,23 @@ Formate en HTML : <div style="background:rgba(255,255,255,0.7); padding:15px; bo
         function renderDashboard() {
             const stats = { book: { t: 0, l: 0, a: 0, title: '📖 Livres', done: 'terminés', todo: 'à lire' }, bd: { t: 0, l: 0, a: 0, title: '💬 BD', done: 'terminées', todo: 'à lire' }, music: { t: 0, l: 0, a: 0, title: '🎵 Musique', done: 'écoutés', todo: 'à découvrir' }, game: { t: 0, l: 0, a: 0, title: '🎲 Jeux', done: 'joués', todo: 'à tester' } };
             let auteurs = {}, tagsCount = {};
-            const ownedItems = library.filter(i => i.statut !== 'aacheter');
+            
+            // Le dashboard et les stats ne calculent QUE les oeuvres non-neutres pour le profil
+            const profileItems = library.filter(i => getUserData(i).statut !== 'neutre');
+            const ownedItems = profileItems.filter(i => getUserData(i).statut !== 'aacheter');
+            
             const totalItems = ownedItems.length;
-            const notes = ownedItems.filter(i => i.note > 0).map(i => parseInt(i.note) || 0);
+            const notes = ownedItems.filter(i => getUserData(i).note > 0).map(i => parseInt(getUserData(i).note) || 0);
             const avgNote = notes.length ? (notes.reduce((a,b)=>a+b,0)/notes.length).toFixed(1) : '-';
             const phys = ownedItems.filter(i=>i.format==='Physique').length;
             const demat = ownedItems.filter(i=>i.format && i.format !== 'Physique').length;
 
             ownedItems.forEach(i => { 
+                let ud = getUserData(i);
                 if (stats[i.type]) { 
                     stats[i.type].t++; 
-                    if (['lu','ecoute','joue'].includes(i.statut)) stats[i.type].l++; 
-                    else if(['alire','adecouvrir','atester'].includes(i.statut)) stats[i.type].a++; 
+                    if (['lu','ecoute','joue'].includes(ud.statut)) stats[i.type].l++; 
+                    else if(['alire','adecouvrir','atester'].includes(ud.statut)) stats[i.type].a++; 
                 }
                 if(i.createur) auteurs[i.createur] = (auteurs[i.createur] || 0) + 1;
                 (i.genres||[]).forEach(t => tagsCount[t] = (tagsCount[t] || 0) + 1);
@@ -882,13 +1011,13 @@ Formate en HTML : <div style="background:rgba(255,255,255,0.7); padding:15px; bo
                 typeContainer.innerHTML += `<div class="stat-card"><div class="stat-main"><span>${s.t}</span> <span style="font-size:1rem; color:var(--text-ink)">${s.title}</span></div><div class="stat-details"><div>✅ ${s.l} ${s.done}</div><div>📚 ${s.a} ${s.todo}</div></div></div>`; 
             });
             
-            const favs = library.filter(i => i.coupDeCoeur); 
+            const favs = profileItems.filter(i => getUserData(i).coupDeCoeur); 
             renderGrid(favs.slice(0, 4), 'list-favs', 'title-coups-coeur'); 
             
-            const wishlist = library.filter(i => i.statut === 'aacheter');
+            const wishlist = profileItems.filter(i => getUserData(i).statut === 'aacheter');
             renderGrid(wishlist, 'list-wishlist', 'title-wishlist');
 
-            const recents = [...library].sort((a,b) => (b.dateAjout || 0) - (a.dateAjout || 0)).slice(0, 4);
+            const recents = [...profileItems].sort((a,b) => (getUserData(b).dateAjout || 0) - (getUserData(a).dateAjout || 0)).slice(0, 4);
             renderGrid(recents, 'list-recent', 'title-recent');
         }
 
@@ -936,10 +1065,11 @@ Formate en HTML : <div style="background:rgba(255,255,255,0.7); padding:15px; bo
         function setFilter(type, val) { activeFilters[type] = val; updateFilterUI(); triggerUpdate(); }
 
         function initFilters() {
-            let statusCount = { 'lu':0, 'encours':0, 'alire':0, 'aacheter':0 };
+            let statusCount = { 'lu':0, 'encours':0, 'alire':0, 'aacheter':0, 'neutre':0 };
             let formatCount = {}, genreCount = {}, ambianceCount = {};
             library.forEach(i => {
-                if(statusCount[i.statut] !== undefined) statusCount[i.statut]++;
+                let ud = getUserData(i);
+                if(statusCount[ud.statut] !== undefined) statusCount[ud.statut]++;
                 if(i.format) formatCount[i.format] = (formatCount[i.format] || 0) + 1;
                 (i.genres || []).forEach(t => genreCount[t] = (genreCount[t] || 0) + 1);
                 (i.ambiances || []).forEach(t => ambianceCount[t] = (ambianceCount[t] || 0) + 1);
@@ -947,7 +1077,7 @@ Formate en HTML : <div style="background:rgba(255,255,255,0.7); padding:15px; bo
 
             document.getElementById('filter-status').innerHTML = [
                 {val:'all', label:'Tous'}, {val:'lu', label:'✅ Terminé'}, {val:'encours', label:'⏳ En cours'}, 
-                {val:'alire', label:'📚 À faire'}, {val:'aacheter', label:'🛒 À acheter'}
+                {val:'alire', label:'📚 À faire'}, {val:'aacheter', label:'🛒 À acheter'}, {val:'neutre', label:'☁️ Non ajouté'}
             ].map(s => `<div class="filter-chip" data-type="status" data-val="${s.val}">${s.label} <small style="opacity:0.7">(${s.val==='all'?library.length:statusCount[s.val]||0})</small></div>`).join('');
 
             document.getElementById('filter-format').innerHTML = `<div class="filter-chip" data-type="format" data-val="all">Tous <small style="opacity:0.7">(${library.length})</small></div>` + 
@@ -980,15 +1110,16 @@ Formate en HTML : <div style="background:rgba(255,255,255,0.7); padding:15px; bo
         
         function processData(data) { 
             let res = data.filter(i => { 
-                if(activeFilters.status !== 'all' && i.statut !== activeFilters.status) return false; 
+                let ud = getUserData(i);
+                if(activeFilters.status !== 'all' && ud.statut !== activeFilters.status) return false; 
                 if(activeFilters.format !== 'all' && i.format !== activeFilters.format) return false; 
                 if(activeFilters.genre !== 'all' && !(i.genres && i.genres.includes(activeFilters.genre))) return false; 
                 if(activeFilters.ambiance !== 'all' && !(i.ambiances && i.ambiances.includes(activeFilters.ambiance))) return false; 
-                if(activeFilters.favOnly && !i.coupDeCoeur) return false; 
+                if(activeFilters.favOnly && !ud.coupDeCoeur) return false; 
                 return true; 
             }); 
             res.sort((a,b) => { 
-                if(activeFilters.sort === 'date_desc') return (b.dateAjout || 0) - (a.dateAjout || 0); 
+                if(activeFilters.sort === 'date_desc') return (getUserData(b).dateAjout || 0) - (getUserData(a).dateAjout || 0); 
                 const sortA = getSortString(a); const sortB = getSortString(b);
                 if(activeFilters.sort === 'alpha_asc') return sortA.localeCompare(sortB, 'fr', {numeric: true, sensitivity: 'base'}); 
                 if(activeFilters.sort === 'createur_asc') {
@@ -999,7 +1130,7 @@ Formate en HTML : <div style="background:rgba(255,255,255,0.7); padding:15px; bo
                     return cr === 0 ? sortA.localeCompare(sortB, 'fr', {numeric: true, sensitivity: 'base'}) : cr;
                 }
                 if(activeFilters.sort === 'note_desc') {
-                    let nr = (b.note||0) - (a.note||0);
+                    let nr = (getUserData(b).note||0) - (getUserData(a).note||0);
                     return nr === 0 ? sortA.localeCompare(sortB, 'fr', {numeric: true, sensitivity: 'base'}) : nr;
                 }
                 return 0; 
@@ -1008,10 +1139,15 @@ Formate en HTML : <div style="background:rgba(255,255,255,0.7); padding:15px; bo
         }
         
         function createCard(i) {
+            let ud = getUserData(i);
             const card = document.createElement('div'); card.className = `card ${isOracleMode ? 'mode-selection' : ''} ${selectedForOracle.includes(i.id) ? 'selected' : ''}`;
             let serieHtml = i.serie ? `<div style="font-size:0.75rem; color:var(--accent-wood); font-weight:700; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">${i.serie} ${i.tome ? '<span style="opacity:0.7">• T.'+i.tome+'</span>' : ''}</div>` : '';
             const iconeType = {'book':'📖','bd':'💬','music':'🎵','game':'🎲'}[i.type] || '❓';
-            card.innerHTML = `<div class="card-header"><div class="card-title-group" style="flex:1; min-width:0;">${serieHtml}<div class="card-title">${iconeType} ${i.titre} ${i.coupDeCoeur?'❤️':''}</div><div class="card-creator" style="margin-top:4px;">${i.createur || ''}</div></div><div class="card-status-group"><span class="badge badge-status" style="background:var(--bg-parchment-dark)">${(statusConfig[i.statut]||{icon:'?'}).icon}</span></div></div><div style="flex:1; pointer-events:none;"></div>${(i.note > 0 && i.note <= 5) ? `<div style="color:var(--color-star);font-size:1.1rem;margin:4px 0;">${'★'.repeat(i.note)}</div>`:''}<div class="card-meta"><span class="badge" style="background:#ddd">${i.format}</span>${(i.genres || []).slice(0, 2).map(t => `<span class="badge">${t}</span>`).join('')}${(i.ambiances || []).slice(0, 1).map(t => `<span class="badge badge-ambiance">${t}</span>`).join('')}</div>`;
+            
+            // Griser la carte si elle n'est pas dans le profil actif
+            if (ud.statut === 'neutre') { card.style.opacity = '0.6'; }
+
+            card.innerHTML = `<div class="card-header"><div class="card-title-group" style="flex:1; min-width:0;">${serieHtml}<div class="card-title">${iconeType} ${i.titre} ${ud.coupDeCoeur?'❤️':''}</div><div class="card-creator" style="margin-top:4px;">${i.createur || ''}</div></div><div class="card-status-group"><span class="badge badge-status" style="background:var(--bg-parchment-dark)">${(statusConfig[ud.statut]||{icon:'?'}).icon}</span></div></div><div style="flex:1; pointer-events:none;"></div>${(ud.note > 0 && ud.note <= 5) ? `<div style="color:var(--color-star);font-size:1.1rem;margin:4px 0;">${'★'.repeat(ud.note)}</div>`:''}<div class="card-meta"><span class="badge" style="background:#ddd">${i.format}</span>${(i.genres || []).slice(0, 2).map(t => `<span class="badge">${t}</span>`).join('')}${(i.ambiances || []).slice(0, 1).map(t => `<span class="badge badge-ambiance">${t}</span>`).join('')}</div>`;
             card.onclick = () => isOracleMode ? toggleCardSelection(i.id, card) : viewItem(i.id); return card;
         }
         
@@ -1037,6 +1173,7 @@ Formate en HTML : <div style="background:rgba(255,255,255,0.7); padding:15px; bo
         }
 
         function safeRenderAll() {
+            updateProfileUI();
             try { renderDashboard(); } catch(e) { showError('Tableau de bord', e); }
             try { renderSettingsTags(); } catch(e) { showError('Réglages Tags', e); }
             try { initFilters(); } catch(e) { showError('Filtres', e); }
@@ -1104,20 +1241,30 @@ Formate en HTML : <div style="background:rgba(255,255,255,0.7); padding:15px; bo
         
         form.onsubmit = e => { 
             e.preventDefault(); 
-            const item = { 
+            const idx = library.findIndex(i=>i.id===editingId); 
+            
+            let item = { 
                 id: editingId || Date.now().toString(), 
                 type: document.querySelector('input[name="type"]:checked').value, 
                 titre: document.getElementById('titre').value, createur: document.getElementById('createur').value, 
                 serie: document.getElementById('serie').value, tome: document.getElementById('tome').value, 
                 format: document.querySelector('input[name="format_radio"]:checked')?.value || '', 
-                annee: document.getElementById('annee').value, statut: document.querySelector('input[name="statut_radio"]:checked')?.value || 'alire', 
+                annee: document.getElementById('annee').value, 
                 genres: [...selectedGenres], ambiances: [...selectedAmbiances], 
-                resume: document.getElementById('resume').value, note: parseInt(document.getElementById('note').value) || 0, 
-                coupDeCoeur: document.getElementById('coup-de-coeur').checked, commentaire: document.getElementById('commentaire').value, 
-                dateAjout: editingId ? library.find(i=>i.id===editingId).dateAjout : Date.now() 
+                resume: document.getElementById('resume').value,
+                userData: idx !== -1 ? library[idx].userData : {} // On garde les données des autres profils
             }; 
-            const idx = library.findIndex(i=>i.id===editingId); 
-            if(idx!==-1) library[idx]=item; else library.push(item); 
+            
+            // Mise à jour uniquement pour le profil ACTIF
+            item.userData[currentProfile] = {
+                statut: document.querySelector('input[name="statut_radio"]:checked')?.value || 'alire',
+                note: parseInt(document.getElementById('note').value) || 0,
+                coupDeCoeur: document.getElementById('coup-de-coeur').checked,
+                commentaire: document.getElementById('commentaire').value,
+                dateAjout: (idx !== -1 && item.userData[currentProfile]) ? item.userData[currentProfile].dateAjout : Date.now()
+            };
+
+            if(idx !== -1) library[idx]=item; else library.push(item); 
             saveLibrary(); modalAdd.close(); 
         };
         
@@ -1126,14 +1273,20 @@ Formate en HTML : <div style="background:rgba(255,255,255,0.7); padding:15px; bo
             document.querySelector(`input[name="type"][value="${i.type}"]`).checked = true; 
             selectedGenres = [...(i.genres||[])]; selectedAmbiances = [...(i.ambiances||[])]; 
             updateFormUI(i.type); 
-            ['titre','createur','serie','tome','annee','resume','commentaire'].forEach(k => { const el = document.getElementById(k); if(el) el.value = i[k]||''; }); 
+            
+            let ud = getUserData(i); // Récupère les données du profil courant
+            
+            ['titre','createur','serie','tome','annee','resume'].forEach(k => { const el = document.getElementById(k); if(el) el.value = i[k]||''; }); 
             const fRad = document.querySelector(`input[name="format_radio"][value="${i.format}"]`); if(fRad) fRad.checked = true;
-            const sRad = document.querySelector(`input[name="statut_radio"][value="${i.statut}"]`); if(sRad) sRad.checked = true;
-            setStars(i.note||0); document.getElementById('coup-de-coeur').checked = i.coupDeCoeur||false; 
+            
+            const sRad = document.querySelector(`input[name="statut_radio"][value="${ud.statut}"]`); if(sRad) sRad.checked = true;
+            document.getElementById('commentaire').value = ud.commentaire || '';
+            setStars(ud.note||0); document.getElementById('coup-de-coeur').checked = ud.coupDeCoeur||false; 
+            
             toggleReviewSection(); openModal('modal-add'); 
         };
         
-        function exportToExcel() { let csv = "\ufeffType;Titre;Série;Tome;Créateur;Format;Année;Statut;Genres;Ambiances;Note;Coup de coeur;Commentaire\n"; library.forEach(i => { const q=s=>`"${(s||"").toString().replace(/"/g, '""')}"`; csv += `${i.type};${q(i.titre)};${q(i.serie)};${q(i.tome)};${q(i.createur)};${q(i.format)};${i.annee||''};${i.statut};${q((i.genres||[]).join(','))};${q((i.ambiances||[]).join(','))};${i.note||0};${i.coupDeCoeur};${q(i.commentaire)}\n`; }); const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})); a.download=`Biblio_${new Date().toISOString().split('T')[0]}.csv`; a.click(); }
+        function exportToExcel() { let csv = "\ufeffType;Titre;Série;Tome;Créateur;Format;Année;Statut;Genres;Ambiances;Note;Coup de coeur;Commentaire\n"; library.forEach(i => { let ud = getUserData(i); const q=s=>`"${(s||"").toString().replace(/"/g, '""')}"`; csv += `${i.type};${q(i.titre)};${q(i.serie)};${q(i.tome)};${q(i.createur)};${q(i.format)};${i.annee||''};${ud.statut};${q((i.genres||[]).join(','))};${q((i.ambiances||[]).join(','))};${ud.note||0};${ud.coupDeCoeur};${q(ud.commentaire)}\n`; }); const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})); a.download=`Biblio_${currentProfile}_${new Date().toISOString().split('T')[0]}.csv`; a.click(); }
         
         function importFromCSV(input) { 
             const f = input.files[0]; if(!f) return; const r=new FileReader(); 
@@ -1151,17 +1304,20 @@ Formate en HTML : <div style="background:rgba(255,255,255,0.7); padding:15px; bo
                     if(c.length<2)continue; 
                     
                     let itemGenres = [], itemAmbiances = [];
+                    let ud = { statut: c[7], note: parseInt(c[hasOldTags?9:10])||0, coupDeCoeur: (String(c[hasOldTags?10:11]).toLowerCase() === 'true' || c[hasOldTags?10:11] === '1'), commentaire: c[hasOldTags?11:12], dateAjout: Date.now() };
+                    
                     if(hasOldTags) {
                         itemGenres = c[8]?c[8].split(',').map(t=>t.trim()).filter(Boolean):[];
-                        added.push({id:Date.now().toString()+i, type:c[0]||'book', titre:c[1], serie:c[2], tome:c[3], createur:c[4], format:c[5], annee:c[6], statut:c[7], genres:itemGenres, ambiances:[], note:parseInt(c[9])||0, coupDeCoeur:c[10]==='true', commentaire:c[11], dateAjout:Date.now()}); 
                     } else {
                         itemGenres = c[8]?c[8].split(',').map(t=>t.trim()).filter(Boolean):[];
                         itemAmbiances = c[9]?c[9].split(',').map(t=>t.trim()).filter(Boolean):[];
-                        let isCDC = (String(c[11]).toLowerCase() === 'true' || c[11] === '1');
-                        added.push({id:Date.now().toString()+i, type:c[0]||'book', titre:c[1], serie:c[2], tome:c[3], createur:c[4], format:c[5], annee:c[6], statut:c[7], genres:itemGenres, ambiances:itemAmbiances, note:parseInt(c[10])||0, coupDeCoeur:isCDC, commentaire:c[12], dateAjout:Date.now()}); 
                     }
+                    
+                    let newItem = {id:Date.now().toString()+i, type:c[0]||'book', titre:c[1], serie:c[2], tome:c[3], createur:c[4], format:c[5], annee:c[6], genres:itemGenres, ambiances:itemAmbiances, resume:"", userData: {}};
+                    newItem.userData[currentProfile] = ud;
+                    added.push(newItem);
                 } 
-                customConfirm(`Importer ${added.length} œuvres depuis ce fichier ?`, () => { library=[...library,...added]; normalizeLibrary(); saveLibrary(); }, false);
+                customConfirm(`Importer ${added.length} œuvres pour le profil ${currentProfile} ?`, () => { library=[...library,...added]; normalizeLibrary(); saveLibrary(); }, false);
             }; 
             r.readAsText(f); 
         }
