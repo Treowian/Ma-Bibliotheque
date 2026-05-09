@@ -88,11 +88,8 @@
             .nav-btn.active { border-radius: 12px 12px 0 0; border-bottom: 3px solid var(--accent-wood); }
         }
 
-        /* GRILLES ET CARTES */
+        /* GRILLES ET CARTES (RETOUR AU GRID CLASSIQUE) */
         .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-top: 10px; }
-        .horizontal-scroll { display: flex; overflow-x: auto; gap: 15px; padding-bottom: 15px; margin-top: 10px; scroll-snap-type: x mandatory; scrollbar-width: none;}
-        .horizontal-scroll::-webkit-scrollbar { display: none; }
-        .horizontal-scroll .card { min-width: 260px; max-width: 300px; flex: 0 0 auto; scroll-snap-align: start; }
 
         .card { background: #fff; border: 2px solid var(--bg-parchment-dark); border-radius: 12px; padding: 15px; box-shadow: var(--shadow-soft); display: flex; flex-direction: column; width: 100%; cursor: pointer; transition: 0.2s; position: relative;}
         .card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(44, 37, 31, 0.15); }
@@ -266,13 +263,13 @@
                 <button class="btn-jukebox" onclick="openJukeboxModal()">Que veux-tu vivre aujourd'hui ?</button>
                 
                 <h3 class="section-title" id="title-wishlist" style="display:none; color: #4A7C59;">🛒 Ma Liste d'Achats</h3>
-                <div id="list-wishlist" class="horizontal-scroll" style="display:none;"></div>
+                <div id="list-wishlist" class="grid-container" style="display:none;"></div>
                 
                 <h3 class="section-title" id="title-recent">✨ Récemment ajoutés (Foyer)</h3>
-                <div id="list-recent" class="horizontal-scroll" style="margin-bottom: 30px;"></div>
+                <div id="list-recent" class="grid-container" style="margin-bottom: 30px;"></div>
                 
                 <h3 class="section-title" id="title-coups-coeur" style="display:none;">❤️ Mes Coups de Coeur</h3>
-                <div id="list-favs" class="horizontal-scroll" style="margin-bottom: 30px;"></div>
+                <div id="list-favs" class="grid-container" style="margin-bottom: 30px;"></div>
             </section>
 
             <section id="view-books" class="view-section"><div id="list-books" class="grid-container"></div></section>
@@ -675,7 +672,7 @@
                 alert("Vous ne pouvez pas supprimer le dernier profil.");
                 return;
             }
-            customConfirm(`⚠️ Supprimer DÉFINITIVEMENT le profil "${name}" et toutes ses données personnelles (notes, statuts, commentaires) ? <br><br>Les œuvres resteront en rayon.`, () => {
+            customConfirm(`⚠️ Supprimer DÉFINITIVEMENT le profil "${name}" et toutes ses données personnelles (notes, statuts, commentaires) ? <br><br>Les œuvres resteront en rayon pour les autres.`, () => {
                 profiles = profiles.filter(p => p !== name);
                 
                 if (currentProfile === name) {
@@ -1079,7 +1076,7 @@
             if(titleId) {
                 const title = document.getElementById(titleId);
                 if(data.length === 0) { title.style.display = 'none'; c.style.display = 'none'; return; }
-                else { title.style.display = 'flex'; c.style.display = c.classList.contains('horizontal-scroll') ? 'flex' : 'grid'; }
+                else { title.style.display = 'flex'; c.style.display = 'grid'; } /* RETOUR AU GRID */
             }
             c.innerHTML = data.length ? '' : '<p style="padding:10px;">Rien à afficher.</p>'; 
             data.forEach(i => c.appendChild(createCard(i))); 
@@ -1088,6 +1085,7 @@
         function switchView(id) { document.querySelectorAll('.view-section').forEach(v => v.classList.toggle('active', v.id === id)); if(id !== 'view-search') { document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.target === id)); safeRenderAll(); } }
         document.querySelectorAll('.nav-btn').forEach(b => b.onclick = () => { document.getElementById('search-input').value=''; switchView(b.dataset.target); });
 
+        // --- 10. AFFICHAGE DES STATISTIQUES ---
         function renderDashboard() {
             const stats = { book: { t: 0, l: 0, a: 0, title: '📖 Livres', done: 'terminés', todo: 'à lire' }, bd: { t: 0, l: 0, a: 0, title: '💬 BD', done: 'terminées', todo: 'à lire' }, music: { t: 0, l: 0, a: 0, title: '🎵 Musique', done: 'écoutés', todo: 'à découvrir' }, game: { t: 0, l: 0, a: 0, title: '🎲 Jeux', done: 'joués', todo: 'à tester' } };
             
@@ -1128,7 +1126,7 @@
             renderGrid(wishlist, 'list-wishlist', 'title-wishlist');
 
             const getCreationDate = (item) => item.dateAjout || parseInt(item.id.substring(0, 13)) || 0;
-            const recents = [...library].sort((a,b) => getCreationDate(b) - getCreationDate(a)).slice(0, 5);
+            const recents = [...library].sort((a,b) => getCreationDate(b) - getCreationDate(a)).slice(0, 6); // 6 cartes en grille c'est mieux que 5
             renderGrid(recents, 'list-recent', 'title-recent');
         }
 

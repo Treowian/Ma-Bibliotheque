@@ -2,82 +2,107 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Générateur Icône Minimaliste</title>
+    <title>Générateur Icône - Ma Bibliothèque</title>
     <style>
-        body { display: flex; flex-direction: column; align-items: center; background: #f0f0f0; font-family: sans-serif; padding-top: 50px; }
-        canvas { border: 1px solid #ccc; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); border-radius: 20px; }
-        button { padding: 12px 24px; font-size: 16px; font-weight: bold; cursor: pointer; background: #2C251F; color: #F4EEDD; border: none; border-radius: 8px; transition: 0.2s;}
-        button:hover { background: #8C5A40; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #e0e0e0; padding: 40px; text-align: center; }
+        .container { max-width: 500px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        h1 { color: #2C251F; margin-top: 0; font-size: 1.5rem;}
+        p { color: #5A4E45; font-size: 0.95rem; margin-bottom: 30px; }
+        
+        .icon-preview { 
+            width: 192px; height: 192px; margin: 0 auto 30px auto; 
+            border-radius: 40px; /* Arrondi typique d'une icône iOS/Android */
+            box-shadow: 0 8px 24px rgba(109, 67, 44, 0.25); 
+            overflow: hidden; 
+        }
+        
+        #canvas-icon { width: 100%; height: 100%; display: block; }
+        
+        .btn { display: block; width: 100%; padding: 15px; background: #6D432C; color: #fff; border-radius: 12px; font-weight: bold; font-size: 1.1rem; cursor: pointer; border: none; transition: 0.2s; }
+        .btn:hover { background: #5A3622; transform: translateY(-2px); }
+        .btn:active { transform: scale(0.98); }
     </style>
 </head>
 <body>
 
-    <canvas id="iconCanvas" width="512" height="512"></canvas>
-    <button onclick="downloadIcon()">⬇️ Télécharger l'icône</button>
+<div class="container">
+    <h1>Nouvelle Icône "Foyer & Lecture"</h1>
+    <p>Un design géométrique propre, lisible et parfaitement intégré aux couleurs de l'application.</p>
+    
+    <div class="icon-preview">
+        <canvas id="canvas-icon" width="512" height="512"></canvas>
+    </div>
 
-    <script>
-        const canvas = document.getElementById('iconCanvas');
+    <button class="btn" onclick="generateIcon()">⬇️ Télécharger icon.png</button>
+</div>
+
+<script>
+    function drawIcon() {
+        const canvas = document.getElementById('canvas-icon');
         const ctx = canvas.getContext('2d');
-        const width = canvas.width;
-        const height = canvas.height;
 
-        // 1. Fond Encre (Premium)
-        ctx.fillStyle = '#2C251F';
-        ctx.fillRect(0, 0, width, height);
+        // 1. FOND (Parchemin de l'appli)
+        ctx.fillStyle = "#F4EEDD";
+        ctx.fillRect(0, 0, 512, 512);
 
-        // 2. Réglages du trait (Parchemin)
-        ctx.strokeStyle = '#F4EEDD';
+        // RÉGLAGES DU TRAIT (Couleur Bois)
+        ctx.strokeStyle = "#6D432C";
         ctx.lineWidth = 32;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
 
-        // 3. Dessin géométrique du livre ouvert
-        const centerX = width / 2;
+        // 2. LE TOIT DE LA MAISON
+        ctx.beginPath();
+        ctx.moveTo(256, 100);  // Sommet
+        ctx.lineTo(100, 230);  // Pente gauche
+        ctx.moveTo(256, 100);
+        ctx.lineTo(412, 230);  // Pente droite
+        ctx.stroke();
+
+        // 3. LE LIVRE OUVERT (Forme les murs et le sol)
         
-        // Courbe supérieure
+        // Tranche du haut des pages
         ctx.beginPath();
-        ctx.moveTo(120, 200);
-        ctx.quadraticCurveTo(188, 150, centerX, 220);
-        ctx.quadraticCurveTo(324, 150, 392, 200);
+        ctx.moveTo(140, 250);
+        ctx.quadraticCurveTo(200, 270, 256, 250); // Courbe gauche
+        ctx.quadraticCurveTo(312, 270, 372, 250); // Courbe droite
         ctx.stroke();
 
-        // Courbe inférieure
+        // Contours extérieurs et bas des pages
         ctx.beginPath();
-        ctx.moveTo(120, 360);
-        ctx.quadraticCurveTo(188, 310, centerX, 380);
-        ctx.quadraticCurveTo(324, 310, 392, 360);
+        ctx.moveTo(140, 250);
+        ctx.lineTo(140, 380); // Bordure gauche
+        ctx.quadraticCurveTo(200, 410, 256, 370); // Bas page gauche
+        ctx.quadraticCurveTo(312, 410, 372, 380); // Bas page droite
+        ctx.lineTo(372, 250); // Bordure droite
         ctx.stroke();
 
-        // Arête centrale
+        // Reliure centrale
         ctx.beginPath();
-        ctx.moveTo(centerX, 220);
-        ctx.lineTo(centerX, 380);
+        ctx.moveTo(256, 250);
+        ctx.lineTo(256, 370);
         ctx.stroke();
 
-        // Bordure gauche
+        // 4. LE FOYER CHALEUREUX (L'étoile/soleil au centre)
+        ctx.fillStyle = "#f39c12"; // Couleur "Étoile" de tes favoris
         ctx.beginPath();
-        ctx.moveTo(120, 200);
-        ctx.lineTo(120, 360);
-        ctx.stroke();
-
-        // Bordure droite
-        ctx.beginPath();
-        ctx.moveTo(392, 200);
-        ctx.lineTo(392, 360);
-        ctx.stroke();
-
-        // 4. L'étincelle de l'Oracle (Point Bois)
-        ctx.fillStyle = '#8C5A40';
-        ctx.beginPath();
-        ctx.arc(centerX, 110, 24, 0, Math.PI * 2);
+        ctx.arc(256, 175, 24, 0, Math.PI * 2);
         ctx.fill();
+    }
 
-        function downloadIcon() {
-            const link = document.createElement('a');
-            link.download = 'icon-512x512.png';
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-        }
-    </script>
+    function generateIcon() {
+        const canvas = document.getElementById('canvas-icon');
+        const dataUrl = canvas.toDataURL("image/png");
+
+        const link = document.createElement('a');
+        link.download = 'icon.png';
+        link.href = dataUrl;
+        link.click();
+    }
+
+    // Dessiner l'icône dès l'ouverture de la page
+    window.onload = drawIcon;
+</script>
+
 </body>
 </html>
