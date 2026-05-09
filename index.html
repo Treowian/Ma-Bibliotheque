@@ -417,7 +417,6 @@
                     <div class="form-group"><label>N° Tome</label><input type="text" id="tome"></div>
                 </div>
                 <div class="form-group"><label id="label-createur">Auteur</label><input type="text" id="createur"></div>
-                
                 <div class="form-row">
                     <div class="form-group" style="flex: 2;">
                         <label>Format</label>
@@ -425,7 +424,6 @@
                     </div>
                     <div class="form-group" style="flex: 1; min-width: 80px;"><label>Année</label><input type="number" id="annee"></div>
                 </div>
-                
                 <div class="form-group">
                     <label>Genres</label>
                     <div id="genres-container" class="tags-container"></div>
@@ -434,7 +432,6 @@
                         <button type="button" id="btn-add-genre" class="btn-secondary" style="padding: 6px 16px; margin: 0; width: auto; font-size: 1.2rem;">＋</button>
                     </div>
                 </div>
-                
                 <div class="form-group">
                     <label style="color: var(--color-ambiance-dark);">Ambiances</label>
                     <div id="ambiances-container" class="tags-container"></div>
@@ -443,7 +440,6 @@
                         <button type="button" id="btn-add-ambiance" class="btn-secondary" style="padding: 6px 16px; margin: 0; width: auto; font-size: 1.2rem; border-color: var(--color-ambiance-dark); color: var(--color-ambiance-dark);">＋</button>
                     </div>
                 </div>
-
                 <div style="background: var(--bg-parchment-dark); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
                     <h4 style="margin-top:0; margin-bottom:10px; font-size:0.9rem; color:var(--text-ink);">👤 Mon Expérience (<span id="form-profile-name"></span>)</h4>
                     <div class="form-group"><label>Statut</label><div id="statut-container" class="type-selector" style="margin-bottom: 0; gap: 6px;"></div></div>
@@ -455,7 +451,6 @@
                         <div class="form-group"><label>Mon Commentaire</label><textarea id="commentaire" rows="3"></textarea></div>
                     </div>
                 </div>
-
                 <div id="group-resume" class="form-group" style="display: none;"><label style="display: flex; justify-content: space-between; align-items: center;">Résumé<button type="button" id="btn-ai-summary" class="btn-ai">✨ IA</button></label><textarea id="resume" rows="4"></textarea></div>
                 <button type="submit" class="btn-primary" id="btn-submit">💾 Sauvegarder</button>
             </form>
@@ -476,7 +471,6 @@
         let confirmAction = null;
         let profileToRename = '';
 
-        // Chargement sécurisé avec blocs Try/Catch séparés
         try { const stored = JSON.parse(localStorage.getItem('myLibrary')); if(Array.isArray(stored)) library = stored; } catch(e) {}
         try { const storedProfiles = JSON.parse(localStorage.getItem('profiles')); if(Array.isArray(storedProfiles) && storedProfiles.length > 0) profiles = storedProfiles; } catch(e) {}
         try { const storedCurrent = localStorage.getItem('currentProfile'); if(storedCurrent) currentProfile = storedCurrent; } catch(e) {}
@@ -495,7 +489,7 @@
             'adecouvrir': { icon: '💿', text: 'À découvrir' }, 
             'joue': { icon: '🎲', text: 'Joué' }, 
             'atester': { icon: '📦', text: 'À tester' },
-            'neutre': { icon: '🏠', text: 'Foyer (Non ajouté)' }
+            'neutre': { icon: '🏠', text: 'En rayon' }
         };
 
         const uiConfig = {
@@ -503,25 +497,25 @@
                 createur: "Auteur", formats: ["Physique", "Dématérialisé"], 
                 genres: ["SF", "Fantasy", "Thriller", "Historique", "Essai", "Classique", "Philosophie", "Poésie"], 
                 ambiances: ["Feel-Good", "Glaçant", "Réflexion", "Épique", "Mélancolique", "Dépaysant", "Poétique"], 
-                statuses: [{val:'neutre', text:'🏠 Ignorer'}, {val:'lu', text:'✅ Lu'}, {val:'encours', text:'⏳ En cours'}, {val:'alire', text:'📚 À lire'}, {val:'aacheter', text:'🛒 À acheter'}, {val:'abandonne', text:'❌ Abandonné'}] 
+                statuses: [{val:'neutre', text:'🏠 En rayon'}, {val:'lu', text:'✅ Lu'}, {val:'encours', text:'⏳ En cours'}, {val:'alire', text:'📚 À lire'}, {val:'aacheter', text:'🛒 À acheter'}, {val:'abandonne', text:'❌ Abandonné'}] 
             },
             bd: { 
                 createur: "Auteur / Dessinateur", formats: ["Physique", "Dématérialisé"], 
                 genres: ["Franco-Belge", "Comics", "Manga Shonen", "Manga Seinen", "Roman Graphique", "Aventure"], 
                 ambiances: ["Tranche de vie", "Humour absurde", "Noir", "Action", "Onirique"], 
-                statuses: [{val:'neutre', text:'🏠 Ignorer'}, {val:'lu', text:'✅ Lu'}, {val:'encours', text:'⏳ En cours'}, {val:'alire', text:'📚 À lire'}, {val:'aacheter', text:'🛒 À acheter'}, {val:'abandonne', text:'❌ Abandonné'}] 
+                statuses: [{val:'neutre', text:'🏠 En rayon'}, {val:'lu', text:'✅ Lu'}, {val:'encours', text:'⏳ En cours'}, {val:'alire', text:'📚 À lire'}, {val:'aacheter', text:'🛒 À acheter'}, {val:'abandonne', text:'❌ Abandonné'}] 
             },
             music: { 
                 createur: "Artiste", formats: ["CD", "Vinyle", "Digital"], 
                 genres: ["Rock/Metal", "Electro", "Hip-Hop", "Jazz/Blues", "Classique", "OST", "Variété"], 
                 ambiances: ["Focus", "Chill", "Énergique", "Défouloir", "Festif", "Planant"], 
-                statuses: [{val:'neutre', text:'🏠 Ignorer'}, {val:'ecoute', text:'🎧 Écouté'}, {val:'adecouvrir', text:'💿 À découvrir'}, {val:'aacheter', text:'🛒 À acheter'}, {val:'abandonne', text:'❌ Déçu'}] 
+                statuses: [{val:'neutre', text:'🏠 En rayon'}, {val:'ecoute', text:'🎧 Écouté'}, {val:'adecouvrir', text:'💿 À découvrir'}, {val:'aacheter', text:'🛒 À acheter'}, {val:'abandonne', text:'❌ Déçu'}] 
             },
             game: { 
                 createur: "Auteur / Éditeur", formats: ["Plateau", "Cartes", "Dés", "Figurines", "Autre"], 
                 genres: ["Gestion", "Deckbuilding", "Affrontement", "Coopératif", "Familial", "Expert"], 
                 ambiances: ["Prise de tête", "Rigolade", "Trahison", "Coopératif", "Narratif", "Familial", "Frustrant"], 
-                statuses: [{val:'neutre', text:'🏠 Ignorer'}, {val:'joue', text:'🎲 Joué'}, {val:'atester', text:'📦 À tester'}, {val:'aacheter', text:'🛒 À acheter'}, {val:'abandonne', text:'❌ Revendu'}] 
+                statuses: [{val:'neutre', text:'🏠 En rayon'}, {val:'joue', text:'🎲 Joué'}, {val:'atester', text:'📦 À tester'}, {val:'aacheter', text:'🛒 À acheter'}, {val:'abandonne', text:'❌ Revendu'}] 
             }
         };
 
@@ -571,11 +565,9 @@
             let needsSave = false;
             let foundProfiles = new Set(profiles); 
             
-            // Rejeter les objets corrompus
             library = library.filter(i => i && typeof i === 'object');
             
             library.forEach(i => {
-                // Typage strict
                 if (i.type && typeof i.type === 'string') {
                     let t = i.type.toLowerCase().trim();
                     if (t !== i.type) { i.type = t; needsSave = true; }
@@ -586,13 +578,17 @@
                 if (!Array.isArray(i.genres)) { i.genres = []; needsSave = true; }
                 if (!Array.isArray(i.ambiances)) { i.ambiances = []; needsSave = true; }
                 
+                if (!i.dateAjout) {
+                    i.dateAjout = parseInt(i.id.substring(0, 13)) || Date.now();
+                    needsSave = true;
+                }
+                
                 if (i.tags) {
                     if (Array.isArray(i.tags)) { i.genres = [...new Set([...i.genres, ...i.tags.map(t => String(t).trim()).filter(t => t !== '')])]; } 
                     else if (typeof i.tags === 'string') { i.genres = [...new Set([...i.genres, ...i.tags.split(',').map(t => String(t).trim()).filter(t => t !== '')])]; }
                     delete i.tags; needsSave = true;
                 }
 
-                // Migration vers structure Multi-profils
                 if (!i.userData) {
                     i.userData = {};
                     i.userData['Principal'] = {
@@ -606,11 +602,9 @@
                     needsSave = true;
                 }
 
-                // Scanne les données pour retrouver tous les profils existants
                 Object.keys(i.userData).forEach(p => foundProfiles.add(p));
             });
 
-            // Restauration automatique des profils si le fichier 'profiles.json' a disparu
             const newProfiles = Array.from(foundProfiles);
             if (newProfiles.length > profiles.length || !newProfiles.includes(currentProfile)) {
                 profiles = newProfiles;
@@ -626,7 +620,7 @@
         }
 
         // ==========================================
-        // 5. GESTION DU MULTI-PROFILS
+        // 5. GESTION DES PROFILS
         // ==========================================
         function updateProfileUI() {
             const btnProfile = document.getElementById('btn-profile');
@@ -664,7 +658,6 @@
             const oldName = profileToRename;
             const newName = document.getElementById('rename-profile-input').value.trim();
             
-            // Si on ne change rien, on ferme juste la modale
             if (!newName || newName === oldName) {
                 document.getElementById('modal-rename-profile').close();
                 openProfileManager();
@@ -676,17 +669,14 @@
                 return; 
             }
             
-            // 1. Mettre à jour la liste des profils
             const index = profiles.indexOf(oldName);
             if (index !== -1) profiles[index] = newName;
             
-            // 2. Mettre à jour le profil courant s'il est concerné
             if (currentProfile === oldName) {
                 currentProfile = newName;
                 localStorage.setItem('currentProfile', currentProfile);
             }
             
-            // 3. Mettre à jour l'étiquette sur TOUTES les œuvres
             library.forEach(item => {
                 if (item.userData && item.userData[oldName]) {
                     item.userData[newName] = item.userData[oldName];
@@ -730,7 +720,7 @@
         }
 
         async function pushToCloud() {
-            if(!cloudConfig.token || !cloudConfig.gistId) { customConfirm("❌ Paramètres incomplets. Veuillez remplir le Token et l'ID du Gist.", null, true); return; }
+            if(!cloudConfig.token || !cloudConfig.gistId) { customConfirm("❌ Paramètres incomplets.", null, true); return; }
             const status = document.getElementById('cloud-status'); status.innerText = "⏳ Envoi...";
             try { 
                 const r = await fetch(`https://api.github.com/gists/${cloudConfig.gistId.trim()}`, { 
@@ -749,7 +739,7 @@
         }
 
         function pullFromCloud() {
-            if(!cloudConfig.token || !cloudConfig.gistId) { customConfirm("❌ Paramètres incomplets. Veuillez remplir le Token et l'ID du Gist.", null, true); return; }
+            if(!cloudConfig.token || !cloudConfig.gistId) { customConfirm("❌ Paramètres incomplets.", null, true); return; }
             customConfirm("⚠️ Écraser les données locales par le Cloud ?", async () => {
                 const status = document.getElementById('cloud-status'); status.innerText = "⏳ Récupération...";
                 try { 
@@ -758,7 +748,6 @@
                     
                     const d = await r.json();
                     
-                    // Récupérer les profils depuis le Cloud
                     if(d.files['profiles.json']) { 
                         let pContent = d.files['profiles.json'].content;
                         if(d.files['profiles.json'].truncated) {
@@ -769,15 +758,9 @@
                         if (Array.isArray(cloudProfiles) && cloudProfiles.length > 0) {
                             profiles = cloudProfiles;
                             localStorage.setItem('profiles', JSON.stringify(profiles));
-                            // Si le profil actuel n'existe plus dans le Cloud, on reset au premier dispo
-                            if (!profiles.includes(currentProfile)) {
-                                currentProfile = profiles[0] || 'Principal';
-                                localStorage.setItem('currentProfile', currentProfile);
-                            }
                         }
                     }
 
-                    // Récupérer la librairie depuis le Cloud
                     const fKey = d.files['library.json'] ? 'library.json' : Object.keys(d.files).find(k => k.endsWith('.json') && k !== 'profiles.json');
                     if(fKey && d.files[fKey]) { 
                         let contentStr = d.files[fKey].content;
@@ -800,7 +783,6 @@
         function saveLibrary() { 
             localStorage.setItem('myLibrary', JSON.stringify(library)); 
             safeRenderAll(); 
-            // Sauvegarde automatique et silencieuse sur GitHub
             if(cloudConfig.token && cloudConfig.gistId) {
                 fetch(`https://api.github.com/gists/${cloudConfig.gistId.trim()}`, { 
                     method: 'PATCH', 
@@ -850,12 +832,8 @@
                 }
             });
 
-            if (modifCount > 0) {
-                saveLibrary();
-                customConfirm(`✅ Magie terminée ! ${modifCount} œuvres auto-taggées.`, null, false);
-            } else {
-                customConfirm(`🪄 Tes œuvres ont déjà toutes au moins une ambiance.`, null, false);
-            }
+            if (modifCount > 0) { saveLibrary(); customConfirm(`✅ Magie terminée ! ${modifCount} œuvres auto-taggées.`, null, false); } 
+            else { customConfirm(`🪄 Tes œuvres ont déjà toutes au moins une ambiance.`, null, false); }
         }
 
         let currentJukeboxType = 'all';
@@ -892,7 +870,6 @@
             library.forEach(i => {
                 if (currentJukeboxType === 'all' || i.type === currentJukeboxType) {
                     let ud = getUserData(i);
-                    // On ne propose que les ambiances des œuvres que ce profil n'a pas abandonnées ou ignorées
                     if (ud.statut !== 'neutre' && ud.statut !== 'abandonne') {
                         (i.ambiances||[]).forEach(a => allAmbiances.add(a));
                     }
@@ -971,7 +948,7 @@
 
             document.getElementById('filter-status').innerHTML = [
                 {val:'all', label:'Tous'}, {val:'lu', label:'✅ Terminé'}, {val:'encours', label:'⏳ En cours'}, 
-                {val:'alire', label:'📚 À faire'}, {val:'aacheter', label:'🛒 À acheter'}, {val:'neutre', label:'🏠 Non ajouté'}
+                {val:'alire', label:'📚 À faire'}, {val:'aacheter', label:'🛒 À acheter'}, {val:'neutre', label:'🏠 En rayon'}
             ].map(s => `<div class="filter-chip" data-type="status" data-val="${s.val}">${s.label} <small style="opacity:0.7">(${s.val==='all'?library.length:statusCount[s.val]||0})</small></div>`).join('');
 
             document.getElementById('filter-format').innerHTML = `<div class="filter-chip" data-type="format" data-val="all">Tous <small style="opacity:0.7">(${library.length})</small></div>` + sortTagsArray(Object.keys(formatCount)).map(f => `<div class="filter-chip" data-type="format" data-val="${String(f).replace(/"/g, '&quot;')}">${f} <small style="opacity:0.7">(${formatCount[f]})</small></div>`).join('');
@@ -1047,7 +1024,6 @@
             let serieHtml = i.serie ? `<div style="font-size:0.75rem; color:var(--accent-wood); font-weight:700; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">${i.serie} ${i.tome ? '<span style="opacity:0.7">• T.'+i.tome+'</span>' : ''}</div>` : '';
             const iconeType = {'book':'📖','bd':'💬','music':'🎵','game':'🎲'}[i.type] || '❓';
             
-            // Griser la carte si elle n'est pas dans le profil actif
             if (ud.statut === 'neutre') { card.style.opacity = '0.6'; }
 
             card.innerHTML = `<div class="card-header"><div class="card-title-group" style="flex:1; min-width:0;">${serieHtml}<div class="card-title">${iconeType} ${i.titre} ${ud.coupDeCoeur?'❤️':''}</div><div class="card-creator" style="margin-top:4px;">${i.createur || ''}</div></div><div class="card-status-group"><span class="badge badge-status" style="background:var(--bg-parchment-dark)">${(statusConfig[ud.statut]||{icon:'?'}).icon}</span></div></div><div style="flex:1; pointer-events:none;"></div>${(ud.note > 0 && ud.note <= 5) ? `<div style="color:var(--color-star);font-size:1.1rem;margin:4px 0;">${'★'.repeat(ud.note)}</div>`:''}<div class="card-meta"><span class="badge" style="background:#ddd">${i.format}</span>${(i.genres || []).slice(0, 2).map(t => `<span class="badge">${t}</span>`).join('')}${(i.ambiances || []).slice(0, 1).map(t => `<span class="badge badge-ambiance">${t}</span>`).join('')}</div>`;
@@ -1108,8 +1084,6 @@
             const wishlist = profileItems.filter(i => getUserData(i).statut === 'aacheter');
             renderGrid(wishlist, 'list-wishlist', 'title-wishlist');
 
-            // RÉCEMMENT AJOUTÉS : Le Flux d'actualité du Foyer 
-            // On trie sur la date de création globale (soit i.dateAjout s'il existe, soit les 13 premiers chiffres de l'ID)
             const getCreationDate = (item) => item.dateAjout || parseInt(item.id.substring(0, 13)) || 0;
             const recents = [...library].sort((a,b) => getCreationDate(b) - getCreationDate(a)).slice(0, 4);
             renderGrid(recents, 'list-recent', 'title-recent');
