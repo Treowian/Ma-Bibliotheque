@@ -32,7 +32,6 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         
-        /* AJOUT DU SAFE-AREA POUR EVITER LA BARRE TRONQUÉE SUR MOBILE */
         body { 
             background-color: var(--bg-parchment); color: var(--text-ink); 
             font-family: var(--font-body); line-height: 1.6; overflow-x: hidden; 
@@ -46,7 +45,7 @@
         #app-container { max-width: 900px; margin: 0 auto; padding: 20px; }
         header { text-align: center; margin-bottom: 15px; }
 
-        /* RESPIRATION DE LA BARRE DE RECHERCHE */
+        /* UI HEADER & RECHERCHE AVEC AVATAR COMPACT */
         .search-area { position: sticky; top: 0; z-index: 80; background: var(--bg-parchment); padding-top: 15px; padding-bottom: 10px; margin-bottom: 20px; }
         .search-header { display: flex; gap: 8px; align-items: center; width: 100%; }
         
@@ -65,6 +64,7 @@
         .btn-icon-header { background: #fff; border: 2px solid var(--bg-parchment-dark); border-radius: 50%; width: 42px; height: 42px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; transition: 0.2s; color: var(--text-ink); }
         .btn-icon-header.active { border-color: var(--accent-wood); background: var(--bg-parchment-dark); }
 
+        /* PANNEAU DE FILTRES */
         .filter-panel { background: rgba(255, 255, 255, 0.95); border: 1px solid var(--bg-parchment-dark); border-radius: 12px; padding: 15px; margin-top: 10px; display: none; flex-direction: column; gap: 15px; box-shadow: var(--shadow-soft); max-height: 65vh; overflow-y: auto; overscroll-behavior: contain; }
         .filter-panel.open { display: flex; }
         .filter-panel::-webkit-scrollbar { width: 6px; }
@@ -84,6 +84,7 @@
         .scrollable-chips::-webkit-scrollbar-track { background: var(--bg-parchment); border-radius: 4px; }
         .scrollable-chips::-webkit-scrollbar-thumb { background: var(--bg-parchment-dark); border-radius: 4px; }
 
+        /* NAVIGATION */
         nav { position: fixed; bottom: 0; left: 0; width: 100%; background-color: var(--bg-parchment-dark); box-shadow: 0 -2px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-around; padding: 6px 0; z-index: 100; }
         .nav-btn { background: none; border: none; color: var(--text-ink-light); font-family: var(--font-body); font-size: 0.65rem; font-weight: 600; cursor: pointer; padding: 8px 2px; display: flex; flex-direction: column; align-items: center; gap: 2px; border-radius: 12px; transition: 0.2s; flex: 1; text-align: center;}
         .nav-btn span:first-child { font-size: 1.1rem; }
@@ -94,10 +95,8 @@
             .nav-btn.active { border-radius: 12px 12px 0 0; border-bottom: 3px solid var(--accent-wood); }
         }
 
+        /* GRILLES ET CARTES (CLASSIQUES) */
         .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-top: 10px; }
-        .horizontal-scroll { display: flex; overflow-x: auto; gap: 15px; padding-bottom: 15px; margin-top: 10px; scroll-snap-type: x mandatory; scrollbar-width: none;}
-        .horizontal-scroll::-webkit-scrollbar { display: none; }
-        .horizontal-scroll .card { min-width: 260px; max-width: 300px; flex: 0 0 auto; scroll-snap-align: start; }
 
         .card { background: #fff; border: 2px solid var(--bg-parchment-dark); border-radius: 12px; padding: 15px; box-shadow: var(--shadow-soft); display: flex; flex-direction: column; width: 100%; cursor: pointer; transition: 0.2s; position: relative;}
         .card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(44, 37, 31, 0.15); }
@@ -112,6 +111,7 @@
         .badge-ambiance { background: var(--color-ambiance); color: var(--color-ambiance-dark); border: 1px solid var(--color-ambiance-dark); }
         .card-meta { display: flex; flex-wrap: wrap !important; gap: 6px; margin-top: 10px; width: 100%; align-items: center; pointer-events: none;}
 
+        /* STATISTIQUES ET DETAILS */
         details.stats-collapse summary { cursor: pointer; user-select: none; list-style: none; outline: none; display: flex; justify-content: space-between; align-items: center; }
         details.stats-collapse summary::-webkit-details-marker { display: none; }
         details.stats-collapse summary::after { content: '▼'; font-size: 0.8rem; transition: transform 0.2s; color: var(--accent-wood); flex-shrink: 0; margin-left: 10px;}
@@ -124,6 +124,7 @@
         .top-list { font-size: 0.85rem; padding-left: 15px; margin-top: 5px; color: var(--text-ink-light); }
         .top-list li { margin-bottom: 5px; }
 
+        /* BOUTONS ET ACTIONS */
         #selection-bar { position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%); background: #fff; border: 2px solid var(--accent-wood); padding: 10px 15px; border-radius: 30px; display: none; align-items: center; gap: 10px; z-index: 200; box-shadow: 0 8px 20px rgba(109, 67, 44, 0.4); white-space: nowrap;}
         @media (min-width: 768px) { #selection-bar { bottom: 30px; } }
         .selection-count { font-weight: bold; color: var(--accent-wood); padding-right: 10px; border-right: 1px solid var(--bg-parchment-dark); }
@@ -204,6 +205,7 @@
         <div class="search-area">
             <div class="search-header">
                 <button id="btn-profile" class="btn-profile-avatar" onclick="openProfileManager()" title="Gérer les profils">P</button>
+                
                 <div class="search-container">
                     <span class="search-icon">🔍</span>
                     <input type="text" id="search-input" placeholder="Titre, Auteur, Genre, Ambiance...">
@@ -429,6 +431,7 @@
                     <div class="form-group"><label>Série</label><input type="text" id="serie"></div>
                     <div class="form-group"><label>N° Tome</label><input type="text" id="tome"></div>
                 </div>
+                
                 <div class="form-group"><label id="label-createur">Auteur</label><input type="text" id="createur"></div>
                 
                 <div class="form-row">
@@ -462,17 +465,17 @@
                     <div class="form-group"><label>Statut</label><div id="statut-container" class="type-selector" style="margin-bottom: 0; gap: 6px;"></div></div>
                     
                     <div id="review-section">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                            <div>
-                                <label style="display: block; margin-bottom: 4px;">Note</label>
-                                <div class="star-rating" id="star-rating" style="display: flex; align-items: center;">
+                        <div class="form-row" style="align-items: flex-end; margin-bottom: 15px;">
+                            <div class="form-group" style="margin:0;">
+                                <label>Note</label>
+                                <div class="star-rating" id="star-rating" style="height: 30px; display: flex; align-items: center;">
                                     <span data-val="1">★</span><span data-val="2">★</span><span data-val="3">★</span><span data-val="4">★</span><span data-val="5">★</span>
                                 </div>
                                 <input type="hidden" id="note" value="0">
                             </div>
-                            <div style="display: flex; align-items: center; gap: 8px; margin-top: 15px;">
+                            <div class="form-group" style="flex-direction:row; align-items:center; gap:8px; margin:0; justify-content: flex-end; height: 30px; padding-bottom: 3px;">
                                 <input type="checkbox" id="coup-de-coeur" style="transform: scale(1.3); margin:0;">
-                                <label for="coup-de-coeur" style="margin:0; cursor:pointer; font-size: 0.95rem; font-weight: bold; color: var(--color-danger);">Favori ❤️</label>
+                                <label style="margin:0; cursor:pointer; font-size: 0.95rem; font-weight: bold; color: var(--color-danger);" for="coup-de-coeur">Favori ❤️</label>
                             </div>
                         </div>
 
@@ -499,6 +502,7 @@
         let selectedForOracle = [];
         let confirmAction = null;
         let profileToRename = '';
+        let cloudSyncTimeout = null; // Pour le Debounce Cloud
 
         try { const stored = JSON.parse(localStorage.getItem('myLibrary')); if(Array.isArray(stored)) library = stored; } catch(e) {}
         try { const storedProfiles = JSON.parse(localStorage.getItem('profiles')); if(Array.isArray(storedProfiles) && storedProfiles.length > 0) profiles = storedProfiles; } catch(e) {}
@@ -549,13 +553,35 @@
         };
 
         // ==========================================
-        // 3. FONCTIONS UTILITAIRES
+        // 3. FONCTIONS UTILITAIRES & SÉCURITÉ
         // ==========================================
         function showError(msg, err) {
             const b = document.getElementById('error-banner');
             b.style.display = 'block';
             b.innerHTML = `🚨 <b>Erreur Système :</b> ${msg}<br><span style="font-size:0.8rem; font-weight:normal;">${err.message || err}</span>`;
             console.error("Erreur détaillée:", err);
+        }
+
+        // PROTECTION XSS : Échapper les caractères spéciaux
+        function escapeHTML(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // PROTECTION XSS : Nettoyer le HTML de l'IA
+        function sanitizeHTML(htmlStr) {
+            const doc = new DOMParser().parseFromString(htmlStr, 'text/html');
+            doc.querySelectorAll('script').forEach(s => s.remove());
+            doc.querySelectorAll('*').forEach(el => {
+                Array.from(el.attributes).forEach(attr => {
+                    if (attr.name.toLowerCase().startsWith('on') || attr.name.toLowerCase() === 'javascript:') {
+                        el.removeAttribute(attr.name);
+                    }
+                });
+            });
+            return doc.body.innerHTML;
         }
 
         function sortTagsArray(tags) {
@@ -565,7 +591,12 @@
         function customConfirm(msg, action, isDanger = true) {
             document.getElementById('confirm-msg').innerHTML = msg;
             const btn = document.getElementById('btn-confirm-action');
-            btn.className = isDanger ? 'btn-danger' : 'btn-primary';
+            if(action === null) {
+                btn.style.display = 'none';
+            } else {
+                btn.style.display = 'block';
+                btn.className = isDanger ? 'btn-danger' : 'btn-primary';
+            }
             confirmAction = action;
             document.getElementById('modal-confirm').showModal();
         }
@@ -653,35 +684,64 @@
         // ==========================================
         function updateProfileUI() {
             const btnProfile = document.getElementById('btn-profile');
-            if(btnProfile) btnProfile.innerText = currentProfile.charAt(0).toUpperCase();
-            document.getElementById('stat-profile-name').innerText = currentProfile;
-            document.getElementById('form-profile-name').innerText = currentProfile;
+            if(btnProfile) btnProfile.innerText = escapeHTML(currentProfile).charAt(0).toUpperCase();
+            document.getElementById('stat-profile-name').innerText = escapeHTML(currentProfile);
+            document.getElementById('form-profile-name').innerText = escapeHTML(currentProfile);
         }
 
+        // CREATION DU DOM PROTEGÉE DES XSS
         function openProfileManager() {
             const list = document.getElementById('profile-list');
-            list.innerHTML = profiles.map(p => `
-                <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border:1px solid ${p===currentProfile?'var(--accent-wood)':'var(--bg-parchment-dark)'}; border-radius:8px; background:${p===currentProfile?'var(--bg-parchment-dark)':'#fff'};">
-                    <div style="display:flex; align-items:center; gap:10px; flex:1; cursor:pointer;" onclick="selectProfile('${p.replace(/'/g, "\\'")}')">
-                        <div class="btn-profile-avatar" style="width:35px; height:35px; pointer-events:none;">${p.charAt(0).toUpperCase()}</div>
-                        <span style="font-weight:bold; color:var(--text-ink);">${p}</span>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        ${p===currentProfile ? '<span style="font-size:1.1rem;">✅</span>' : ''}
-                        <button style="background:none; border:none; font-size:1.2rem; cursor:pointer;" onclick="openRenameModal('${p.replace(/'/g, "\\'")}')" title="Renommer">✏️</button>
-                        ${profiles.length > 1 ? `<button style="background:none; border:none; font-size:1.2rem; cursor:pointer;" onclick="deleteProfile('${p.replace(/'/g, "\\'")}')" title="Supprimer">🗑️</button>` : ''}
-                    </div>
-                </div>
-            `).join('');
+            list.innerHTML = '';
+            
+            profiles.forEach(p => {
+                const div = document.createElement('div');
+                div.style.cssText = `display:flex; justify-content:space-between; align-items:center; padding:10px; border:1px solid ${p===currentProfile?'var(--accent-wood)':'var(--bg-parchment-dark)'}; border-radius:8px; background:${p===currentProfile?'var(--bg-parchment-dark)':'#fff'};`;
+                
+                const leftDiv = document.createElement('div');
+                leftDiv.style.cssText = "display:flex; align-items:center; gap:10px; flex:1; cursor:pointer;";
+                leftDiv.onclick = () => selectProfile(p);
+                leftDiv.innerHTML = `<div class="btn-profile-avatar" style="width:35px; height:35px; pointer-events:none;">${escapeHTML(p).charAt(0).toUpperCase()}</div><span style="font-weight:bold; color:var(--text-ink);">${escapeHTML(p)}</span>`;
+                
+                const rightDiv = document.createElement('div');
+                rightDiv.style.cssText = "display:flex; align-items:center; gap:10px;";
+                
+                if(p === currentProfile) {
+                    const check = document.createElement('span');
+                    check.style.fontSize = "1.1rem";
+                    check.innerText = "✅";
+                    rightDiv.appendChild(check);
+                }
+                
+                const btnRename = document.createElement('button');
+                btnRename.style.cssText = "background:none; border:none; font-size:1.2rem; cursor:pointer;";
+                btnRename.title = "Renommer";
+                btnRename.innerText = "✏️";
+                btnRename.onclick = () => openRenameModal(p);
+                rightDiv.appendChild(btnRename);
+                
+                if(profiles.length > 1) {
+                    const btnDel = document.createElement('button');
+                    btnDel.style.cssText = "background:none; border:none; font-size:1.2rem; cursor:pointer;";
+                    btnDel.title = "Supprimer";
+                    btnDel.innerText = "🗑️";
+                    btnDel.onclick = () => deleteProfile(p);
+                    rightDiv.appendChild(btnDel);
+                }
+                
+                div.appendChild(leftDiv);
+                div.appendChild(rightDiv);
+                list.appendChild(div);
+            });
             openModal('modal-profile');
         }
 
         function deleteProfile(name) {
             if (profiles.length <= 1) {
-                alert("Vous ne pouvez pas supprimer le dernier profil.");
+                customConfirm("Vous ne pouvez pas supprimer le dernier profil.", null, false);
                 return;
             }
-            customConfirm(`⚠️ Supprimer DÉFINITIVEMENT le profil "${name}" et toutes ses données personnelles (notes, statuts, commentaires) ? <br><br>Les œuvres resteront en rayon pour les autres.`, () => {
+            customConfirm(`⚠️ Supprimer DÉFINITIVEMENT le profil "<b>${escapeHTML(name)}</b>" et toutes ses données personnelles ? <br><br>Les œuvres resteront en rayon pour les autres.`, () => {
                 profiles = profiles.filter(p => p !== name);
                 
                 if (currentProfile === name) {
@@ -704,7 +764,7 @@
 
         function openRenameModal(oldName) {
             profileToRename = oldName;
-            document.getElementById('rename-old-name-display').innerText = oldName;
+            document.getElementById('rename-old-name-display').innerText = escapeHTML(oldName);
             document.getElementById('rename-profile-input').value = oldName;
             document.getElementById('modal-profile').close();
             openModal('modal-rename-profile');
@@ -721,7 +781,7 @@
             }
             
             if (profiles.includes(newName)) { 
-                alert("Ce nom de profil existe déjà."); 
+                customConfirm("Ce nom de profil existe déjà.", null, false); 
                 return; 
             }
             
@@ -757,7 +817,7 @@
         function createNewProfile() {
             const name = document.getElementById('new-profile-name').value.trim();
             if (!name) return;
-            if (profiles.includes(name)) { alert("Ce profil existe déjà."); return; }
+            if (profiles.includes(name)) { customConfirm("Ce profil existe déjà.", null, false); return; }
             profiles.push(name);
             localStorage.setItem('profiles', JSON.stringify(profiles));
             document.getElementById('new-profile-name').value = '';
@@ -765,7 +825,7 @@
         }
 
         // ==========================================
-        // 6. CLOUD & SYNCHRONISATION
+        // 6. CLOUD & SYNCHRONISATION (DEBOUNCED)
         // ==========================================
         function saveCloudSettings() {
             cloudConfig.token = document.getElementById('gh-token').value.trim();
@@ -836,25 +896,30 @@
             }, true);
         }
 
+        // SAUVEGARDE AVEC DEBOUNCE (Evite le Rate Limiting GitHub)
         function saveLibrary() { 
             localStorage.setItem('myLibrary', JSON.stringify(library)); 
             safeRenderAll(); 
+            
             if(cloudConfig.token && cloudConfig.gistId) {
-                fetch(`https://api.github.com/gists/${cloudConfig.gistId.trim()}`, { 
-                    method: 'PATCH', 
-                    headers: { 'Authorization': `Bearer ${cloudConfig.token.trim()}`, 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify({ 
-                        files: { 
-                            'library.json': { content: JSON.stringify(library) },
-                            'profiles.json': { content: JSON.stringify(profiles) }
-                        } 
-                    }) 
-                }).catch(() => {});
+                if(cloudSyncTimeout) clearTimeout(cloudSyncTimeout);
+                cloudSyncTimeout = setTimeout(() => {
+                    fetch(`https://api.github.com/gists/${cloudConfig.gistId.trim()}`, { 
+                        method: 'PATCH', 
+                        headers: { 'Authorization': `Bearer ${cloudConfig.token.trim()}`, 'Content-Type': 'application/json' }, 
+                        body: JSON.stringify({ 
+                            files: { 
+                                'library.json': { content: JSON.stringify(library) },
+                                'profiles.json': { content: JSON.stringify(profiles) }
+                            } 
+                        }) 
+                    }).catch(() => {});
+                }, 3000); // Attend 3s après la dernière action pour envoyer
             }
         }
 
         // ==========================================
-        // 7. AUTO-TAGGER ET JUKEBOX (AVEC HASARD TOTAL)
+        // 7. AUTO-TAGGER ET JUKEBOX
         // ==========================================
         function autoTagAmbiances() {
             let modifCount = 0;
@@ -931,7 +996,7 @@
             
             const container = document.getElementById('jukebox-ambiances');
             if (allAmbiances.size === 0) { container.innerHTML = `<p style="font-size:0.85rem; color:var(--text-ink-light);">Aucune ambiance trouvée dans tes listes.</p>`; } 
-            else { container.innerHTML = sortTagsArray(allAmbiances).map(a => `<div class="filter-chip ambiance-chip" style="background:var(--bg-parchment); color:var(--text-ink);" onclick="spinJukebox('${String(a).replace(/'/g, "\\'")}')">${a}</div>`).join(''); }
+            else { container.innerHTML = sortTagsArray(allAmbiances).map(a => `<div class="filter-chip ambiance-chip" style="background:var(--bg-parchment); color:var(--text-ink);" onclick="spinJukebox('${escapeHTML(a).replace(/'/g, "\\'")}')">${escapeHTML(a)}</div>`).join(''); }
         }
 
         function spinJukebox(ambiance) {
@@ -940,8 +1005,7 @@
                 c.style.color = c.innerText === ambiance ? '#fff' : 'var(--text-ink)';
             });
 
-            const profileItems = library.filter(i => getUserData(i).statut !== 'neutre');
-            const matching = profileItems.filter(i => {
+            const matching = library.filter(i => {
                 const matchType = (currentJukeboxType === 'all' || i.type === currentJukeboxType);
                 const matchAmbiance = (i.ambiances||[]).includes(ambiance);
                 return matchType && matchAmbiance;
@@ -949,48 +1013,34 @@
 
             const todos = matching.filter(i => ['alire','adecouvrir','atester'].includes(getUserData(i).statut));
             const dones = matching.filter(i => ['lu','ecoute','joue'].includes(getUserData(i).statut));
-            
-            let discovery = null, safeBet = null, alternative = null, hasard = null;
+            let discovery = null, safeBet = null, alternative = null;
 
             if (todos.length > 0) discovery = todos[Math.floor(Math.random() * todos.length)];
-            
             if (dones.length > 0) {
                 let tickets = [];
                 dones.forEach(i => { let ud = getUserData(i); tickets.push(i); if(ud.coupDeCoeur) { tickets.push(i); tickets.push(i); } }); 
                 safeBet = tickets[Math.floor(Math.random() * tickets.length)];
             }
-            
-            const remaining = matching.filter(i => i.id !== (discovery?.id) && i.id !== (safeBet?.id));
+            const remaining = matching.filter(i => i.id !== (discovery?.id) && i.id !== (safeBet?.id) && getUserData(i).statut !== 'neutre');
             if (remaining.length > 0) alternative = remaining[Math.floor(Math.random() * remaining.length)];
 
-            // HASARD TOTAL : Pioche n'importe quoi dans les œuvres du profil (du bon type)
-            let hasardPool = profileItems.filter(i => {
-                const matchType = (currentJukeboxType === 'all' || i.type === currentJukeboxType);
-                return matchType && i.id !== (discovery?.id) && i.id !== (safeBet?.id) && i.id !== (alternative?.id);
-            });
-            if (hasardPool.length > 0) hasard = hasardPool[Math.floor(Math.random() * hasardPool.length)];
-
             let html = '';
-            
-            const buildCard = (item, titleEmoji, titleText) => {
-                if(!item) return '';
-                const ud = getUserData(item);
-                const createurHtml = item.createur ? `<br><small style="color:var(--text-ink-light)">de ${item.createur}</small>` : '';
-                return `<div class="jukebox-card" onclick="document.getElementById('modal-jukebox').close(); viewItem('${item.id}')">
-                    <div class="jukebox-card-title">${titleEmoji} ${titleText} (${statusConfig[ud.statut].text})</div>
-                    <b>${item.titre}</b> ${ud.coupDeCoeur?'❤️':''} ${createurHtml}
-                </div>`;
-            };
+            if(!discovery && !safeBet && !alternative) { html = `<p style="color:var(--text-ink-light);">Rien trouvé pour cette ambiance...</p>`; } 
+            else {
+                const buildCard = (item, titleEmoji, titleText) => {
+                    if(!item) return '';
+                    const ud = getUserData(item);
+                    const createurHtml = item.createur ? `<br><small style="color:var(--text-ink-light)">de ${escapeHTML(item.createur)}</small>` : '';
+                    return `<div class="jukebox-card" onclick="document.getElementById('modal-jukebox').close(); viewItem('${item.id}')">
+                        <div class="jukebox-card-title">${titleEmoji} ${titleText} (${statusConfig[ud.statut].text})</div>
+                        <b>${escapeHTML(item.titre)}</b> ${ud.coupDeCoeur?'❤️':''} ${createurHtml}
+                    </div>`;
+                };
 
-            if(!discovery && !safeBet && !alternative && !hasard) { 
-                html = `<p style="color:var(--text-ink-light);">Rien trouvé pour cette ambiance...</p>`; 
-            } else {
                 html += buildCard(discovery, '✨', 'La Découverte');
                 html += buildCard(safeBet, '🧸', 'La Valeur Sûre');
                 html += buildCard(alternative, '🎲', 'L\'Alternative');
-                html += buildCard(hasard, '🌪️', 'Le Hasard Total');
                 
-                // BOUTON RELANCER
                 html += `<button class="btn-secondary" style="width:100%; margin-top:10px; background:var(--bg-parchment-dark); border-color:var(--accent-wood);" onclick="spinJukebox('${ambiance.replace(/'/g, "\\'")}')">🔄 Relancer les dés</button>`;
             }
             document.getElementById('jukebox-results').innerHTML = html;
@@ -1028,9 +1078,9 @@
                 {val:'alire', label:'📚 À faire'}, {val:'aacheter', label:'🛒 À acheter'}, {val:'neutre', label:'🏠 En rayon'}
             ].map(s => `<div class="filter-chip" data-type="status" data-val="${s.val}">${s.label} <small style="opacity:0.7">(${s.val==='all'?library.length:statusCount[s.val]||0})</small></div>`).join('');
 
-            document.getElementById('filter-format').innerHTML = `<div class="filter-chip" data-type="format" data-val="all">Tous <small style="opacity:0.7">(${library.length})</small></div>` + sortTagsArray(Object.keys(formatCount)).map(f => `<div class="filter-chip" data-type="format" data-val="${String(f).replace(/"/g, '&quot;')}">${f} <small style="opacity:0.7">(${formatCount[f]})</small></div>`).join('');
-            document.getElementById('filter-genre').innerHTML = `<div class="filter-chip" data-type="genre" data-val="all">Tous <small style="opacity:0.7">(${library.length})</small></div>` + sortTagsArray(Object.keys(genreCount)).map(t => `<div class="filter-chip" data-type="genre" data-val="${String(t).replace(/"/g, '&quot;')}">${t} <small style="opacity:0.7">(${genreCount[t]})</small></div>`).join('');
-            document.getElementById('filter-ambiance').innerHTML = `<div class="filter-chip ambiance-chip" data-type="ambiance" data-val="all">Toutes <small style="opacity:0.7">(${library.length})</small></div>` + sortTagsArray(Object.keys(ambianceCount)).map(t => `<div class="filter-chip ambiance-chip" data-type="ambiance" data-val="${String(t).replace(/"/g, '&quot;')}">${t} <small style="opacity:0.7">(${ambianceCount[t]})</small></div>`).join('');
+            document.getElementById('filter-format').innerHTML = `<div class="filter-chip" data-type="format" data-val="all">Tous <small style="opacity:0.7">(${library.length})</small></div>` + sortTagsArray(Object.keys(formatCount)).map(f => `<div class="filter-chip" data-type="format" data-val="${escapeHTML(f).replace(/"/g, '&quot;')}">${escapeHTML(f)} <small style="opacity:0.7">(${formatCount[f]})</small></div>`).join('');
+            document.getElementById('filter-genre').innerHTML = `<div class="filter-chip" data-type="genre" data-val="all">Tous <small style="opacity:0.7">(${library.length})</small></div>` + sortTagsArray(Object.keys(genreCount)).map(t => `<div class="filter-chip" data-type="genre" data-val="${escapeHTML(t).replace(/"/g, '&quot;')}">${escapeHTML(t)} <small style="opacity:0.7">(${genreCount[t]})</small></div>`).join('');
+            document.getElementById('filter-ambiance').innerHTML = `<div class="filter-chip ambiance-chip" data-type="ambiance" data-val="all">Toutes <small style="opacity:0.7">(${library.length})</small></div>` + sortTagsArray(Object.keys(ambianceCount)).map(t => `<div class="filter-chip ambiance-chip" data-type="ambiance" data-val="${escapeHTML(t).replace(/"/g, '&quot;')}">${escapeHTML(t)} <small style="opacity:0.7">(${ambianceCount[t]})</small></div>`).join('');
 
             document.querySelectorAll('.filter-chip').forEach(chip => { chip.onclick = () => setFilter(chip.dataset.type, chip.dataset.val); });
             document.getElementById('filter-fav').onchange = e => setFilter('favOnly', e.target.checked);
@@ -1051,11 +1101,21 @@
             renderGrid(processData(library.filter(i => String(i.titre||'').toLowerCase().includes(term) || String(i.createur||'').toLowerCase().includes(term) || (i.genres||[]).some(t=>String(t).toLowerCase().includes(term)) || (i.ambiances||[]).some(t=>String(t).toLowerCase().includes(term)))), 'list-search', 'title-search'); 
         };
 
+        // GESTION INTELLIGENTE DU TRI DES NOMS (Particules)
         function getLastNameForSort(creatorString) {
             if (!creatorString || String(creatorString).trim() === '') return "zzzzz";
-            let firstAuthor = String(creatorString).split(/&|,| et /i)[0].trim();
-            let words = firstAuthor.split(' ');
-            return words[words.length - 1].toLowerCase();
+            let author = String(creatorString).split(/&|,| et /i)[0].trim().toLowerCase();
+            let words = author.split(' ');
+            if (words.length === 1) return words[0];
+            
+            let last = words[words.length - 1];
+            let prev = words[words.length - 2];
+            let particules = ['de', 'la', 'le', 'les', 'des', 'du', 'van', 'von', 'der', 'mac', 'mc', "d'"];
+            
+            if (particules.includes(prev)) {
+                return prev + ' ' + last;
+            }
+            return last;
         }
 
         function getSortString(i) {
@@ -1098,12 +1158,12 @@
         function createCard(i) {
             let ud = getUserData(i);
             const card = document.createElement('div'); card.className = `card ${isOracleMode ? 'mode-selection' : ''} ${selectedForOracle.includes(i.id) ? 'selected' : ''}`;
-            let serieHtml = i.serie ? `<div style="font-size:0.75rem; color:var(--accent-wood); font-weight:700; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">${i.serie} ${i.tome ? '<span style="opacity:0.7">• T.'+i.tome+'</span>' : ''}</div>` : '';
+            let serieHtml = i.serie ? `<div style="font-size:0.75rem; color:var(--accent-wood); font-weight:700; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">${escapeHTML(i.serie)} ${i.tome ? '<span style="opacity:0.7">• T.'+escapeHTML(i.tome)+'</span>' : ''}</div>` : '';
             const iconeType = {'book':'📖','bd':'💬','music':'🎵','game':'🎲'}[i.type] || '❓';
             
             if (ud.statut === 'neutre') { card.style.opacity = '0.6'; }
 
-            card.innerHTML = `<div class="card-header"><div class="card-title-group" style="flex:1; min-width:0;">${serieHtml}<div class="card-title">${iconeType} ${i.titre} ${ud.coupDeCoeur?'❤️':''}</div><div class="card-creator" style="margin-top:4px;">${i.createur || ''}</div></div><div class="card-status-group"><span class="badge badge-status" style="background:var(--bg-parchment-dark)">${(statusConfig[ud.statut]||{icon:'?'}).icon}</span></div></div><div style="flex:1; pointer-events:none;"></div>${(ud.note > 0 && ud.note <= 5) ? `<div style="color:var(--color-star);font-size:1.1rem;margin:4px 0;">${'★'.repeat(ud.note)}</div>`:''}<div class="card-meta"><span class="badge" style="background:#ddd">${i.format}</span>${(i.genres || []).slice(0, 2).map(t => `<span class="badge">${t}</span>`).join('')}${(i.ambiances || []).slice(0, 1).map(t => `<span class="badge badge-ambiance">${t}</span>`).join('')}</div>`;
+            card.innerHTML = `<div class="card-header"><div class="card-title-group" style="flex:1; min-width:0;">${serieHtml}<div class="card-title">${iconeType} ${escapeHTML(i.titre)} ${ud.coupDeCoeur?'❤️':''}</div><div class="card-creator" style="margin-top:4px;">${escapeHTML(i.createur) || ''}</div></div><div class="card-status-group"><span class="badge badge-status" style="background:var(--bg-parchment-dark)">${(statusConfig[ud.statut]||{icon:'?'}).icon}</span></div></div><div style="flex:1; pointer-events:none;"></div>${(ud.note > 0 && ud.note <= 5) ? `<div style="color:var(--color-star);font-size:1.1rem;margin:4px 0;">${'★'.repeat(ud.note)}</div>`:''}<div class="card-meta"><span class="badge" style="background:#ddd">${escapeHTML(i.format)}</span>${(i.genres || []).slice(0, 2).map(t => `<span class="badge">${escapeHTML(t)}</span>`).join('')}${(i.ambiances || []).slice(0, 1).map(t => `<span class="badge badge-ambiance">${escapeHTML(t)}</span>`).join('')}</div>`;
             card.onclick = () => isOracleMode ? toggleCardSelection(i.id, card) : viewItem(i.id); return card;
         }
 
@@ -1121,7 +1181,6 @@
         function switchView(id) { document.querySelectorAll('.view-section').forEach(v => v.classList.toggle('active', v.id === id)); if(id !== 'view-search') { document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.target === id)); safeRenderAll(); } }
         document.querySelectorAll('.nav-btn').forEach(b => b.onclick = () => { document.getElementById('search-input').value=''; switchView(b.dataset.target); });
 
-        // --- 10. AFFICHAGE DES STATISTIQUES ---
         function renderDashboard() {
             const stats = { book: { t: 0, l: 0, a: 0, title: '📖 Livres', done: 'terminés', todo: 'à lire' }, bd: { t: 0, l: 0, a: 0, title: '💬 BD', done: 'terminées', todo: 'à lire' }, music: { t: 0, l: 0, a: 0, title: '🎵 Musique', done: 'écoutés', todo: 'à découvrir' }, game: { t: 0, l: 0, a: 0, title: '🎲 Jeux', done: 'joués', todo: 'à tester' } };
             
@@ -1183,11 +1242,11 @@
                     let html = `<h4 style="margin-bottom:8px; color:var(--text-ink-light); font-family: var(--font-body); font-size: 0.95rem;">${t.icon} ${t.name}</h4><div class="tags-container" id="settings-group-${t.id}">`;
                     sortTagsArray(genresSet).forEach(tag => {
                         let safeTag = String(tag).replace(/'/g, "\\'");
-                        html += `<span class="tag-pill" style="background:#ffebee; border-color:#ffcdd2;" onclick="customConfirm('⚠️ Supprimer le genre <b>${safeTag}</b> ?', () => { library.forEach(i => { if(i.type === '${t.id}' && i.genres) i.genres = i.genres.filter(x => x !== '${safeTag}'); }); saveLibrary(); })">${tag} <span style="color:var(--color-danger); margin-left:4px;">✖</span></span>`;
+                        html += `<span class="tag-pill" style="background:#ffebee; border-color:#ffcdd2;" onclick="customConfirm('⚠️ Supprimer le genre <b>${safeTag}</b> ?', () => { library.forEach(i => { if(i.type === '${t.id}' && i.genres) i.genres = i.genres.filter(x => x !== '${safeTag}'); }); saveLibrary(); })">${escapeHTML(tag)} <span style="color:var(--color-danger); margin-left:4px;">✖</span></span>`;
                     });
                     sortTagsArray(ambiancesSet).forEach(tag => {
                         let safeTag = String(tag).replace(/'/g, "\\'");
-                        html += `<span class="tag-pill ambiance-chip" style="background:var(--color-ambiance); border-color:var(--color-ambiance-dark); color:var(--color-ambiance-dark);" onclick="customConfirm('⚠️ Supprimer l\\'ambiance <b>${safeTag}</b> ?', () => { library.forEach(i => { if(i.type === '${t.id}' && i.ambiances) i.ambiances = i.ambiances.filter(x => x !== '${safeTag}'); }); saveLibrary(); })">${tag} <span style="color:var(--color-ambiance-dark); margin-left:4px;">✖</span></span>`;
+                        html += `<span class="tag-pill ambiance-chip" style="background:var(--color-ambiance); border-color:var(--color-ambiance-dark); color:var(--color-ambiance-dark);" onclick="customConfirm('⚠️ Supprimer l\\'ambiance <b>${safeTag}</b> ?', () => { library.forEach(i => { if(i.type === '${t.id}' && i.ambiances) i.ambiances = i.ambiances.filter(x => x !== '${safeTag}'); }); saveLibrary(); })">${escapeHTML(tag)} <span style="color:var(--color-ambiance-dark); margin-left:4px;">✖</span></span>`;
                     });
                     html += `</div>`;
                     section.innerHTML = html; container.appendChild(section);
@@ -1336,31 +1395,31 @@
             const s = statusConfig[ud.statut] || {icon:'?', text:'-'};
             
             let titleHtml = '';
-            if (i.serie) titleHtml += `<div style="font-size:0.9rem; color:var(--accent-wood); text-transform:uppercase; font-weight:bold; margin-bottom:5px; letter-spacing: 1px;">${i.serie} ${i.tome ? '• T.'+i.tome : ''}</div>`;
-            titleHtml += i.titre;
+            if (i.serie) titleHtml += `<div style="font-size:0.9rem; color:var(--accent-wood); text-transform:uppercase; font-weight:bold; margin-bottom:5px; letter-spacing: 1px;">${escapeHTML(i.serie)} ${i.tome ? '• T.'+escapeHTML(i.tome) : ''}</div>`;
+            titleHtml += escapeHTML(i.titre);
             
             document.getElementById('view-titre').innerHTML = titleHtml;
             document.getElementById('view-createur').textContent = i.createur || 'Inconnu';
             
-            let metaHtml = `<span class="badge" style="background:#eee">${i.format}</span> <span class="badge" style="background:var(--bg-parchment-dark)">${s.icon} ${s.text}</span>`;
-            if(i.annee) metaHtml += `<span class="badge" style="background:#eee">${i.annee}</span>`;
+            let metaHtml = `<span class="badge" style="background:#eee">${escapeHTML(i.format)}</span> <span class="badge" style="background:var(--bg-parchment-dark)">${s.icon} ${s.text}</span>`;
+            if(i.annee) metaHtml += `<span class="badge" style="background:#eee">${escapeHTML(i.annee)}</span>`;
             if(ud.coupDeCoeur) metaHtml += `<span class="badge" style="background:var(--color-danger); color:white;">❤️ Coup de coeur</span>`;
             
-            (i.genres || []).forEach(t => metaHtml += `<span class="badge" style="background:#fff; border:1px solid #ddd;">${t}</span>`);
-            (i.ambiances || []).forEach(t => metaHtml += `<span class="badge badge-ambiance">${t}</span>`);
+            (i.genres || []).forEach(t => metaHtml += `<span class="badge" style="background:#fff; border:1px solid #ddd;">${escapeHTML(t)}</span>`);
+            (i.ambiances || []).forEach(t => metaHtml += `<span class="badge badge-ambiance">${escapeHTML(t)}</span>`);
             
             document.getElementById('view-meta').innerHTML = metaHtml;
             document.getElementById('view-stars').innerHTML = ud.note > 0 ? '★'.repeat(ud.note) + '☆'.repeat(5-ud.note) : '';
             document.getElementById('view-resume').style.display = i.resume ? 'block' : 'none'; document.getElementById('view-resume').textContent = i.resume || '';
             
             let commentHtml = '';
-            if (ud.commentaire) commentHtml += `<b>Mon avis :</b><br>${ud.commentaire}<br><br>`;
+            if (ud.commentaire) commentHtml += `<b>Mon avis :</b><br>${escapeHTML(ud.commentaire)}<br><br>`;
             
             let otherComments = '';
             if (i.userData) {
                 Object.keys(i.userData).forEach(p => {
                     if (p !== currentProfile && i.userData[p].commentaire) {
-                        otherComments += `<i>Avis de ${p} :</i><br>${i.userData[p].commentaire}<br><br>`;
+                        otherComments += `<i>Avis de ${escapeHTML(p)} :</i><br>${escapeHTML(i.userData[p].commentaire)}<br><br>`;
                     }
                 });
             }
@@ -1375,7 +1434,7 @@
         }
 
         // ==========================================
-        // 12. IA ORACLE & RÉSUMÉS
+        // 12. IA ORACLE & RÉSUMÉS (SECURISÉ XSS)
         // ==========================================
         document.getElementById('btn-toggle-oracle').onclick = function() {
             isOracleMode = !isOracleMode; this.classList.toggle('active'); selectedForOracle = [];
@@ -1448,8 +1507,15 @@ Formate en HTML : <div style="background:rgba(255,255,255,0.7); padding:15px; bo
                 resultBox.innerHTML = `⏳ Connexion établie avec <b>${modelToUse}</b>...`;
                 const req = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${cloudConfig.geminiKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
                 const data = await req.json();
-                if(data.candidates) resultBox.innerHTML = data.candidates[0].content.parts[0].text.replace(/```html/gi, '').replace(/```/g, '').trim();
-                else resultBox.innerHTML = `❌ Erreur : ${data.error ? data.error.message : 'inconnue'}`;
+                
+                if(data.candidates) {
+                    // Application du filtre Anti-XSS strict
+                    const rawHtml = data.candidates[0].content.parts[0].text.replace(/```html/gi, '').replace(/```/g, '').trim();
+                    resultBox.innerHTML = sanitizeHTML(rawHtml);
+                }
+                else {
+                    resultBox.innerHTML = `❌ Erreur : ${data.error ? data.error.message : 'inconnue'}`;
+                }
             } catch(e) { resultBox.innerHTML = `❌ Échec de la connexion.`; }
         });
 
