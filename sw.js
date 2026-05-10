@@ -1,4 +1,4 @@
-const CACHE_NAME = 'biblio-cache-v44';
+const CACHE_NAME = 'biblio-cache-v2';
 const urlsToCache = [
   './index.html',
   './manifest.json',
