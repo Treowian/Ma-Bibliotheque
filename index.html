@@ -1176,38 +1176,75 @@
 
         // --- 10. AFFICHAGE DES STATISTIQUES ---
         function renderDashboard() {
-            const stats = { book: { t: 0, l: 0, a: 0, title: '📖 Livres', done: 'terminés', todo: 'à lire' }, bd: { t: 0, l: 0, a: 0, title: '💬 BD', done: 'terminées', todo: 'à lire' }, music: { t: 0, l: 0, a: 0, title: '🎵 Musique', done: 'écoutés', todo: 'à découvrir' }, game: { t: 0, l: 0, a: 0, title: '🎲 Jeux', done: 'joués', todo: 'à tester' } };
+            const stats = { 
+                book: { t: 0, l: 0, a: 0, title: '📖 Livres', done: 'terminés', todo: 'à lire', notes: [] }, 
+                bd: { t: 0, l: 0, a: 0, title: '💬 BD', done: 'terminées', todo: 'à lire', notes: [] }, 
+                music: { t: 0, l: 0, a: 0, title: '🎵 Musique', done: 'écoutés', todo: 'à découvrir', notes: [] }, 
+                game: { t: 0, l: 0, a: 0, title: '🎲 Jeux', done: 'joués', todo: 'à tester', notes: [] } 
+            };
             
+            // STATS DU FOYER (GLOBALES - Logistique)
             const totalItems = library.length;
             const phys = library.filter(i=>i.format==='Physique').length;
             const demat = library.filter(i=>i.format && i.format !== 'Physique').length;
 
+            // Remplissage des volumes par type
             library.forEach(i => {
                 if (stats[i.type]) stats[i.type].t++;
             });
 
+            // STATS DU PROFIL (PERSONNELLES)
             const profileItems = library.filter(i => getUserData(i).statut !== 'neutre');
             const ownedItems = profileItems.filter(i => getUserData(i).statut !== 'aacheter');
-            
-            const notes = ownedItems.filter(i => getUserData(i).note > 0).map(i => parseInt(getUserData(i).note) || 0);
-            const avgNote = notes.length ? (notes.reduce((a,b)=>a+b,0)/notes.length).toFixed(1) : '-';
 
-            profileItems.forEach(i => { 
+            ownedItems.forEach(i => { 
                 let ud = getUserData(i);
                 if (stats[i.type]) { 
+                    // Comptage des statuts
                     if (['lu','ecoute','joue'].includes(ud.statut)) stats[i.type].l++; 
                     else if(['alire','adecouvrir','atester'].includes(ud.statut)) stats[i.type].a++; 
+                    
+                    // Récupération des notes pour la moyenne par catégorie
+                    if (ud.note > 0) stats[i.type].notes.push(parseInt(ud.note));
                 }
             });
 
+            // 1. Rendu de la Vue Globale (Épurée)
             const mainContainer = document.getElementById('dashboard-stats-main');
-            mainContainer.innerHTML = `<div class="stat-card" style="grid-column: 1 / -1; background: var(--bg-parchment-dark); border-color: var(--accent-wood);"><h4 style="color: var(--accent-wood); font-family: var(--font-title); margin-bottom: 8px;">🌍 Vue d'ensemble (Foyer)</h4><ul class="top-list" style="display: flex; flex-wrap: wrap; gap: 15px; padding-left: 0; list-style: none;"><li>📦 <b>${totalItems}</b> œuvres poss.</li><li>⭐ Ma Note moy. : <b>${avgNote}</b>/5</li><li>📚 Physique : <b>${phys}</b> | ☁️ Démat. : <b>${demat}</b></li></ul></div>`;
-            const typeContainer = document.getElementById('dashboard-stats-types'); typeContainer.innerHTML = '';
+            mainContainer.innerHTML = `
+                <div class="stat-card" style="grid-column: 1 / -1; background: var(--bg-parchment-dark); border-color: var(--accent-wood);">
+                    <h4 style="color: var(--accent-wood); font-family: var(--font-title); margin-bottom: 8px;">🌍 Base de données Foyer</h4>
+                    <ul class="top-list" style="display: flex; flex-wrap: wrap; gap: 15px; padding-left: 0; list-style: none;">
+                        <li>📦 <b>${totalItems}</b> œuvres au total</li>
+                        <li>📚 Format Physique : <b>${phys}</b></li>
+                        <li>☁️ Format Démat. : <b>${demat}</b></li>
+                    </ul>
+                </div>`;
+
+            // 2. Rendu des cartes par Type (Avec Note Moyenne intégrée)
+            const typeContainer = document.getElementById('dashboard-stats-types'); 
+            typeContainer.innerHTML = '';
+            
             Object.keys(stats).forEach(k => { 
-                const s = stats[k]; if(s.t === 0) return; 
-                typeContainer.innerHTML += `<div class="stat-card"><div class="stat-main"><span>${s.t}</span> <span style="font-size:1rem; color:var(--text-ink)">${s.title}</span></div><div class="stat-details"><div>✅ ${s.l} ${s.done}</div><div>📚 ${s.a} ${s.todo}</div></div></div>`; 
+                const s = stats[k]; 
+                if(s.t === 0) return; // Ne pas afficher si vide
+                
+                const avgNote = s.notes.length ? (s.notes.reduce((a,b)=>a+b,0)/s.notes.length).toFixed(1) : '-';
+
+                typeContainer.innerHTML += `
+                    <div class="stat-card">
+                        <div class="stat-main" style="justify-content: space-between;">
+                            <div><span>${s.t}</span> <span style="font-size:1rem; color:var(--text-ink)">${s.title}</span></div>
+                            <div style="font-size:1rem; color:var(--color-star);">⭐ ${avgNote}</div>
+                        </div>
+                        <div class="stat-details">
+                            <div>✅ ${s.l} ${s.done}</div>
+                            <div>🎯 ${s.a} ${s.todo}</div>
+                        </div>
+                    </div>`; 
             });
             
+            // AFFICHAGE DES CARROUSELS
             const favs = profileItems.filter(i => getUserData(i).coupDeCoeur); 
             renderGrid(favs, 'list-favs', 'title-coups-coeur'); 
             
